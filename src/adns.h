@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.30 1998/11/14 16:41:40 ian Exp $
+ * $Id: adns.h,v 1.31 1998/11/14 18:58:13 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -136,7 +136,7 @@ typedef struct {
 } adns_addr;
 
 typedef struct {
-  char *dm;
+  char *host;
   adns_status astatus;
   int naddrs; /* temp fail => -1, perm fail => 0, s_ok => >0 */
   adns_addr *addrs;
@@ -148,7 +148,7 @@ typedef struct {
 
 typedef struct {
   int i;
-  adns_rr_hostaddr hostaddr;
+  adns_rr_hostaddr ha;
 } adns_rr_inthostaddr;
 
 typedef struct {
