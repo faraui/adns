@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.47 1999/04/17 14:38:50 ian Exp $
+ *  $Id: adns.h,v 1.48 1999/04/17 15:41:16 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -272,7 +272,6 @@ int adns_wait(adns_state ads,
 	      adns_query *query_io,
 	      adns_answer **answer_r,
 	      void **context_r);
-/* fixme: minor cache */
 
 void adns_cancel(adns_query query);
 
