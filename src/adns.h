@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.60 1999/09/26 15:17:29 ian Exp $
+ *  $Id: adns.h,v 1.61 1999/09/26 18:59:34 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -335,6 +335,12 @@ int adns_wait(adns_state ads,
 	      adns_query *query_io,
 	      adns_answer **answer_r,
 	      void **context_r);
+
+/* same as adns_wait but uses poll(2) internally */
+int adns_wait_poll(adns_state ads,
+		   adns_query *query_io,
+		   adns_answer **answer_r,
+		   void **context_r);
 
 void adns_cancel(adns_query query);
 
