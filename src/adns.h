@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.35 1998/11/16 00:58:26 ian Exp $
+ * $Id: adns.h,v 1.36 1998/11/22 19:06:32 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -235,8 +235,11 @@ typedef struct {
  *  If no (appropriate) requests are outstanding adns_query and adns_wait return ESRCH;
  */
 
-/* fixme: separate parsing from instantiation */
-int adns_init(adns_state *newstate_r, adns_initflags flags, FILE *diagfile/*0=>stderr*/);
+int adns_init(adns_state *newstate_r, adns_initflags flags,
+	      FILE *diagfile /*0=>stderr*/);
+
+int adns_init_strcfg(adns_state *newstate_r, adns_initflags flags,
+		     FILE *diagfile /*0=>discard*/, const char *configtext);
 
 int adns_synchronous(adns_state ads,
 		     const char *owner,
