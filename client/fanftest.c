@@ -9,7 +9,7 @@
  *
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
- *    Copyright (C) 1999 Tony Finch <dot@dotat.at>
+ *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
  *  
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
  */
 
 static const char * const cvsid =
-	"$Id: fanftest.c,v 1.4 2000/09/14 01:23:39 ian Exp $";
+	"$Id: fanftest.c,v 1.5 2000/09/17 00:24:24 ian Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
