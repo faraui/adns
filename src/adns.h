@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.29 1998/11/14 15:24:56 ian Exp $
+ * $Id: adns.h,v 1.30 1998/11/14 16:41:40 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -140,7 +140,7 @@ typedef struct {
   adns_status astatus;
   int naddrs; /* temp fail => -1, perm fail => 0, s_ok => >0 */
   adns_addr *addrs;
-} adns_rr_dmaddr;
+} adns_rr_hostaddr;
 
 typedef struct {
   char *a, *b;
@@ -148,8 +148,8 @@ typedef struct {
 
 typedef struct {
   int i;
-  adns_rr_dmaddr dmaddr;
-} adns_rr_intdmaddr;
+  adns_rr_hostaddr hostaddr;
+} adns_rr_inthostaddr;
 
 typedef struct {
   /* Used both for mx_raw, in which case i is the preference and str the domain,
@@ -174,15 +174,15 @@ typedef struct {
   union {
     void *untyped;
     unsigned char *bytes;
-    char *(*str);                  /* ns_raw, cname, ptr, ptr_raw */
-    adns_rr_intstr *(*manyistr);   /* txt (list of strings ends with i=-1, str=0) */
-    adns_addr *addr;               /* addr */
-    struct in_addr *inaddr;        /* a */
-    adns_rr_dmaddr *dmaddr;        /* ns */
-    adns_rr_strpair *strpair;      /* hinfo ??fixme, rp, rp_raw */
-    adns_rr_intdmaddr *intdmaddr;  /* mx */
-    adns_rr_intstr *intstr;        /* mx_raw */
-    adns_rr_soa *soa;              /* soa, soa_raw */
+    char *(*str);                     /* ns_raw, cname, ptr, ptr_raw */
+    adns_rr_intstr *(*manyistr);      /* txt (list of strings ends with i=-1, str=0) */
+    adns_addr *addr;                  /* addr */
+    struct in_addr *inaddr;           /* a */
+    adns_rr_hostaddr *hostaddr;       /* ns */
+    adns_rr_strpair *strpair;         /* hinfo ??fixme, rp, rp_raw */
+    adns_rr_inthostaddr *inthostaddr; /* mx */
+    adns_rr_intstr *intstr;           /* mx_raw */
+    adns_rr_soa *soa;                 /* soa, soa_raw */
   } rrs;
 } adns_answer;
 
