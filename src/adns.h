@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.43 1999/04/11 18:14:20 ian Exp $
+ *  $Id: adns.h,v 1.44 1999/04/11 19:42:07 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -89,7 +89,7 @@ typedef enum {
   
 } adns_rrtype;
 
-/* In queries without qtf_anyquote, all domains must have standard
+/* In queries without qtf_quoteok_*, all domains must have standard
  * legal syntax.  In queries _with_ qtf_anyquote, domains in the query
  * or response may contain any characters, quoted according to
  * RFC1035 5.1.  On input to adns, the char* is a pointer to the
