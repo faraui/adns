@@ -31,7 +31,7 @@
  */
 
 static const char * const cvsid =
-	"$Id: adnslogres.c,v 1.10 2000/04/11 21:15:39 ian Exp $";
+	"$Id: adnslogres.c,v 1.11 2000/09/14 01:15:20 ian Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -160,13 +160,14 @@ static void proclog(FILE *inf, FILE *outf, int opts) {
     if (opts & OPT_DEBUG)
       msg("%d in queue; checking %.*s", len,
 	  head->rest-head->addr, guard_null(head->addr));
-    if (eof || len > MAXPENDING)
+    if (eof || len > MAXPENDING) {
       if (opts & OPT_POLL)
 	err= adns_wait_poll(adns, &head->query, &answer, NULL);
       else
 	err= adns_wait(adns, &head->query, &answer, NULL);
-    else
+    } else {
       err= adns_check(adns, &head->query, &answer, NULL);
+    }
     if (err != EAGAIN) {
       printline(outf, head->start, head->addr, head->rest,
 		answer->status == adns_s_ok ? *answer->rrs.str : NULL);
