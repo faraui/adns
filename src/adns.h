@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.44 1999/04/11 19:42:07 ian Exp $
+ *  $Id: adns.h,v 1.45 1999/04/11 21:01:49 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -42,6 +42,7 @@ typedef enum {
   adns_if_debug=        0x0008, /* enable all output to stderr plus debug msgs */
   adns_if_noautosys=    0x0010, /* do not make syscalls at every opportunity */
   adns_if_eintr=        0x0020, /* allow _wait and _synchronous to return EINTR */
+  adns_if_nosigpipe=    0x0040, /* applic has SIGPIPE set to SIG_IGN, do not protect */
 } adns_initflags;
 
 typedef enum {
