@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.50 1999/07/05 01:51:04 ian Exp $
+ *  $Id: adns.h,v 1.51 1999/07/11 18:15:16 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -479,30 +479,35 @@ int adns_beforepoll(adns_state ads, struct pollfd *fds, int *nfds_io, int *timeo
  * listen for more structs then *nfds_io will be set to the number
  * required and _beforepoll will return ERANGE.
  *
- * NOTE that if now is 0, adns may acquire additional fds from one
- * call to the next, so you must put adns_beforepoll in a loop, rather
- * than assuming that the second call (with the buffer size requested
- * by the first) will not return ERANGE.
- *
  * You may call _beforepoll with fds==0 and *nfds_io 0, in which case
  * adns will fill in the number of fds that it might be interested in
- * in *nfds_io, and always return 0.
+ * in *nfds_io, and always return either 0 (if it is not interested in
+ * any fds) or ERANGE (if it is).
+ *
+ * NOTE that (unless timeout_io is 0) adns may acquire additional fds
+ * from one call to the next, so you must put adns_beforepoll in a
+ * loop, rather than assuming that the second call (with the buffer
+ * size requested by the first) will not return ERANGE.
  *
  * adns only ever sets POLLIN, POLLOUT and POLLPRI in its pollfd
  * structs, and only ever looks at those bits.  POLLPRI is required to
- * detect TCP Urgent Data, which should not be used by a DNS server,
+ * detect TCP Urgent Data (which should not be used by a DNS server)
  * so that adns can know that the TCP stream is now useless.
  *
  * In any case, *timeout_io should be a timeout value as for poll(2),
  * which adns will modify downwards as required.  If the caller does
- * not plan to block then *timeout_io should be 0 on entry.
+ * not plan to block then *timeout_io should be 0 on entry, or
+ * alternatively, timeout_io may be 0.  (Alternatively, the caller may
+ * use _beforeselect with timeout_io==0 to find out about file
+ * descriptors, and use _firsttimeout is used to find out when adns
+ * might want to time something out.)
  *
  * adns_beforepoll will return 0 on success, and will not fail for any
  * reason other than the fds buffer being too small (ERANGE).
  *
- * If *now is not 0 then this call will never actually do any I/O, or
- * change the fds that adns is using or the timeouts it wants.  In any
- * case it won't block.
+ * This call will never actually do any I/O, or change the fds that
+ * adns is using or the timeouts it wants; and in any case it won't
+ * block.
  */
 
 #define ADNS_POLLFDS_RECOMMENDED 2
