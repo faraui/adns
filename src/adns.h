@@ -1,4 +1,9 @@
-/**/
+/*
+ * Copyright (C)1998 Ian Jackson.
+ * This version provided for review and comment only.
+ *
+ * $Id: adns.h,v 1.17 1998/10/07 00:48:24 ian Exp $
+ */
 
 #ifndef ADNS_H_INCLUDED
 #define ADNS_H_INCLUDED
