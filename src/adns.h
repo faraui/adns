@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.83 2000/09/17 01:56:18 ian Exp $
+ *  $Id: adns.h,v 1.84 2002/11/24 17:23:01 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -59,9 +59,9 @@
 
 #include <stdio.h>
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
 
