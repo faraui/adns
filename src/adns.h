@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.46 1999/04/17 14:20:45 ian Exp $
+ *  $Id: adns.h,v 1.47 1999/04/17 14:38:50 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -48,7 +48,7 @@ typedef enum {
 typedef enum {
   adns_qf_search=          0x000001, /* use the searchlist */
   adns_qf_usevc=           0x000002, /* use a virtual circuit (TCP connection) */
-  adns_qf_owner=           0x000004, /* fill in the owner field in the answer fixme:do */
+  adns_qf_owner=           0x000004, /* fill in the owner field in the answer */
   adns_qf_quoteok_query=   0x000010, /* allow quote-requiring chars in query domain */
   adns_qf_quoteok_cname=   0x000020, /* allow ... in CNAME we go via */
   adns_qf_quoteok_anshost= 0x000040, /* allow ... in answers expected to be hostnames */
@@ -196,7 +196,7 @@ typedef struct {
 typedef struct {
   adns_status status;
   char *cname; /* always NULL if query was for CNAME records */
-  char *owner; /* often NULL, depending on query flags */
+  char *owner; /* only set if requested in query flags */
   adns_rrtype type; /* guaranteed to be same as in query */
   time_t expires; /* expiry time, defined only if _s_ok, nxdomain or nodata. NOT TTL! */
   int nrrs, rrsz;
