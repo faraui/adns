@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.61 1999/09/26 18:59:34 ian Exp $
+ *  $Id: adns.h,v 1.62 1999/10/09 11:17:29 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -433,7 +433,7 @@ int adns_processexceptional(adns_state ads, int fd, const struct timeval *now);
  * from, or send outgoing data via, fd.  Very like _processany.  If it
  * returns zero then fd will no longer be readable or writeable
  * (unless of course more data has arrived since).  adns will _only_
- * that fd and only in the manner specified, regardless of whether
+ * use that fd and only in the manner specified, regardless of whether
  * adns_if_noautosys was specified.
  *
  * adns_processexceptional should be called when select(2) reports an
