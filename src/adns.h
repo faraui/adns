@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.85 2003/06/22 14:34:37 ian Exp $
+ *  $Id: adns.h,v 1.86 2005/04/05 20:34:38 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -117,7 +117,7 @@ typedef enum {
  adns_r_soa_raw=          6,
  adns_r_soa=                 adns_r_soa_raw|adns__qtf_mail822, 
  		     
- adns_r_ptr_raw=         12,
+ adns_r_ptr_raw=         12, /* do not mind PTR with wrong or missing A */
  adns_r_ptr=                 adns_r_ptr_raw|adns__qtf_deref,
  		     
  adns_r_hinfo=           13,  
