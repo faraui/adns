@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.37 1998/11/28 17:37:56 ian Exp $
+ * $Id: adns.h,v 1.38 1998/12/05 18:51:37 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -134,8 +134,6 @@ typedef enum {
   adns_s_invaliddata,
   
   adns_s_max_misconfig= 199,
-
-  /* fixme: implement _s_cname */
 
   /* permanent problems with the query */
   adns_s_querydomainwrong,
