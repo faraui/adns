@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.52 1999/07/14 21:59:38 ian Exp $
+ *  $Id: adns.h,v 1.53 1999/07/14 22:45:08 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -306,7 +306,7 @@ void adns_finish(adns_state ads);
 
 
 void adns_forallqueries_begin(adns_state ads);
-struct adns_query adns_forallqueries_next(adns_state ads, void **context_r);
+adns_query adns_forallqueries_next(adns_state ads, void **context_r);
 /* Iterator functions, which you can use to loop over the outstanding
  * (submitted but not yet successfuly checked/waited) queries.
  *
@@ -319,7 +319,7 @@ struct adns_query adns_forallqueries_next(adns_state ads, void **context_r);
  * query in the same adns_state).  There is no need to explicitly
  * finish an iteration.
  *
- * context_r may be 0.
+ * context_r may be 0.  *context_r may not be set when _next returns 0.
  */
 
 /*
