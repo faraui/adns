@@ -1,4 +1,8 @@
 /*
+ * adns.h
+ * - adns user-visible API (single-threaded, without any locking)
+ */
+/*
  *  This file is part of adns, which is Copyright (C) 1997-1999 Ian Jackson
  *  
  *  This program is free software; you can redistribute it and/or modify
@@ -15,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.39 1999/03/30 18:57:18 ian Exp $
+ *  $Id: adns.h,v 1.40 1999/04/10 16:29:21 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -264,10 +268,10 @@ int adns_wait(adns_state ads,
 	      adns_query *query_io,
 	      adns_answer **answer_r,
 	      void **context_r);
-/* fixme: merge _check and _wait into one func with flags wait and `remove'(?) */
 /* fixme: include TTL in answer somehow */
 /* fixme: multithreading/locking */
 /* fixme: easy way to get lists of fd's */
+/* fixme: IPv6 */
 
 void adns_cancel(adns_query query);
 
