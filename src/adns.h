@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.58 1999/09/25 15:46:39 ian Exp $
+ *  $Id: adns.h,v 1.59 1999/09/25 16:13:03 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -381,9 +381,11 @@ adns_query adns_forallqueries_next(adns_state ads, void **context_r);
  * context_r may be 0.  *context_r may not be set when _next returns 0.
  */
 
-void adns_checkconsistency(adns_state ads);
+void adns_checkconsistency(adns_state ads, adns_query qu);
 /* Checks the consistency of adns's internal data structures.
  * If any error is found, the program will abort().
+ * You may pass 0 for qu; if you pass non-null then additional checks
+ * are done to make sure that qu is a valid query.
  */
 
 /*
