@@ -36,29 +36,70 @@ typedef struct adns__state *adns_state;
 typedef struct adns__query *adns_query;
 
 typedef enum {
-  adns_if_noenv=        0x0001, /* do not look at environment */
-  adns_if_noerrprint=   0x0002, /* never print output to stderr (_debug overrides) */
-  adns_if_noserverwarn= 0x0004, /* do not warn to stderr about duff nameservers etc */
-  adns_if_debug=        0x0008, /* enable all output to stderr plus debug msgs */
-  adns_if_noautosys=    0x0010, /* do not make syscalls at every opportunity */
-  adns_if_eintr=        0x0020, /* allow _wait and _synchronous to return EINTR */
+  adns_if_noenv=           0x0001, /* do not look at environment */
+  adns_if_noerrprint=      0x0002, /* never print output to stderr (_debug overrides) */
+  adns_if_noserverwarn=    0x0004, /* do not warn to stderr about duff nameservers etc */
+  adns_if_debug=           0x0008, /* enable all output to stderr plus debug msgs */
+  adns_if_noautosys=       0x0010, /* do not make syscalls at every opportunity */
+  adns_if_eintr=           0x0020, /* allow _wait and _synchronous to return EINTR */
+
+  /* Flags for address formatting, in both init and query.  Do not use directly. */
+  adns__iqaf_keepv4=      0x01000, /* If clear, any IPv4s will be mapped to AF_INET6 */
+  adns__iqaf_weakv6=      0x02000, /* `Prefer IPv6 less' - depends on other flags */
+  adns__iqaf_only=        0x04000, /* Return only one kind of address */
+  adns__iqaf_override=    0x08000, /* In query flags, means to ignore init flags */
+  adns__iqaf_mask=        0x07000, /* Mask of flags that _override overrides */
+
+  /* Actual address formatting options.  These set the default.  Do not combine them.
+   * Meanings are:
+   * _v6first:    Query for AAAA; if no AAAA then query for A.  Return all as AF_INET6.
+   * _v6first:    Same, but return IPv6 as AF_INET6 and IPv4 as AF_INET.
+   * _both:       Query for both A and AAAA, return all addresses as AF_INET6.
+   * _bothraw:    Same, but return IPv6 as AF_INET6 and IPv4 as AF_INET.
+   * _v4only:     Query only for A, and return as AF_INET.
+   * _v6only:     Query only for AAAA, and return as AF_INET6.
+   * If none is specified, the default is _v6first.
+   */
+  adns_if_addr_v6first=      0,
+  adns_if_addr_v6firstraw=                                     adns__iqaf_keepv4,
+  adns_if_addr_both=                         adns__iqaf_weakv6,
+  adns_if_addr_bothraw=                      adns__iqaf_weakv6|adns__iqaf_keepv4,
+  adns_if_addr_v4only=       adns__iqaf_only|adns__iqaf_weakv6|adns__iqaf_keepv4,
+  adns_if_addr_v6only=       adns__iqaf_only,
+
+  adns__if_internalmask=   0x7fff0000
 } adns_initflags;
 
 typedef enum {
-  adns_qf_search=          0x000001, /* use the searchlist */
-  adns_qf_usevc=           0x000002, /* use a virtual circuit (TCP connection) */
-  adns_qf_quoteok_query=   0x000010, /* allow quote-requiring chars in query domain */
-  adns_qf_quoteok_cname=   0x000020, /* allow ... in CNAME we go via */
-  adns_qf_quoteok_anshost= 0x000040, /* allow ... in answers expected to be hostnames */
-  adns_qf_cname_loose=     0x000100, /* allow refs to CNAMEs - without, get _s_cname */
-  adns_qf_cname_forbid=    0x000200, /* don't follow CNAMEs, instead give _s_cname */
-  adns__qf_internalmask=   0x0ff000
+  adns_qf_search=          0x0000001, /* use the searchlist */
+  adns_qf_usevc=           0x0000002, /* use a virtual circuit (TCP connection) */
+  adns_qf_quoteok_query=   0x0000010, /* allow quote-requiring chars in query domain */
+  adns_qf_quoteok_cname=   0x0000020, /* allow ... in CNAME we go via */
+  adns_qf_quoteok_anshost= 0x0000040, /* allow ... in answers expected to be hostnames */
+  adns_qf_cname_loose=     0x0000100, /* allow refs to CNAMEs - without, get _s_cname */
+  adns_qf_cname_forbid=    0x0000200, /* don't follow CNAMEs, instead give _s_cname */
+
+  /* Address formatting options.  They have the same meaning as the corresponding
+   * adns_if_... options.  Do not combine with other _if_addr/_qf_addr options.
+   * If a _qf_addr is specified then the _if_addr are irrelevant, otherwise the
+   * _if_addr are used.
+   */
+  adns_qf_addr_both=       adns__iqaf_override|adns_if_addr_both,
+  adns_qf_addr_bothraw=    adns__iqaf_override|adns_if_addr_bothraw,
+  adns_qf_addr_v6first=    adns__iqaf_override|adns_if_addr_v6first,
+  adns_qf_addr_v6firstraw= adns__iqaf_override|adns_if_addr_v6firstraw,
+  adns_qf_addr_v4only=     adns__iqaf_override|adns_if_addr_v4only,
+  adns_qf_addr_v6only=     adns__iqaf_override|adns_if_addr_v6only,
+  
+  adns__qf_internalmask=   0x7fff0000
 } adns_queryflags;
 
 typedef enum {
-  adns__rrt_typemask=  0x0ffff,
-  adns__qtf_deref=     0x10000, /* dereference domains and perhaps produce extra data */
-  adns__qtf_mail822=   0x20000, /* make mailboxes be in RFC822 rcpt field format */
+  adns__rrt_typemask=   0x0ffff,
+  adns__qtf_deref=      0x10000, /* dereference domains and perhaps produce extra data */
+  adns__qtf_mail822=    0x20000, /* make mailboxes be in RFC822 rcpt field format */
+  adns__qtf_nostdquery= 0x40000, /* do not make normal initial query */
+  adns__qtf_mask=   0x07fff0000,
   
   adns_r_none=               0,
   
@@ -85,7 +126,9 @@ typedef enum {
   adns_r_rp_raw=            17,
   adns_r_rp=                    adns_r_rp_raw|adns__qtf_mail822,
 
-  adns_r_addr=                  adns_r_a|adns__qtf_deref
+  adns_r_aaaa=              28,
+  
+  adns_r_addr=                  adns_r_a|adns__qtf_nostdquery
   
 } adns_rrtype;
 
@@ -152,7 +195,8 @@ typedef struct {
   int len;
   union {
     struct sockaddr sa;
-    struct sockaddr_in inet;
+    struct sockaddr_in inet; /* port field will be zero */
+    struct sockaddr_in6 inet6; /* port field will be zero */
   } addr;
 } adns_rr_addr;
 
@@ -203,6 +247,7 @@ typedef struct {
     adns_rr_intstr *(*manyistr);      /* txt (list of strings ends with i=-1, str=0) */
     adns_rr_addr *addr;               /* addr */
     struct in_addr *inaddr;           /* a */
+    struct in_addr6 *inaddr6;         /* aaaa */
     adns_rr_hostaddr *hostaddr;       /* ns */
     adns_rr_intstrpair *intstrpair;   /* hinfo */
     adns_rr_strpair *strpair;         /* rp, rp_raw */
@@ -269,7 +314,6 @@ int adns_wait(adns_state ads,
 	      adns_answer **answer_r,
 	      void **context_r);
 /* fixme: include TTL in answer somehow */
-/* fixme: multithreading/locking */
 /* fixme: easy way to get lists of fd's */
 /* fixme: IPv6 */
 

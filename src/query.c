@@ -87,12 +87,16 @@ int adns__internal_submit(adns_state ads, adns_query *query_r,
   }
   qu->vb= *qumsg_vb;
   adns__vbuf_init(qumsg_vb);
+
+  if (failstat) goto x_failure;
   
-  if (failstat) {
-    adns__query_fail(qu,failstat);
-    return adns_s_ok;
+  if (qu->typei->begin) {
+    failstat= qu->typei->begin(ads,qu,now);
+    if (failstat) goto x_failure;
+  } else {
+    adns__query_udp(qu,now);
   }
-  adns__query_udp(qu,now);
+
   adns__autosys(ads,now);
 
   return adns_s_ok;
@@ -102,6 +106,33 @@ int adns__internal_submit(adns_state ads, adns_query *query_r,
  x_nomemory:
   adns__vbuf_free(qumsg_vb);
   return adns_s_nomemory;
+
+ x_failure:
+  adns__query_fail(qu,failstat);
+  return adns_s_ok;
+}
+
+adns_status adns__subquery(adns_state ads, adns_query parent, vbuf *vb,
+			   const byte *qd_dgram, int qd_dglen, int qd_begin,
+			   adns_rrtype type, adns_queryflags flags,
+			   struct timeval now, const qcontext *ctx) {
+  adns_status st;
+  int id;
+  adns_query nqu;
+  
+  st= adns__mkquery_frdgram(ads, vb, &id,
+			    qd_dgram, qd_dglen, qd_begin,
+			    type, flags);
+  if (st) return st;
+  
+  st= adns__internal_submit(ads, &nqu, adns__findtype(type),
+			    vb, id, flags, now, 0, ctx);
+  if (st) return st;
+
+  nqu->parent= parent;
+  LIST_LINK_TAIL_PART(parent->children,nqu,siblings.);
+
+  return adns_s_ok;
 }
 
 int adns_submit(adns_state ads,
@@ -127,6 +158,11 @@ int adns_submit(adns_state ads,
   r= gettimeofday(&now,0); if (r) return errno;
   id= 0;
 
+  if (!(flags & adns__iqaf_override)) {
+    flags &= ~adns__iqaf_mask;
+    flags |= ads->iflags & adns__iqaf_mask;
+  }
+
   adns__vbuf_init(&vb);
 
   ol= strlen(owner);
@@ -134,7 +170,9 @@ int adns_submit(adns_state ads,
 				 
   if (owner[ol-1]=='.' && owner[ol-2]!='\\') { flags &= ~adns_qf_search; ol--; }
 
-  stat= adns__mkquery(ads,&vb,&id, owner,ol, typei,flags);
+
+		     typei->initialtype ? typei->initialtype(ads,flags) : typei->type
+		       stat= adns__mkquery(ads,&vb,&id, owner,ol, typei,flags);
 			
  xit:
   return adns__internal_submit(ads,query_r, typei,&vb,id, flags,now, stat,&ctx);	

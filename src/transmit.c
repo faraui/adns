@@ -71,7 +71,8 @@ static adns_status mkquery_footer(vbuf *vb, adns_rrtype type) {
 
 adns_status adns__mkquery(adns_state ads, vbuf *vb, int *id_r,
 			  const char *owner, int ol,
-			  const typeinfo *typei, adns_queryflags flags) {
+			  const typeinfo *typei, adns_rr_type typecode,
+			  adns_queryflags flags) {
   int ll, c, nlabs;
   byte label[255], *rqp;
   const char *p, *pe;
@@ -118,8 +119,8 @@ adns_status adns__mkquery(adns_state ads, vbuf *vb, int *id_r,
   MKQUERY_ADDB(0);
 
   MKQUERY_STOP(vb);
-  
-  st= mkquery_footer(vb,typei->type);
+
+  st= mkquery_footer(vb,typecode);
   
   return adns_s_ok;
 }

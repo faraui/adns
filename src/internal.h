@@ -120,6 +120,24 @@ typedef struct {
   /* Returns !0 if RR a should be strictly after RR b in the sort order,
    * 0 otherwise.  Must not fail.
    */
+
+  /* Now come a number of hooks which are usually zero.  They are used by
+   * query types which need special processing, like adns_rr_addr.
+   */
+
+  int (*initqtype)(adns_state ads, adns_queryflags flags);
+  /* Returns the typecode (DNS, not adns_rr_type) for the initial
+   * query.  The general code will always construct a query datagram
+   * for the owner domain specified in _submit.
+   * If !initqtype then (typeinfo->type & adns__rrt_typemask) is used.
+   */
+  
+  adns_status (*begin)(adns_state ads, adns_query qu, struct timeval now);
+  /* Alternative `query start' function.  If !begin then the general code
+   * will try to send the initial query datagram by UDP to a nameserver.
+   * If it returns an error then the original _submit will too; it may
+   * also choose to fail the query.
+   */
 } typeinfo;
 
 typedef struct allocnode {
@@ -247,11 +265,9 @@ struct adns__state {
   int nservers, nsortlist, tcpserver;
   enum adns__tcpstate { server_disconnected, server_connecting, server_ok } tcpstate;
   struct timeval tcptimeout;
-  struct server {
-    struct in_addr addr;
-  } servers[MAXSERVERS];
+  adns_rr_addr servers[MAXSERVERS]; /* port fields will be 53 here */
   struct sortlist {
-    struct in_addr base, mask;
+    struct in_addr6 base, mask;
   } sortlist[MAXSORTLIST];
 };
 
@@ -315,6 +331,15 @@ adns_status adns__mkquery_frdgram(adns_state ads, vbuf *vb, int *id_r,
  * That domain must be correct and untruncated.
  */
 
+adns_status adns__subquery(adns_state ads, adns_query parent, vbuf *vb,
+			   const byte *qd_dgram, int qd_dglen, int qd_begin,
+			   adns_rrtype type, adns_queryflags flags,
+			   struct timeval now, const qcontext *ctx);
+/* Constructs a query datagram using _mkquery_frdgram, as above, and then
+ * makes the query an internal one with parent qu and sends it off.
+ * vbuf is used as a buffer to construct the query, and will be overwritten.
+ */
+  
 void adns__query_tcp(adns_query qu, struct timeval now);
 /* Query must be in state tcpwait/timew; it will be moved to a new state
  * if possible and no further processing can be done on it for now.
@@ -323,7 +348,7 @@ void adns__query_tcp(adns_query qu, struct timeval now);
  *
  * adns__tcp_tryconnect should already have been called - _tcp
  * will only use an existing connection (if there is one), which it
- * may break.  If the conn list lost then the caller is responsible for any
+ * may break.  If the conn is lost then the caller is responsible for any
  * reestablishment and retry.
  */
 
