@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.22 1998/11/08 15:13:17 ian Exp $
+ * $Id: adns.h,v 1.23 1998/11/08 16:16:09 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -234,7 +234,7 @@ int adns_wait(adns_state ads,
 	      void **context_r);
 /* Might return EINTR - if so, try again */
 
-void adns_cancel(adns_state ads, adns_query query);
+void adns_cancel(adns_query query);
 
 int adns_finish(adns_state);
 /* You may call this even if you have queries outstanding;
