@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.65 1999/10/10 13:16:24 ian Exp $
+ *  $Id: adns.h,v 1.66 1999/10/12 19:14:49 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -456,6 +456,8 @@ int adns_submit(adns_state ads,
 		void *context,
 		adns_query *query_r);
 
+/* The owner should be quoted in master file format. */
+
 int adns_check(adns_state ads,
 	       adns_query *query_io,
 	       adns_answer **answer_r,
@@ -737,7 +739,6 @@ adns_status adns_rr_info(adns_rrtype type,
 			 int *len_r,
 			 const void *datap, char **data_r);
 /*
-  
  * Get information about a query type, or convert reply data to a
  * textual form.  type must be specified, and the official name of the
  * corresponding RR type will be returned in *rrtname_r, and
