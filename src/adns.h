@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.25 1998/11/10 02:09:32 ian Exp $
+ * $Id: adns.h,v 1.26 1998/11/10 02:43:02 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -154,7 +154,8 @@ typedef struct {
   union {
     void *untyped;
     unsigned char *bytes;
-    char *(*str);                  /* ns_raw, cname, ptr, ptr_raw, txt */
+    char *(*str);                  /* ns_raw, cname, ptr, ptr_raw */
+    char *(**manystr);             /* txt (list is null-terminated) */
     struct in_addr *inaddr;        /* a */
     adns_rr_dmaddr *dmaddr;        /* ns */
     adns_rr_strpair *strpair;      /* hinfo, rp, rp_raw */
