@@ -5,7 +5,7 @@
 /*
  *  This file is
  *   Copyright (C) 1999 Tony Finch <dot@dotat.at>
- *   Copyright (C) 1999 Ian Jackson <ian@davenant.greenend.org.uk>
+ *   Copyright (C) 1999-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
@@ -30,7 +30,7 @@
  */
 
 static const char * const cvsid =
-	"$Id: fanftest.c,v 1.3 2000/05/07 22:37:18 ian Exp $";
+	"$Id: fanftest.c,v 1.4 2000/09/14 01:23:39 ian Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -40,6 +40,7 @@ static const char * const cvsid =
 #include <stdio.h>
 #include <errno.h>
 
+#include "config.h"
 #include "adns.h"
 
 static const char *progname;

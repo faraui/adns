@@ -31,7 +31,7 @@
  */
 
 static const char * const cvsid =
-	"$Id: adnslogres.c,v 1.11 2000/09/14 01:15:20 ian Exp $";
+	"$Id: adnslogres.c,v 1.12 2000/09/14 01:23:39 ian Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -42,7 +42,9 @@ static const char * const cvsid =
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdarg.h>
 
+#include "config.h"
 #include "adns.h"
 
 /* maximum number of concurrent DNS queries */
@@ -57,11 +59,20 @@ static const char * const cvsid =
 
 static const char *progname;
 
-#define msg(fmt, args...) fprintf(stderr, "%s: " fmt "\n", progname, ##args)
 #define guard_null(str) ((str) ? (str) : "")
 
 #define sensible_ctype(type,ch) (type((unsigned char)(ch)))
   /* isfoo() functions from ctype.h can't safely be fed char - blech ! */
+
+static void msg(const char *fmt, ...) {
+  va_list al;
+
+  fprintf(stderr, "%s: ", progname);
+  va_start(al,fmt);
+  vfprintf(stderr, fmt, al);
+  va_end(al);
+  fputc('\n',stderr);
+}
 
 static void aargh(const char *cause) {
   const char *why = strerror(errno);
