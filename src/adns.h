@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.70 1999/10/13 01:23:56 ian Exp $
+ *  $Id: adns.h,v 1.71 1999/10/15 16:55:00 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -78,6 +78,7 @@ typedef enum {
   adns_if_noerrprint=   0x0002, /* never print output to stderr (_debug overrides) */
   adns_if_noserverwarn= 0x0004, /* do not warn to stderr about duff nameservers etc */
   adns_if_debug=        0x0008, /* enable all output to stderr plus debug msgs */
+  adns_if_logpid=       0x0080, /* include pid in diagnostic output */
   adns_if_noautosys=    0x0010, /* do not make syscalls at every opportunity */
   adns_if_eintr=        0x0020, /* allow _wait and _synchronous to return EINTR */
   adns_if_nosigpipe=    0x0040, /* applic has SIGPIPE set to SIG_IGN, do not protect */
