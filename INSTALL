@@ -32,6 +32,22 @@ perform badly.
 You will probably find that GNU Make is required.
 
 
+IPv6 SUPPORT
+
+If you build adns on a system without a definition for AF_INET6 in
+<netinet/in.h>, you will (probably) still be able to do lookups for
+IPv6 addresses, etc.  However, adns will do this by including the
+header file adns-in6fake.h, which contains definitions of various
+IPv6-related structures (those in RFC2133) which I have just made up.
+They may not be the same as those which a later version of your system
+actually includes, which means that the versions of adns built
+before and after IPv6 support on your platform might not be binary
+compatible - EVEN FOR PROGRAMS WHICH DO NOT DO IPv6 LOOKUPS !
+
+On platforms with a `sa_len' field this feature will not work
+properly.
+
+
 SECURITY AND PERFORMANCE - AN IMPORTANT NOTE
 
 adns is not a full-service resolver.  It does no caching of responses

@@ -1009,11 +1009,14 @@ DEEP_TYPE(hinfo,  "HINFO", 0,     intstrpair, pa_hinfo,   0,          cs_hinfo  
 DEEP_TYPE(mx_raw, "MX",   "raw",  intstr,     pa_mx_raw,  di_mx_raw,  cs_inthost    ),
 DEEP_TYPE(txt,    "TXT",   0,     manyistr,   pa_txt,     0,          cs_txt        ),
 DEEP_TYPE(rp_raw, "RP",   "raw",  strpair,    pa_rp,      0,          cs_rp         ),
+FLAT_TYPE(aaaa,   "AAAA",  0,     inaddr6,    pa_inaddr6, di_inaddr6, cs_inaddr6    ),
+DEEP_TYPE(srv_raw,"SRV",  "raw",  srvraw,     pa_srvraw,  di_srvraw,  cs_srvraw     ),
  		     	                                     		   	       
 FLAT_TYPE(addr,   "A",  "addr",   addr,       pa_addr,    di_addr,    cs_addr       ),
 DEEP_TYPE(ns,     "NS", "+addr",  hostaddr,   pa_hostaddr,di_hostaddr,cs_hostaddr   ),
 DEEP_TYPE(ptr,    "PTR","checked",str,        pa_ptr,     0,          cs_domain     ),
 DEEP_TYPE(mx,     "MX", "+addr",  inthostaddr,pa_mx,      di_mx,      cs_inthostaddr),
+DEEP_TYPE(srv,    "SRV","+addr",  srv,        pa_srv,     di_srv,     cs_srv        ),
  		     	                                     		      
 DEEP_TYPE(soa,    "SOA","822",    soa,        pa_soa,     0,          cs_soa        ),
 DEEP_TYPE(rp,     "RP", "822",    strpair,    pa_rp,      0,          cs_rp         ),
