@@ -19,11 +19,14 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.53 1999/07/14 22:45:08 ian Exp $
+ *  $Id: adns.h,v 1.54 1999/07/14 22:47:16 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
 #define ADNS_H_INCLUDED
+#ifdef __cplusplus
+extern "C" { /* I really dislike this - iwj. */
+#endif
 
 #include <stdio.h>
 
@@ -564,4 +567,7 @@ const char *adns_errabbrev(adns_status st);
  * not returned by the same adns library.
  */
 
+#ifdef __cplusplus
+} /* end of extern "C" */
+#endif
 #endif
