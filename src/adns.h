@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.67 1999/10/12 22:55:15 ian Exp $
+ *  $Id: adns.h,v 1.68 1999/10/13 00:23:01 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -798,9 +798,12 @@ adns_status adns_rr_info(adns_rrtype type,
 
 const char *adns_strerror(adns_status st);
 const char *adns_errabbrev(adns_status st);
+const char *adns_errtypeabbrev(adns_status st);
 /* Like strerror but for adns_status values.  adns_errabbrev returns
  * the abbreviation of the error - eg, for adns_s_timeout it returns
- * "timeout".  You MUST NOT call these functions with status values
+ * "timeout".  adns_errtypeabbrev returns the abbreviation of the
+ * error class: ie, for values up to adns_s_max_XXX it will return the
+ * string XXX.  You MUST NOT call these functions with status values
  * not returned by the same adns library.
  */
 
