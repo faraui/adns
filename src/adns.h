@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.75 2000/03/02 00:58:07 ian Exp $
+ *  $Id: adns.h,v 1.76 2000/03/02 01:34:04 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -508,6 +508,19 @@ int adns_submit_reverse(adns_state ads,
 			void *context,
 			adns_query *query_r);
 /* type must be _r_ptr or _r_ptr_raw.  _qf_search is ignored.
+ * addr->sa_family must be AF_INET or you get ENOSYS.
+ */
+
+int adns_submit_reverse_any(adns_state ads,
+			    const struct sockaddr *addr,
+			    const char *rzone,
+			    adns_rrtype type,
+			    adns_queryflags flags,
+			    void *context,
+			    adns_query *query_r);
+/* For RBL-style reverse `zone's; look up
+ *   <reversed-address>.<zone>
+ * Any type is allowed.  _qf_search is ignored.
  * addr->sa_family must be AF_INET or you get ENOSYS.
  */
 
