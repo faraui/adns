@@ -31,7 +31,7 @@
  */
 
 static const char * const cvsid =
-	"$Id: adnslogres.c,v 1.18 2000/09/17 00:24:24 ian Exp $";
+	"$Id: adnslogres.c,v 1.19 2000/09/17 00:43:10 ian Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -218,9 +218,13 @@ static void proclog(FILE *inf, FILE *outf, int maxpending, int opts) {
   adns_finish(adns);
 }
 
-static void usage(void) {
-  fprintf(stderr, "usage: %s [-d] [-p] [-c concurrency] [-C config] [logfile]\n",
+static void printhelp(FILE *file) {
+  fprintf(file, "usage: %s [-d] [-p] [-c concurrency] [-C config] [logfile]\n",
 	  progname);
+}
+
+static void usage(void) {
+  printhelp(stderr);
   exit(1);
 }
 
@@ -228,6 +232,12 @@ int main(int argc, char *argv[]) {
   int c, opts, maxpending;
   extern char *optarg;
   FILE *inf;
+
+  if (argv[1] && !strcmp(argv[1],"--help")) {
+    printhelp(stdout);
+    if (ferror(stdout) || fclose(stdout)) { perror("stdout"); exit(1); }
+    exit(0);
+  }
 
   maxpending= DEFMAXPENDING;
   opts= 0;
