@@ -66,7 +66,7 @@ static adns_query query_alloc(adns_state ads, const typeinfo *typei,
   adns__vbuf_init(&qu->search_vb);
   qu->search_origlen= qu->search_pos= qu->search_doneabs= 0;
 
-  qu->id= -2; /* will be overwritten with real id before we leave adns */
+  qu->id= 0;
   qu->flags= flags;
   qu->retries= 0;
   qu->udpnextserver= 0;
@@ -501,6 +501,7 @@ void adns__query_done(adns_query qu) {
   adns_answer *ans;
   adns_query parent;
 
+  assert(!qu->ads->bug_if_query_done_now);
   cancel_children(qu);
 
   qu->id= -1;
@@ -542,6 +543,7 @@ void adns__query_done(adns_query qu) {
 }
 
 void adns__query_fail(adns_query qu, adns_status stat) {
+  assert(!qu->ads->bug_if_query_done_now);
   adns__reset_preserved(qu);
   qu->answer->status= stat;
   adns__query_done(qu);
