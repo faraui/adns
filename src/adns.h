@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.68 1999/10/13 00:23:01 ian Exp $
+ *  $Id: adns.h,v 1.69 1999/10/13 00:57:36 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -496,7 +496,9 @@ int adns_submit_reverse(adns_state ads,
 			adns_queryflags flags,
 			void *context,
 			adns_query *query_r);
-/* type must be _r_ptr or _r_ptr_raw.  _qf_search is ignored. */
+/* type must be _r_ptr or _r_ptr_raw.  _qf_search is ignored.
+ * addr->sa_family must be AF_INET or you get ENOSYS.
+ */
 
 void adns_finish(adns_state ads);
 /* You may call this even if you have queries outstanding;
