@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.20 1998/11/08 00:58:51 ian Exp $
+ * $Id: adns.h,v 1.21 1998/11/08 12:59:41 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -105,6 +105,7 @@ typedef enum {
   adns_s_norecurse,
   adns_s_serverfaulty,
   adns_s_unknownreply,
+  adns_s_invaliddata,
   adns_s_max_tempfail= 99,
   adns_s_inconsistent, /* PTR gives domain whose A does not match */
   adns_s_cname, /* CNAME found where data eg A expected (not if _qf_loosecname) */
