@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.36 1998/11/22 19:06:32 ian Exp $
+ * $Id: adns.h,v 1.37 1998/11/28 17:37:56 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -29,6 +29,8 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+/* All struct in_addr anywhere in adns are in NETWORK byte order. */
 
 typedef struct adns__state *adns_state;
 typedef struct adns__query *adns_query;
