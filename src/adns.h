@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.18 1998/10/07 00:53:53 ian Exp $
+ * $Id: adns.h,v 1.19 1998/11/07 16:52:17 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -264,5 +264,7 @@ void adns_interest(adns_state, int *maxfd_io, fd_set *readfds_io,
  *   ...
  *  }
  */
+
+const char *adns_strerror(adns_status st);
 
 #endif
