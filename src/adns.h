@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.28 1998/11/14 14:21:50 ian Exp $
+ * $Id: adns.h,v 1.29 1998/11/14 15:24:56 ian Exp $
  */
 /*
  *  This file is part of adns, which is Copyright (C) 1997, 1998 Ian Jackson
@@ -39,6 +39,7 @@ typedef enum {
   adns_if_noserverwarn= 0x0004, /* do not warn to stderr about duff nameservers etc */
   adns_if_debug=        0x0008, /* enable all output to stderr plus debug msgs */
   adns_if_noautosys=    0x0010, /* do not make syscalls at every opportunity */
+  adns_if_eintr=        0x0020, /* allow _wait and _synchronous to return EINTR */
 } adns_initflags;
 
 typedef enum {
@@ -215,7 +216,6 @@ int adns_synchronous(adns_state ads,
 		     adns_rrtype type,
 		     adns_queryflags flags,
 		     adns_answer **answer_r);
-/* Will not return EINTR. */
 
 /* NB: if you set adns_if_noautosys then _submit and _check do not
  * make any system calls; you must use adns_callback (possibly after
@@ -238,7 +238,6 @@ int adns_wait(adns_state ads,
 	      adns_query *query_io,
 	      adns_answer **answer_r,
 	      void **context_r);
-/* Might return EINTR - if so, try again */
 
 void adns_cancel(adns_query query);
 
