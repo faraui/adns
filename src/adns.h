@@ -10,6 +10,7 @@
 
 typedef struct adns__state *adns_state;
 typedef struct adns__query *adns_query;
+typedef const struct adns__rrtype *adns_rrtype;
 
 typedef enum {
   adns_if_noenv=        0x0001, /* do not look at environment */
@@ -27,49 +28,69 @@ typedef enum {
   adns_qf_nocname=    0x0010, /* don't follow CNAMEs, instead give _s_cname */
 } adns_queryflags;
 
+typedef const struct adns__rrtype adns__rrtype_indicator[1];
+
+extern adns__rrtype_indicator
+  adns_r_none,
+  adns_r_null,     adns_r_null_mf,
+  adns_r_a,        adns_r_a_mf,
+  adns_r_ns,       adns_r_ns_mf,      adns_r_ns_raw,
+  adns_r_soa,      adns_r_soa_mf,     adns_r_soa_raw,
+  adns_r_cname,    adns_r_cname_mf,
+  adns_r_ptr,      adns_r_ptr_mf,     adns_r_ptr_raw,
+  adns_r_hinfo,    adns_r_hinfo_mf,
+  adns_r_mx_raw,
+  adns_r_mx,
+  adns_r_txt,
+  adns_r_mx_mf,
+  adns_r_rp_raw,
+  adns_r_txt_mf,
+  adns_r_rp,
+  adns_r_rp_mf;
+
 typedef enum {
   adns__rrt_typemask=  0x0ffff,
   adns__qtf_deref=     0x10000, /* dereference domains and perhaps produce extra data */
   adns__qtf_mail822=   0x20000, /* make mailboxes be in RFC822 rcpt field format */
   adns__qtf_masterfmt= 0x80000, /* convert RRs to master file format, return as str */
-  
+
   adns_r_none=               0,
-  
+
   adns_r_a=                  1,
   adns_r_a_mf=                  adns_r_a|adns__qtf_masterfmt,
-  
+
   adns_r_ns_raw=             2,
   adns_r_ns=                    adns_r_ns_raw|adns__qtf_deref,
   adns_r_ns_mf=                 adns_r_ns_raw|adns__qtf_masterfmt,
-  
+
   adns_r_cname=              5,
   adns_r_cname_mf=              adns_r_cname|adns__qtf_masterfmt,
-  
+
   adns_r_soa_raw=            6,
-  adns_r_soa=                   adns_r_soa_raw|adns__qtf_mail822, 
+  adns_r_soa=                   adns_r_soa_raw|adns__qtf_mail822,
   adns_r_soa_mf=                adns_r_soa_raw|adns__qtf_masterfmt,
-  
+
   adns_r_null=              10,
   adns_r_null_mf=               adns_r_null|adns__qtf_masterfmt,
-  
+
   adns_r_ptr_raw=           12,
   adns_r_ptr=                   adns_r_ptr_raw|adns__qtf_deref,
   adns_r_ptr_mf=                adns_r_ptr_raw|adns__qtf_masterfmt,
-  
-  adns_r_hinfo=             13,  
+
+  adns_r_hinfo=             13,
   adns_r_hinfo_mf=              adns_r_hinfo|adns__qtf_masterfmt,
-  
+
   adns_r_mx_raw=            15,
   adns_r_mx=                    adns_r_mx_raw|adns__qtf_deref,
   adns_r_mx_mf=                 adns_r_mx_raw|adns__qtf_masterfmt,
-  
+
   adns_r_txt=               16,
   adns_r_txt_mf=                adns_r_txt|adns__qtf_masterfmt,
-  
+
   adns_r_rp_raw=            17,
   adns_r_rp=                    adns_r_rp_raw|adns__qtf_mail822,
   adns_r_rp_mf=                 adns_r_rp_raw|adns__qtf_masterfmt
-  
+
 } adns_rrtype;
 
 /* In queries without qtf_anyquote, all domains must have standard

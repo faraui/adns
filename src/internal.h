@@ -14,6 +14,17 @@ typedef unsigned char byte;
 
 #include "adns.h"
 
+typedef enum {
+  rtf_deref=     0x1, /* dereference domains and perhaps produce extra data */
+  rtf_mail822=   0x2, /* make mailboxes be in RFC822 rcpt field format */
+} rrtype_flags;
+
+struct adns__rrtype {
+  int qtype;
+  rrtype_flags rflags;
+  void (*recv_fn)(void);
+};
+
 /* Configuration and constants */
 
 #define MAXSERVERS 5
