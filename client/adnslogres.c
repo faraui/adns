@@ -30,7 +30,7 @@
  */
 
 static const char * const cvsid =
-	"$Id: adnslogres.c,v 1.4 1999/10/10 13:16:24 ian Exp $";
+	"$Id: adnslogres.c,v 1.5 1999/10/12 22:56:16 ian Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -154,7 +154,7 @@ static void proclog(int opts) {
 	err= adns_wait(adns, &head->query, &answer, NULL);
     else
       err= adns_check(adns, &head->query, &answer, NULL);
-    if (err != EWOULDBLOCK) {
+    if (err != EAGAIN) {
 	printline(head->start, head->addr, head->rest,
 		  answer->status == adns_s_ok ? *answer->rrs.str : NULL);
 	line= head; head= head->next;

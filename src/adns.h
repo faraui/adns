@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.66 1999/10/12 19:14:49 ian Exp $
+ *  $Id: adns.h,v 1.67 1999/10/12 22:55:15 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -231,7 +231,9 @@ typedef enum {
 
   /* permanent errors */
   adns_s_nxdomain,
-  adns_s_nodata
+  adns_s_nodata,
+
+  adns_s_max_permfail= 499
   
 } adns_status;
 
@@ -320,9 +322,9 @@ typedef struct {
  *  values.
  * 
  *  For _wait and _check failures are reported in the answer
- *  structure, and only 0, ESRCH or (for _check) EWOULDBLOCK is
+ *  structure, and only 0, ESRCH or (for _check) EAGAIN is
  *  returned: if no (appropriate) requests are done adns_check returns
- *  EWOULDBLOCK; if no (appropriate) requests are outstanding both
+ *  EAGAIN; if no (appropriate) requests are outstanding both
  *  adns_query and adns_wait return ESRCH.
  *
  *  Additionally, _wait can return EINTR if you set adns_if_eintr.
@@ -533,7 +535,7 @@ void adns_checkconsistency(adns_state ads, adns_query qu);
  *  adns_submit 2
  *  adns_submit 3
  *  adns_wait 1
- *  adns_check 3 -> EWOULDBLOCK
+ *  adns_check 3 -> EAGAIN
  *  adns_wait 2
  *  adns_wait 3
  *  ....
