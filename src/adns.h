@@ -2,7 +2,7 @@
  * Copyright (C)1998 Ian Jackson.
  * This version provided for review and comment only.
  *
- * $Id: adns.h,v 1.19 1998/11/07 16:52:17 ian Exp $
+ * $Id: adns.h,v 1.20 1998/11/08 00:58:51 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -146,8 +146,10 @@ typedef struct {
   adns_status status;
   char *cname; /* always NULL if query was for CNAME records */
   adns_rrtype type;
-  int nrrs;
+  int nrrs, rrsz;
   union {
+    void *untyped;
+    unsigned char *bytes;
     char *(*str);                  /* ns_raw, cname, ptr, ptr_raw, txt, <any>_mf */
     struct in_addr *inaddr;        /* a */
     adns_rr_dmaddr *dmaddr;        /* ns */
