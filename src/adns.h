@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.73 1999/11/07 19:15:36 ian Exp $
+ *  $Id: adns.h,v 1.74 2000/03/01 23:50:05 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -284,7 +284,7 @@ typedef struct {
 typedef struct {
   adns_status status;
   char *cname; /* always NULL if query was for CNAME records */
-  char *owner; /* only set if requested in query flags */
+  char *owner; /* only set if requested in query flags, and may be 0 on error anyway */
   adns_rrtype type; /* guaranteed to be same as in query */
   time_t expires; /* expiry time, defined only if _s_ok, nxdomain or nodata. NOT TTL! */
   int nrrs, rrsz; /* nrrs is 0 if an error occurs */
