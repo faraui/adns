@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.57 1999/08/15 14:24:16 ian Exp $
+ *  $Id: adns.h,v 1.58 1999/09/25 15:46:39 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -49,6 +49,8 @@ typedef enum {
   adns_if_noautosys=    0x0010, /* do not make syscalls at every opportunity */
   adns_if_eintr=        0x0020, /* allow _wait and _synchronous to return EINTR */
   adns_if_nosigpipe=    0x0040, /* applic has SIGPIPE set to SIG_IGN, do not protect */
+  adns_if_checkc_entex= 0x0100, /* do consistency checks on entry/exit to adns funcs */
+  adns_if_checkc_freq=  0x0300, /* do consistency checks very frequently (slow!) */
 } adns_initflags;
 
 typedef enum {
@@ -377,6 +379,11 @@ adns_query adns_forallqueries_next(adns_state ads, void **context_r);
  * finish an iteration.
  *
  * context_r may be 0.  *context_r may not be set when _next returns 0.
+ */
+
+void adns_checkconsistency(adns_state ads);
+/* Checks the consistency of adns's internal data structures.
+ * If any error is found, the program will abort().
  */
 
 /*
