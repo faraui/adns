@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software Foundation,
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  $Id: adns.h,v 1.59 1999/09/25 16:13:03 ian Exp $
+ *  $Id: adns.h,v 1.60 1999/09/26 15:17:29 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -553,7 +553,7 @@ int adns_beforepoll(adns_state ads, struct pollfd *fds, int *nfds_io, int *timeo
  * in *nfds_io, and always return either 0 (if it is not interested in
  * any fds) or ERANGE (if it is).
  *
- * NOTE that (unless timeout_io is 0) adns may acquire additional fds
+ * NOTE that (unless now is 0) adns may acquire additional fds
  * from one call to the next, so you must put adns_beforepoll in a
  * loop, rather than assuming that the second call (with the buffer
  * size requested by the first) will not return ERANGE.
@@ -574,9 +574,11 @@ int adns_beforepoll(adns_state ads, struct pollfd *fds, int *nfds_io, int *timeo
  * adns_beforepoll will return 0 on success, and will not fail for any
  * reason other than the fds buffer being too small (ERANGE).
  *
- * This call will never actually do any I/O, or change the fds that
- * adns is using or the timeouts it wants; and in any case it won't
- * block.
+ * This call will never actually do any I/O.  If you supply the
+ * current time it will not change the fds that adns is using or the
+ * timeouts it wants.
+ *
+ * In any case this call won't block.
  */
 
 #define ADNS_POLLFDS_RECOMMENDED 2
