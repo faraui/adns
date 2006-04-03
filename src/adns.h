@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.88 2006/04/03 22:49:32 ian Exp $
+ *  $Id: adns.h,v 1.89 2006/04/03 23:47:41 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -340,7 +340,8 @@ typedef struct {
  *
  *  For _init, _init_strcfg, _submit and _synchronous, system errors
  *  (eg, failure to create sockets, malloc failure, etc.) return errno
- *  values.
+ *  values.  EINVAL from _init et al means the configuration file
+ *  is erroneous and cannot be parsed.
  * 
  *  For _wait and _check failures are reported in the answer
  *  structure, and only 0, ESRCH or (for _check) EAGAIN is
