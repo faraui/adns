@@ -51,7 +51,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.91 2006/04/04 01:21:39 ian Exp $
+ *  $Id: adns.h,v 1.92 2006/04/04 23:29:24 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -315,7 +315,7 @@ typedef struct {
 typedef struct {
   int priority, weight, port;
   adns_rr_hostaddr ha;
-} adns_rr_srvhostaddr;
+} adns_rr_srvha;
 
 typedef struct {
   adns_status status;
@@ -338,7 +338,7 @@ typedef struct {
     adns_rr_intstr *intstr;          /* mx_raw */
     adns_rr_soa *soa;                /* soa, soa_raw */
     adns_rr_srvraw *srvraw;          /* srv_raw */
-    adns_rr_srvhostaddr *srvhostaddr;/* srv */
+    adns_rr_srvha *srvha;/* srv */
   } rrs;
 } adns_answer;
 
