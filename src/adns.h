@@ -5,12 +5,13 @@
 /*
  *
  *  This file is
- *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
+ *    Copyright (C) 1997-2000,2003,2006 Ian Jackson
  *
  *  It is part of adns, which is
- *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
- *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *    Copyright (C) 1997-2000,2003,2006 Ian Jackson
+ *    Copyright (C) 1999-2000,2003,2006 Tony Finch
+ *    Copyright (C) 1991 Massachusetts Institute of Technology
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
@@ -51,7 +52,7 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id: adns.h,v 1.94 2006/04/07 00:25:14 ian Exp $
+ *  $Id: adns.h,v 1.95 2006/04/08 14:36:57 ian Exp $
  */
 
 #ifndef ADNS_H_INCLUDED

@@ -8,8 +8,10 @@
  *   Copyright (C) 1999-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *
  *  It is part of adns, which is
- *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
- *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
+ *    Copyright (C) 1997-2000,2003,2006  Ian Jackson
+ *    Copyright (C) 1999-2000,2003,2006  Tony Finch
+ *    Copyright (C) 1991 Massachusetts Institute of Technology
+ *  (See the file INSTALL for full details.)
  *  
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,7 +33,7 @@
  */
 
 static const char * const cvsid =
-	"$Id: adnslogres.c,v 1.21 2006/04/03 22:41:14 ian Exp $";
+	"$Id: adnslogres.c,v 1.22 2006/04/08 14:36:57 ian Exp $";
 
 #include <sys/types.h>
 #include <sys/time.h>
