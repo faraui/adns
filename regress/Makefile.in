@@ -28,10 +28,10 @@ PROGS_SYSDEP=	@PROGS_HAVE_TSEARCH@
 CLIENTS=	adnstest adnshost adnslogres $(PROGS_SYSDEP)
 AUTOCHDRS=	harness.h hsyscalls.h hredirect.h
 AUTOCSRCS=	hrecord.c hplayback.c hcommon.c
-include		$(srcdir)/../settings.make
+include		../settings.make
 include		$(srcdir)/../src/adns.make
 
-DIRCFLAGS=	-I$(srcdir)/../src
+DIRCFLAGS=	-I../src -I$(srcdir) -I$(srcdir)/../src
 
 HCPPFLAGS=	-DADNS_REGRESS_TEST -I.
 
@@ -46,7 +46,7 @@ ALL_OBJS=	$(HARNLOBJS) dtest.o hrecord.o hplayback.o
 all install uninstall: $(TARGETS)
 
 check:		$(TARGETS)
-		./checkall
+		srcdir=$(srcdir) $(srcdir)/checkall
 
 LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
