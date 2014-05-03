@@ -47,8 +47,9 @@
  * _intstr                    (mf,csp,cs)
  * _manyistr                  (mf,cs)
  * _txt                       (pa)
- * _inaddr                    (pa,dip,di)
- * _addr                      (pa,di,csp,cs)
+ * _inaddr                    (pa,cs,di, +search_sortlist, dip_genaddr)
+ * _in6addr                   (pa,cs,di)
+ * _addr                      (pa,di,csp,cs, +search_sortlist_sa, dip_sockaddr)
  * _domain                    (pap)
  * _host_raw                  (pa)
  * _hostaddr                  (pap,pa,dip,di,mfp,mf,csp,cs +pap_findaddrs)
@@ -239,7 +240,7 @@ static adns_status cs_hinfo(vbuf *vb, const void *datap) {
 }
 
 /*
- * _inaddr   (pa,dip,di)
+ * _inaddr   (pa,di,cs +search_sortlist, dip_genaddr)
  */
 
 static adns_status pa_inaddr(const parseinfo *pai, int cbyte,
@@ -251,32 +252,30 @@ static adns_status pa_inaddr(const parseinfo *pai, int cbyte,
   return adns_s_ok;
 }
 
-static int search_sortlist(adns_state ads, struct in_addr ad) {
+static int search_sortlist(adns_state ads, int af, const void *ad) {
   const struct sortlist *slp;
   int i;
   
   for (i=0, slp=ads->sortlist;
-       i<ads->nsortlist &&
-	 !((ad.s_addr & slp->mask.s_addr) == slp->base.s_addr);
+       i<ads->nsortlist && (af != slp->ai->af ||
+			    !slp->ai->matchp(ad, &slp->base, &slp->mask));
        i++, slp++);
   return i;
 }
 
-static int dip_inaddr(adns_state ads, struct in_addr a, struct in_addr b) {
+static int dip_genaddr(adns_state ads, int af, const void *a, const void *b) {
   int ai, bi;
   
   if (!ads->nsortlist) return 0;
 
-  ai= search_sortlist(ads,a);
-  bi= search_sortlist(ads,b);
+  ai= search_sortlist(ads,af,a);
+  bi= search_sortlist(ads,af,b);
   return bi<ai;
 }
 
 static int di_inaddr(adns_state ads,
 		     const void *datap_a, const void *datap_b) {
-  const struct in_addr *ap= datap_a, *bp= datap_b;
-
-  return dip_inaddr(ads,*ap,*bp);
+  return dip_genaddr(ads,AF_INET,datap_a,datap_b);
 }
 
 static adns_status cs_inaddr(vbuf *vb, const void *datap) {
@@ -289,7 +288,34 @@ static adns_status cs_inaddr(vbuf *vb, const void *datap) {
 }
 
 /*
- * _addr   (pa,di,csp,cs)
+ * _in6addr   (pa,di,cs)
+ */
+
+static adns_status pa_in6addr(const parseinfo *pai, int cbyte,
+			     int max, void *datap) {
+  struct in6_addr *storeto= datap;
+
+  if (max-cbyte != 16) return adns_s_invaliddata;
+  memcpy(storeto->s6_addr, pai->dgram + cbyte, 16);
+  return adns_s_ok;
+}
+
+static int di_in6addr(adns_state ads,
+		     const void *datap_a, const void *datap_b) {
+  return dip_genaddr(ads,AF_INET6,datap_a,AF_INET6,datap_b);
+}
+
+static adns_status cs_in6addr(vbuf *vb, const void *datap) {
+  char buf[INET6_ADDRSTRLEN];
+  const char *ia;
+
+  ia= inet_ntop(AF_INET6, datap, buf, sizeof(buf)); assert(ia);
+  CSP_ADDSTR(ia);
+  return adns_s_ok;
+}
+
+/*
+ * _addr   (pa,di,csp,cs, +search_sortlist_sa, dip_sockaddr)
  */
 
 static adns_status pa_addr(const parseinfo *pai, int cbyte,
@@ -305,11 +331,31 @@ static adns_status pa_addr(const parseinfo *pai, int cbyte,
   return adns_s_ok;
 }
 
+static int search_sortlist_sa(adns_state ads, const struct sockaddr *sa)
+{
+  const struct afinfo *ai = 0;
+
+  switch (sa->sa_family) {
+    case AF_INET: ai = &adns__inet_afinfo; break;
+    case AF_INET6: ai = &adns__inet6_afinfo; break;
+  }
+  assert(ai);
+
+  return search_sortlist(ads, sa->sa_family, ai->sockaddr_to_inaddr(sa));
+}
+
+static int dip_sockaddr(adns_state ads,
+			const struct sockaddr *sa,
+			const struct sockaddr *sb)
+{
+  if (!ads->sortlist) return 0;
+  return search_sortlist_sa(ads, sa) > search_sortlist_sa(ads, sb);
+}
+
 static int di_addr(adns_state ads, const void *datap_a, const void *datap_b) {
   const adns_rr_addr *ap= datap_a, *bp= datap_b;
 
-  assert(ap->addr.sa.sa_family == AF_INET);
-  return dip_inaddr(ads, ap->addr.inet.sin_addr, bp->addr.inet.sin_addr);
+  return dip_sockaddr(ads, &ap->addr.sa, &bp->addr.sa);
 }
 
 static int div_addr(void *context, const void *datap_a, const void *datap_b) {
@@ -539,11 +585,7 @@ static int dip_hostaddr(adns_state ads,
   if (ap->astatus != bp->astatus) return ap->astatus;
   if (ap->astatus) return 0;
 
-  assert(ap->addrs[0].addr.sa.sa_family == AF_INET);
-  assert(bp->addrs[0].addr.sa.sa_family == AF_INET);
-  return dip_inaddr(ads,
-		    ap->addrs[0].addr.inet.sin_addr,
-		    bp->addrs[0].addr.inet.sin_addr);
+  return dip_sockaddr(ads, &ap->addrs[0].addr.sa, &bp->addrs[0].addr.sa);
 }
 
 static int di_hostaddr(adns_state ads,
@@ -1271,6 +1313,7 @@ DEEP_TYPE(hinfo,  "HINFO", 0, intstrpair,pa_hinfo,   0,        cs_hinfo      ),
 DEEP_TYPE(mx_raw, "MX",   "raw",intstr,  pa_mx_raw,  di_mx_raw,cs_inthost    ),
 DEEP_TYPE(txt,    "TXT",   0,   manyistr,pa_txt,     0,        cs_txt        ),
 DEEP_TYPE(rp_raw, "RP",   "raw",strpair, pa_rp,      0,        cs_rp         ),
+FLAT_TYPE(aaaa,   "AAAA",  0,   in6addr, pa_in6addr, di_in6addr,cs_in6addr   ),
 XTRA_TYPE(srv_raw,"SRV",  "raw",srvraw , pa_srvraw,  di_srv,   cs_srvraw,
 	                                               qdpl_srv, postsort_srv),
 

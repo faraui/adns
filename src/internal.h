@@ -112,6 +112,22 @@ typedef struct {
   struct timeval now;
 } parseinfo;
 
+union gen_addr {
+  struct in_addr v4;
+  struct in6_addr v6;
+};
+
+typedef struct {
+  int af;
+  int width;
+  int delim;
+  void *(*sockaddr_to_inaddr)(struct sockaddr *sa);
+  void (*prefix_mask)(int len, union gen_addr *a);
+  int (*guess_len)(const union gen_addr *a);
+  int (*matchp)(const union gen_addr *addr,
+		const union gen_addr *base, const union gen_addr *mask);
+} afinfo;
+
 typedef struct typeinfo {
   adns_rrtype typekey;
   const char *rrtname;
@@ -333,11 +349,16 @@ struct adns__state {
     struct in_addr addr;
   } servers[MAXSERVERS];
   struct sortlist {
-    struct in_addr base, mask;
+    const afinfo *ai;
+    union gen_addr base, mask;
   } sortlist[MAXSORTLIST];
   char **searchlist;
   unsigned short rand48xsubi[3];
 };
+
+/* From addrfam.c: */
+
+extern const afinfo adns__inet_afinfo, adns__inet6_afinfo;
 
 /* From setup.c: */
 
