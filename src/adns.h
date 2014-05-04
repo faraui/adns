@@ -71,6 +71,23 @@
 extern "C" { /* I really dislike this - iwj. */
 #endif
 
+/* Whether to support address families other than IPv4 in responses which use
+ * the `adns_rr_addr' structure.  This is a source-compatibility issue: old
+ * clients may not expect to find address families other than AF_INET in
+ * their query results.  There's a separate binary compatibility issue to do
+ * with the size of the `adns_rr_addr' structure, but we'll assume you can
+ * cope with that because you have this header file.  Define
+ * `ADNS_FEATURE_IPV4ONLY' if you only want to see AF_INET addresses, or
+ * `ADNS_FEATURE_MANYAF' to allow multiple address families; the default is
+ * currently to stick with AF_INET only, but this is likely to change in a
+ * later release of ADNS.
+ */
+#if !defined(ADNS_FEATURE_IPV4ONLY) && !defined(ADNS_FEATURE_MANYAF)
+#  define ADNS_FEATURE_IPV4ONLY
+#elif defined(ADNS_FEATURE_IPV4ONLY) && defined(ADNS_FEATURE_MANYAF)
+#  error "Feature flags ADNS_FEATURE_IPV4ONLY and ..._MANYAF are incompatible"
+#endif
+
 /* All struct in_addr anywhere in adns are in NETWORK byte order. */
 
 typedef struct adns__state *adns_state;
@@ -101,12 +118,18 @@ typedef enum { /* In general, or together the desired flags: */
  adns_qf_quotefail_cname=0x00000080,/* refuse if quote-req chars in CNAME we go via */
  adns_qf_cname_loose=    0x00000100,/* allow refs to CNAMEs - without, get _s_cname */
  adns_qf_cname_forbid=   0x00000200,/* don't follow CNAMEs, instead give _s_cname */
+ adns_qf_ipv4_only=	 0x00000400,/* only ever return IPv4 addresses */
+ adns_qf_ipv6_ok=	 0x00000800,/* returning IPv6 addresses is acceptable */
+ adns_qf_ipv6_mapv4=	 0x00001800,/*  ... and IPv4 addresses should be v6-mapped */
+ adns_qf_ipv6_only=	 0x00002800,/*  ... and don't bother looking for IPv4 */
+ adns__qf_afmask=	 0x00003800,/* all the above flag bits */
  adns__qf_internalmask=  0x0ff00000
 } adns_queryflags;
 
 typedef enum {
  adns_rrt_typemask=  0x0ffff,
- adns__qtf_deref=    0x10000,/* dereference domains; perhaps get extra data */
+ adns_rrt_reprmask= 0xffffff,
+ adns__qtf_deref_bit=0x10000,/* internal version of ..._deref below */
  adns__qtf_mail822=  0x20000,/* return mailboxes in RFC822 rcpt field fmt   */
 
  adns_r_unknown=     0x40000,
@@ -126,6 +149,15 @@ typedef enum {
     * do that.
     *
     * Don't forget adns_qf_quoteok if that's what you want. */
+
+ adns__qtf_bigaddr=0x1000000,/* use the new larger sockaddr union */
+ adns__qtf_manyaf= 0x2000000,/* permitted to return multiple address families */
+
+ adns__qtf_deref=    adns__qtf_deref_bit|adns__qtf_bigaddr
+#ifdef ADNS_FEATURE_MANYAF
+		     |adns__qtf_manyaf
+#endif
+			    ,/* dereference domains; perhaps get extra data */
 
  adns_r_none=             0,
  		     
@@ -284,13 +316,27 @@ typedef enum {
  
 } adns_status;
 
+typedef union {
+  struct sockaddr sa;
+  struct sockaddr_in inet;
+} adns_sockaddr_v4only;
+
+typedef union {
+  struct sockaddr sa;
+  struct sockaddr_in inet;
+  struct sockaddr_in6 inet6;
+  char adns__padding[240]; /* Good idea?  I'm inclined to think not. */
+} adns_sockaddr;
+
 typedef struct {
   int len;
-  union {
-    struct sockaddr sa;
-    struct sockaddr_in inet;
-  } addr;
+  adns_sockaddr addr;
 } adns_rr_addr;
+
+typedef struct {
+  int len;
+  adns_sockaddr_v4only addr;
+} adns_rr_addr_v4only;
 
 typedef struct {
   char *host;

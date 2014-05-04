@@ -104,18 +104,21 @@ static void query_submit(adns_state ads, adns_query qu,
   qu->id= id;
   qu->query_dglen= qu->vb.used;
   memcpy(qu->query_dgram,qu->vb.buf,qu->vb.used);
-  
-  adns__query_send(qu,now);
+
+  if (typei->query_send && !(qu->flags & adns__qf_senddirect))
+    typei->query_send(qu,now);
+  else
+    adns__query_send(qu, now);
 }
 
 adns_status adns__internal_submit(adns_state ads, adns_query *query_r,
-				  const typeinfo *typei, vbuf *qumsg_vb,
-				  int id,
+				  const typeinfo *typei, adns_rrtype type,
+				  vbuf *qumsg_vb, int id,
 				  adns_queryflags flags, struct timeval now,
 				  const qcontext *ctx) {
   adns_query qu;
 
-  qu= query_alloc(ads,typei,typei->typekey,flags,now);
+  qu= query_alloc(ads,typei,type,flags,now);
   if (!qu) { adns__vbuf_free(qumsg_vb); return adns_s_nomemory; }
   *query_r= qu;
 
@@ -221,6 +224,9 @@ int adns_submit(adns_state ads,
   const char *p;
 
   adns__consistency(ads,0,cc_entex);
+
+  if (!(type & adns__qtf_bigaddr) || !(type & adns__qtf_manyaf))
+    flags = (flags & ~adns__qf_afmask) | adns_qf_ipv4_only;
 
   typei= adns__findtype(type);
   if (!typei) return ENOSYS;
@@ -358,6 +364,7 @@ static void *alloc_common(adns_query qu, size_t sz) {
   an= malloc(MEM_ROUND(MEM_ROUND(sizeof(*an)) + sz));
   if (!an) return 0;
   LIST_LINK_TAIL(qu->allocations,an);
+  an->sz = sz;
   return (byte*)an + MEM_ROUND(sizeof(*an));
 }
 
@@ -379,6 +386,18 @@ void *adns__alloc_preserved(adns_query qu, size_t sz) {
   if (!rv) return 0;
   qu->preserved_allocd += sz;
   return rv;
+}
+
+void adns__free_interim(adns_query qu, void *p) {
+  allocnode *an;
+  size_t sz;
+
+  if (!p) return;
+  an = (allocnode *)((byte *)p - MEM_ROUND(sizeof(allocnode)));
+  sz = MEM_ROUND(an->sz);
+  LIST_UNLINK(qu->allocations, an);
+  free(an);
+  qu->interim_allocd -= sz;
 }
 
 void *adns__alloc_mine(adns_query qu, size_t sz) {
@@ -421,7 +440,7 @@ void *adns__alloc_final(adns_query qu, size_t sz) {
   return rp;
 }
 
-static void cancel_children(adns_query qu) {
+void adns__cancel_children(adns_query qu) {
   adns_query cqu, ncqu;
 
   for (cqu= qu->children.head; cqu; cqu= ncqu) {
@@ -432,7 +451,7 @@ static void cancel_children(adns_query qu) {
 
 void adns__reset_preserved(adns_query qu) {
   assert(!qu->final_allocspace);
-  cancel_children(qu);
+  adns__cancel_children(qu);
   qu->answer->nrrs= 0;
   qu->answer->rrs.untyped= 0;
   qu->interim_allocd= qu->preserved_allocd;
@@ -441,7 +460,7 @@ void adns__reset_preserved(adns_query qu) {
 static void free_query_allocs(adns_query qu) {
   allocnode *an, *ann;
 
-  cancel_children(qu);
+  adns__cancel_children(qu);
   for (an= qu->allocations.head; an; an= ann) { ann= an->next; free(an); }
   LIST_INIT(qu->allocations);
   adns__vbuf_free(&qu->vb);
@@ -529,7 +548,7 @@ void adns__query_done(adns_query qu) {
   adns_answer *ans;
   adns_query parent;
 
-  cancel_children(qu);
+  adns__cancel_children(qu);
 
   qu->id= -1;
   ans= qu->answer;
@@ -542,7 +561,7 @@ void adns__query_done(adns_query qu) {
   }
 
   if (ans->nrrs && qu->typei->diff_needswap) {
-    if (!adns__vbuf_ensure(&qu->vb,qu->typei->rrsz)) {
+    if (!adns__vbuf_ensure(&qu->vb,ans->rrsz)) {
       adns__query_fail(qu,adns_s_nomemory);
       return;
     }

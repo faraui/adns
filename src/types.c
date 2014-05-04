@@ -24,12 +24,14 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
  */
 
+#include <stddef.h>
 #include <stdlib.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 #include "internal.h"
 
@@ -49,7 +51,8 @@
  * _txt                       (pa)
  * _inaddr                    (pa,cs,di, +search_sortlist, dip_genaddr)
  * _in6addr                   (pa,cs,di)
- * _addr                      (pa,di,csp,cs, +search_sortlist_sa, dip_sockaddr)
+ * _addr                      (pap,pa,di,csp,cs,qs,  +search_sortlist_sa,
+				dip_sockaddr, rrtypes)
  * _domain                    (pap)
  * _host_raw                  (pa)
  * _hostaddr                  (pap,pa,dip,di,mfp,mf,csp,cs +pap_findaddrs)
@@ -319,7 +322,7 @@ static adns_status pa_in6addr(const parseinfo *pai, int cbyte,
 
 static int di_in6addr(adns_state ads,
 		     const void *datap_a, const void *datap_b) {
-  return dip_genaddr(ads,AF_INET6,datap_a,AF_INET6,datap_b);
+  return dip_genaddr(ads,AF_INET6,datap_a,datap_b);
 }
 
 static adns_status cs_in6addr(vbuf *vb, const void *datap) {
@@ -332,25 +335,69 @@ static adns_status cs_in6addr(vbuf *vb, const void *datap) {
 }
 
 /*
- * _addr   (pa,di,csp,cs, +search_sortlist_sa, dip_sockaddr)
+ * _addr   (pap,pa,di,csp,cs,qs, +search_sortlist_sa, dip_sockaddr,
+ *		addr_rrtypes, addr_rrsz)
  */
+
+static adns_status pap_addr(const parseinfo *pai, int rrty, size_t rrsz,
+			    int *cbyte_io, int max, adns_rr_addr *storeto)
+{
+  const byte *dgram= pai->dgram;
+  int af, addrlen, salen;
+  struct in6_addr v6map;
+  const void *oaddr = dgram + *cbyte_io;
+  int avail = max - *cbyte_io;
+  int step = -1;
+  void *addrp = 0;
+
+  switch (rrty) {
+    case adns_r_a:
+      if (pai->qu->flags & adns_qf_ipv6_mapv4) {
+	if (avail < 4) return adns_s_invaliddata;
+	memset(v6map.s6_addr +  0, 0x00, 10);
+	memset(v6map.s6_addr + 10, 0xff,  2);
+	memcpy(v6map.s6_addr + 12, oaddr, 4);
+	oaddr = v6map.s6_addr; avail = sizeof(v6map.s6_addr);
+	if (step < 0) step = 4;
+	goto aaaa;
+      }
+      af = AF_INET; addrlen = 4;
+      addrp = &storeto->addr.inet.sin_addr;
+      salen = sizeof(storeto->addr.inet);
+      break;
+    case adns_r_aaaa:
+    aaaa:
+      af = AF_INET6; addrlen = 16;
+      addrp = storeto->addr.inet6.sin6_addr.s6_addr;
+      salen = sizeof(storeto->addr.inet6);
+      break;
+  }
+  assert(addrp);
+
+  assert(offsetof(adns_rr_addr, addr) + salen <= rrsz);
+  if (addrlen < avail) return adns_s_invaliddata;
+  if (step < 0) step = addrlen;
+  *cbyte_io += step;
+  memset(&storeto->addr, 0, salen);
+  storeto->len = salen;
+  storeto->addr.sa.sa_family = af;
+  memcpy(addrp, oaddr, addrlen);
+
+  return adns_s_ok;
+}
 
 static adns_status pa_addr(const parseinfo *pai, int cbyte,
 			   int max, void *datap) {
-  adns_rr_addr *storeto= datap;
-  const byte *dgram= pai->dgram;
-
-  if (max-cbyte != 4) return adns_s_invaliddata;
-  storeto->len= sizeof(storeto->addr.inet);
-  memset(&storeto->addr,0,sizeof(storeto->addr.inet));
-  storeto->addr.inet.sin_family= AF_INET;
-  memcpy(&storeto->addr.inet.sin_addr,dgram+cbyte,4);
+  int err = pap_addr(pai, pai->qu->answer->type & adns_rrt_typemask,
+		     pai->qu->answer->rrsz, &cbyte, max, datap);
+  if (err) return err;
+  if (cbyte != max) return adns_s_invaliddata;
   return adns_s_ok;
 }
 
 static int search_sortlist_sa(adns_state ads, const struct sockaddr *sa)
 {
-  const struct afinfo *ai = 0;
+  const afinfo *ai = 0;
 
   switch (sa->sa_family) {
     case AF_INET: ai = &adns__inet_afinfo; break;
@@ -382,14 +429,20 @@ static int div_addr(void *context, const void *datap_a, const void *datap_b) {
 }		     
 
 static adns_status csp_addr(vbuf *vb, const adns_rr_addr *rrp) {
-  const char *ia;
-  char buf[30];
+  char buf[128];
+  int err;
 
   switch (rrp->addr.inet.sin_family) {
   case AF_INET:
     CSP_ADDSTR("INET ");
-    ia= inet_ntoa(rrp->addr.inet.sin_addr); assert(ia);
-    CSP_ADDSTR(ia);
+    goto ntop;
+  case AF_INET6:
+    CSP_ADDSTR("INET6 ");
+    goto ntop;
+  ntop:
+    err= getnameinfo(&rrp->addr.sa, rrp->len, buf, sizeof(buf), 0, 0,
+		     NI_NUMERICHOST); assert(!err);
+    CSP_ADDSTR(buf);
     break;
   default:
     sprintf(buf,"AF=%u",rrp->addr.sa.sa_family);
@@ -403,6 +456,118 @@ static adns_status cs_addr(vbuf *vb, const void *datap) {
   const adns_rr_addr *rrp= datap;
 
   return csp_addr(vb,rrp);
+}
+
+#define ADDR_MAXRRTYPES 2
+
+static void addr_rrtypes(adns_state ads, adns_rrtype type,
+			 adns_queryflags qf,
+			 adns_rrtype *rrty, size_t *nrrty)
+{
+  size_t n = 0;
+  adns_rrtype qtf = type & adns__qtf_deref;
+
+  if ((qf & adns__qf_afmask) != adns_qf_ipv6_only)
+    rrty[n++] = adns_r_a | qtf;
+  if ((qf & adns__qf_afmask) != adns_qf_ipv4_only)
+    rrty[n++] = adns_r_aaaa | qtf;
+
+  *nrrty = n;
+}
+
+static size_t addr_rrsz(adns_query qu)
+{
+  return qu->answer->type & adns__qtf_bigaddr ?
+    sizeof(adns_rr_addr) : sizeof(adns_rr_addr_v4only);
+}
+
+static void icb_addr(adns_query parent, adns_query child)
+{
+  adns_state ads = parent->ads;
+  adns_answer *pans = parent->answer, *cans = child->answer;
+  struct timeval tvbuf;
+  const struct timeval *now = 0;
+  size_t prrsz, crrsz;
+  unsigned char *rrs;
+
+  /* Must handle CNAMEs correctly.  This gets very hairy if the answers we
+   * get are inconsistent.
+   */
+
+  if ((parent->flags & adns_qf_search) &&
+      cans->status == adns_s_nxdomain) {
+    if (parent->expires > child->expires) parent->expires = child->expires;
+    adns__cancel_children(parent);
+    adns__free_interim(parent, pans->rrs.bytes);
+    pans->rrs.bytes = 0; pans->nrrs = 0;
+    adns__must_gettimeofday(ads, &now, &tvbuf);
+    if (now) adns__search_next(ads, parent, *now);
+    return;
+  }
+
+  if (cans->status) {
+    adns__query_fail(parent, cans->status);
+    return;
+  }
+
+  assert(pans->rrsz == cans->rrsz);
+  prrsz = pans->rrsz*pans->nrrs;
+  crrsz = cans->rrsz*cans->nrrs;
+  rrs = adns__alloc_interim(parent, prrsz + crrsz);
+  if (!rrs) {
+    adns__query_fail(parent, adns_s_nomemory);
+    return;
+  }
+  if (prrsz) {
+    memcpy(rrs, pans->rrs.bytes, prrsz);
+    adns__free_interim(parent, pans->rrs.bytes);
+  }
+  memcpy(rrs + prrsz, cans->rrs.bytes, crrsz);
+
+  if (parent->expires > child->expires) parent->expires = child->expires;
+  pans->rrs.bytes = rrs;
+  pans->nrrs += cans->nrrs;
+
+  if (parent->children.head) LIST_LINK_TAIL(ads->childw, parent);
+  else adns__query_done(parent);
+}
+
+static void qs_addr(adns_query qu, struct timeval now)
+{
+  adns_rrtype rrty[ADDR_MAXRRTYPES];
+  int i, nrrty, err, id;
+  adns_query cqu;
+  adns_queryflags qf =
+    (qu->flags | adns__qf_senddirect) &
+    ~(adns_qf_search);
+  qcontext ctx;
+
+  addr_rrtypes(qu->ads, qu->answer->type, qu->flags, rrty, &nrrty);
+
+  if (!(qu->answer->type & adns__qtf_bigaddr))
+    qu->answer->rrsz = sizeof(adns_rr_addr_v4only);
+
+  /* This always makes child queries, even if there's only the one.  This
+   * seems wasteful, but there's only one case where it'd be safe -- namely
+   * IPv4-only -- and that's not the case I want to optimize.
+   */
+  memset(&ctx, 0, sizeof(ctx));
+  ctx.callback = icb_addr;
+  for (i = 0; i < nrrty; i++) {
+    err = adns__mkquery_frdgram(qu->ads, &qu->vb, &id, qu->query_dgram,
+				qu->query_dglen, DNS_HDRSIZE, rrty[i], qf);
+    if (err) goto x_error;
+    err = adns__internal_submit(qu->ads, &cqu, qu->typei, rrty[i],
+				&qu->vb, id, qf, now, &ctx);
+    if (err) goto x_error;
+    cqu->answer->rrsz = qu->answer->rrsz;
+    cqu->parent = qu;
+    LIST_LINK_TAIL_PART(qu->children, cqu,siblings.);
+  }
+  return;
+
+x_error:
+  adns__query_fail(qu, err);
 }
 
 /*
@@ -476,10 +641,17 @@ static adns_status pa_host_raw(const parseinfo *pai, int cbyte,
 
 static adns_status pap_findaddrs(const parseinfo *pai, adns_rr_hostaddr *ha,
 				 int *cbyte_io, int count, int dmstart) {
-  int rri, naddrs;
-  int type, class, rdlen, rdstart, ownermatched;
+  int rri, naddrs, j;
+  int type, class, rdlen, rdend, rdstart, ownermatched;
+  adns_rrtype rrty[ADDR_MAXRRTYPES];
+  size_t nrrty, addrsz;
   unsigned long ttl;
   adns_status st;
+
+  addr_rrtypes(pai->qu->ads, pai->qu->answer->type,
+	       pai->qu->flags, rrty, &nrrty);
+
+  addrsz = addr_rrsz(pai->qu);
   
   for (rri=0, naddrs=-1; rri<count; rri++) {
     st= adns__findrr_anychk(pai->qu, pai->serv, pai->dgram,
@@ -487,28 +659,32 @@ static adns_status pap_findaddrs(const parseinfo *pai, adns_rr_hostaddr *ha,
 			    &type, &class, &ttl, &rdlen, &rdstart,
 			    pai->dgram, pai->dglen, dmstart, &ownermatched);
     if (st) return st;
-    if (!ownermatched || class != DNS_CLASS_IN || type != adns_r_a) {
+    if (!ownermatched || class != DNS_CLASS_IN) {
       if (naddrs>0) break; else continue;
     }
     if (naddrs == -1) {
       naddrs= 0;
     }
-    if (!adns__vbuf_ensure(&pai->qu->vb, (naddrs+1)*sizeof(adns_rr_addr)))
+    for (j = 0; j < nrrty && type != (rrty[j] & adns_rrt_typemask); j++);
+    if (j >= nrrty) continue;
+    if (!adns__vbuf_ensure(&pai->qu->vb, (naddrs+1)*addrsz))
       R_NOMEM;
     adns__update_expires(pai->qu,ttl,pai->now);
-    st= pa_addr(pai, rdstart,rdstart+rdlen,
-		pai->qu->vb.buf + naddrs*sizeof(adns_rr_addr));
+    rdend = rdstart + rdlen;
+    st= pap_addr(pai, type, addrsz, &rdstart, rdend,
+		 (adns_rr_addr *)(pai->qu->vb.buf + naddrs*addrsz));
     if (st) return st;
+    if (rdstart != rdend) return adns_s_invaliddata;
     naddrs++;
   }
   if (naddrs >= 0) {
-    ha->addrs= adns__alloc_interim(pai->qu, naddrs*sizeof(adns_rr_addr));
+    ha->addrs= adns__alloc_interim(pai->qu, naddrs*addrsz);
     if (!ha->addrs) R_NOMEM;
-    memcpy(ha->addrs, pai->qu->vb.buf, naddrs*sizeof(adns_rr_addr));
+    memcpy(ha->addrs, pai->qu->vb.buf, naddrs*addrsz);
     ha->naddrs= naddrs;
     ha->astatus= adns_s_ok;
 
-    adns__isort(ha->addrs, naddrs, sizeof(adns_rr_addr), pai->qu->vb.buf,
+    adns__isort(ha->addrs, naddrs, addrsz, pai->qu->vb.buf,
 		div_addr, pai->ads);
   }
   return adns_s_ok;
@@ -524,8 +700,7 @@ static void icb_hostaddr(adns_query parent, adns_query child) {
   rrp->astatus= st;
   rrp->naddrs= (st>0 && st<=adns_s_max_tempfail) ? -1 : cans->nrrs;
   rrp->addrs= cans->rrs.addr;
-  adns__transfer_interim(child, parent, rrp->addrs,
-			 rrp->naddrs*sizeof(adns_rr_addr));
+  adns__transfer_interim(child, parent, rrp->addrs, rrp->naddrs*cans->rrsz);
 
   if (parent->children.head) {
     LIST_LINK_TAIL(ads->childw,parent);
@@ -576,6 +751,8 @@ static adns_status pap_hostaddr(const parseinfo *pai, int *cbyte_io,
   if (!(pai->qu->flags & adns_qf_cname_loose)) nflags |= adns_qf_cname_forbid;
   
   st= adns__internal_submit(pai->ads, &nqu, adns__findtype(adns_r_addr),
+			    (adns_r_addr & adns_rrt_reprmask) |
+			    (pai->qu->answer->type & ~adns_rrt_reprmask),
 			    &pai->qu->vb, id, nflags, pai->now, &ctx);
   if (st) return st;
 
@@ -614,10 +791,11 @@ static int di_hostaddr(adns_state ads,
 
 static void mfp_hostaddr(adns_query qu, adns_rr_hostaddr *rrp) {
   void *tablev;
-
+  size_t sz = qu->answer->type & adns__qtf_bigaddr ?
+    sizeof(adns_rr_addr) : sizeof(adns_rr_addr_v4only);
   adns__makefinal_str(qu,&rrp->host);
   tablev= rrp->addrs;
-  adns__makefinal_block(qu, &tablev, rrp->naddrs*sizeof(*rrp->addrs));
+  adns__makefinal_block(qu, &tablev, rrp->naddrs*sz);
   rrp->addrs= tablev;
 }
 
@@ -877,7 +1055,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart,
   ctx.callback= icb_ptr;
   memset(&ctx.info,0,sizeof(ctx.info));
   st= adns__internal_submit(pai->ads, &nqu, adns__findtype(ap->ai->rrtype),
-			    &pai->qu->vb, id,
+			    ap->ai->rrtype, &pai->qu->vb, id,
 			    adns_qf_quoteok_query, pai->now, &ctx);
   if (st) return st;
 
@@ -1330,14 +1508,15 @@ static void mf_flat(adns_query qu, void *data) { }
 #define FLAT_MEMB(memb) TYPESZ_M(memb), mf_flat, cs_##memb
 
 #define DEEP_TYPE(code,rrt,fmt,memb,parser,comparer,printer)	\
- { adns_r_##code, rrt,fmt,TYPESZ_M(memb), mf_##memb,		\
-      printer,parser,comparer, adns__qdpl_normal,0 }
+{ adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb),	\
+    mf_##memb, printer,parser,comparer, adns__qdpl_normal,0,0 }
 #define FLAT_TYPE(code,rrt,fmt,memb,parser,comparer,printer)	\
- { adns_r_##code, rrt,fmt,TYPESZ_M(memb), mf_flat,		\
-     printer,parser,comparer, adns__qdpl_normal,0 }
-#define XTRA_TYPE(code,rrt,fmt,memb,parser,comparer,printer,qdpl,postsort) \
- { adns_r_##code, rrt,fmt,TYPESZ_M(memb), mf_##memb,			   \
-    printer,parser,comparer,qdpl,postsort }
+{ adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb),	\
+     mf_flat, printer,parser,comparer, adns__qdpl_normal,0,0 }
+#define XTRA_TYPE(code,rrt,fmt,memb,parser,comparer,printer,		   \
+		  makefinal,qdpl,postsort,sender)			   \
+{ adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb), makefinal,	   \
+    printer,parser,comparer,qdpl,postsort,sender }
 
 static const typeinfo typeinfos[] = {
 /* Must be in ascending order of rrtype ! */
@@ -1354,14 +1533,15 @@ DEEP_TYPE(txt,    "TXT",   0,   manyistr,pa_txt,     0,        cs_txt        ),
 DEEP_TYPE(rp_raw, "RP",   "raw",strpair, pa_rp,      0,        cs_rp         ),
 FLAT_TYPE(aaaa,   "AAAA",  0,   in6addr, pa_in6addr, di_in6addr,cs_in6addr   ),
 XTRA_TYPE(srv_raw,"SRV",  "raw",srvraw , pa_srvraw,  di_srv,   cs_srvraw,
-	                                               qdpl_srv, postsort_srv),
+					 mf_srvraw, qdpl_srv, postsort_srv, 0),
 
-FLAT_TYPE(addr,   "A",  "addr", addr,    pa_addr,    di_addr,  cs_addr       ),
+XTRA_TYPE(addr,   "A",  "addr", addr,    pa_addr,    di_addr,  cs_addr,
+				       mf_flat, adns__qdpl_normal, 0, qs_addr),
 DEEP_TYPE(ns,     "NS", "+addr",hostaddr,pa_hostaddr,di_hostaddr,cs_hostaddr ),
 DEEP_TYPE(ptr,    "PTR","checked",str,   pa_ptr,     0,        cs_domain     ),
 DEEP_TYPE(mx,     "MX", "+addr",inthostaddr,pa_mx,   di_mx,    cs_inthostaddr),
 XTRA_TYPE(srv,    "SRV","+addr",srvha,   pa_srvha,   di_srv,   cs_srvha,
-          	                                       qdpl_srv, postsort_srv),
+					  mf_srvha, qdpl_srv, postsort_srv, 0),
 
 DEEP_TYPE(soa,    "SOA","822",  soa,     pa_soa,     0,        cs_soa        ),
 DEEP_TYPE(rp,     "RP", "822",  strpair, pa_rp,      0,        cs_rp         ),
@@ -1374,6 +1554,7 @@ const typeinfo *adns__findtype(adns_rrtype type) {
   const typeinfo *begin, *end, *mid;
 
   if (type & adns_r_unknown) return &typeinfo_unknown;
+  type &= adns_rrt_reprmask;
 
   begin= typeinfos;  end= typeinfos+(sizeof(typeinfos)/sizeof(typeinfo));
 

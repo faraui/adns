@@ -42,6 +42,7 @@ typedef unsigned char byte;
 
 #include <sys/time.h>
 
+#define ADNS_FEATURE_MANYAF
 #include "adns.h"
 #include "dlist.h"
 
@@ -90,6 +91,10 @@ typedef enum {
   rcode_notimp,
   rcode_refused
 } dns_rcode;
+
+enum {
+  adns__qf_senddirect = 0x00100000 /* don't call the `query_send' type hook */
+};
 
 /* Shared data structures */
 
@@ -194,6 +199,12 @@ typedef struct typeinfo {
    * them.  (This is really for the benefit of SRV's bizarre weighting
    * stuff.)  May be 0 to mean nothing needs to be done.
    */
+
+  void (*query_send)(adns_query qu, struct timeval now);
+  /* Send the query to nameservers, and hook it into the appropriate queue.
+   * Normal behaviour is to call adns__query_send, but this can be overridden
+   * for special effects.
+   */
 } typeinfo;
 
 adns_status adns__qdpl_normal(adns_state ads,
@@ -206,6 +217,7 @@ adns_status adns__qdpl_normal(adns_state ads,
 
 typedef struct allocnode {
   struct allocnode *next, *back;
+  size_t sz;
 } allocnode;
 
 union maxalign {
@@ -473,8 +485,8 @@ void adns__query_send(adns_query qu, struct timeval now);
 /* From query.c: */
 
 adns_status adns__internal_submit(adns_state ads, adns_query *query_r,
-				  const typeinfo *typei, vbuf *qumsg_vb,
-				  int id,
+				  const typeinfo *typei, adns_rrtype,
+				  vbuf *qumsg_vb, int id,
 				  adns_queryflags flags, struct timeval now,
 				  const qcontext *ctx);
 /* Submits a query (for internal use, called during external submits).
@@ -550,6 +562,10 @@ void adns__transfer_interim(adns_query from, adns_query to,
  * TTLs get inherited by their parents.
  */
 
+void adns__free_interim(adns_query qu, void *p);
+/* Forget about a block allocated by adns__alloc_interim.
+ */
+
 void *adns__alloc_mine(adns_query qu, size_t sz);
 /* Like _interim, but does not record the length for later
  * copying into the answer.  This just ensures that the memory
@@ -573,6 +589,7 @@ void adns__reset_preserved(adns_query qu);
 
 void adns__query_done(adns_query qu);
 void adns__query_fail(adns_query qu, adns_status stat);
+void adns__cancel_children(adns_query qu);
 
 /* From reply.c: */
 
