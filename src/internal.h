@@ -71,6 +71,9 @@ typedef unsigned char byte;
 #define DNS_INADDR_ARPA "in-addr", "arpa"
 #define DNS_IP6_ARPA "ip6", "arpa"
 
+#define STRINGIFY(x) REALLY_STRINGIFY(x)
+#define REALLY_STRINGIFY(x) #x
+
 #define MAX_POLLFDS  ADNS_POLLFDS_RECOMMENDED
 
 typedef enum {
@@ -126,13 +129,15 @@ typedef struct {
   int revcompwd;
   adns_rrtype rrtype;
   void *(*sockaddr_to_inaddr)(struct sockaddr *sa);
+  int (*sockaddr_equalp)(const struct sockaddr *sa,
+			 const struct sockaddr *sb);
   void (*prefix_mask)(int len, union gen_addr *a);
   int (*guess_len)(const union gen_addr *a);
   int (*matchp)(const union gen_addr *addr,
 		const union gen_addr *base, const union gen_addr *mask);
   int (*rev_parsecomp)(const char *p, size_t n);
   void (*rev_mkaddr)(union gen_addr *addr, const byte *ipv);
-  char *(*rev_mkname)(struct sockaddr *sa, char *buf);
+  char *(*rev_mkname)(const struct sockaddr *sa, char *buf);
 } afinfo;
 
 struct afinfo_addr { const afinfo *ai; union gen_addr addr; };
@@ -331,6 +336,8 @@ struct adns__query {
 
 struct query_queue { adns_query head, tail; };
 
+#define MAXUDP 2
+
 struct adns__state {
   adns_initflags iflags;
   adns_logcallbackfn *logfn;
@@ -338,7 +345,9 @@ struct adns__state {
   int configerrno;
   struct query_queue udpw, tcpw, childw, output;
   adns_query forallnext;
-  int nextid, udpsocket, tcpsocket;
+  int nextid, tcpsocket;
+  struct udpsocket { const afinfo *ai; int fd; } udpsocket[MAXUDP];
+  int nudp;
   vbuf tcpsend, tcprecv;
   int nservers, nsortlist, nsearchlist, searchndots, tcpserver, tcprecv_skip;
   enum adns__tcpstate {
@@ -354,9 +363,7 @@ struct adns__state {
   struct sigaction stdsigpipe;
   sigset_t stdsigmask;
   struct pollfd pollfds_buf[MAX_POLLFDS];
-  struct server {
-    struct in_addr addr;
-  } servers[MAXSERVERS];
+  adns_rr_addr servers[MAXSERVERS];
   struct sortlist {
     const afinfo *ai;
     union gen_addr base, mask;
@@ -375,6 +382,7 @@ int adns__setnonblock(adns_state ads, int fd); /* => errno value */
 
 /* From general.c: */
 
+const char *adns__sockaddr_ntoa(struct sockaddr *sa, size_t n);
 void adns__vlprintf(adns_state ads, const char *fmt, va_list al);
 void adns__lprintf(adns_state ads, const char *fmt,
 		   ...) PRINTFFORMAT(2,3);

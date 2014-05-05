@@ -250,9 +250,11 @@ static void query_usetcp(adns_query qu, struct timeval now) {
 }
 
 void adns__query_send(adns_query qu, struct timeval now) {
-  struct sockaddr_in servaddr;
-  int serv, r;
+  int serv, r, i;
   adns_state ads;
+  int fd = -1;
+  struct udpsocket *udp;
+  adns_rr_addr *addr;
 
   assert(qu->state == query_tosend);
   if ((qu->flags & adns_qf_usevc) || (qu->query_dglen > DNS_MAXUDP)) {
@@ -265,16 +267,17 @@ void adns__query_send(adns_query qu, struct timeval now) {
     return;
   }
 
-  serv= qu->udpnextserver;
-  memset(&servaddr,0,sizeof(servaddr));
-
   ads= qu->ads;
-  servaddr.sin_family= AF_INET;
-  servaddr.sin_addr= ads->servers[serv].addr;
-  servaddr.sin_port= htons(DNS_PORT);
+  serv= qu->udpnextserver;
+  addr= &ads->servers[serv];
+  for (i = 0; i < ads->nudp; i++) {
+    udp = &ads->udpsocket[i];
+    if (udp->ai->af == addr->addr.sa.sa_family) { fd = udp->fd; break; }
+  }
+  assert(fd >= 0);
   
-  r= sendto(ads->udpsocket,qu->query_dgram,qu->query_dglen,0,
-	    (const struct sockaddr*)&servaddr,sizeof(servaddr));
+  r= sendto(fd,qu->query_dgram,qu->query_dglen,0,
+	    &addr->addr.sa,addr->len);
   if (r<0 && errno == EMSGSIZE) {
     qu->retries= 0;
     query_usetcp(qu,now);

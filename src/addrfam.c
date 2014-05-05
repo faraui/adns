@@ -42,9 +42,18 @@
  */
 
 #define SIN(sa) ((struct sockaddr_in *)(sa))
+#define CSIN(sa) ((const struct sockaddr_in *)(sa))
 
 static void *inet_sockaddr_to_inaddr(struct sockaddr *sa)
   { return &SIN(sa)->sin_addr; }
+
+static int inet_sockaddr_equalp(const struct sockaddr *sa,
+				const struct sockaddr *sb)
+{
+  const struct sockaddr_in *sina = CSIN(sa), *sinb = CSIN(sb);
+  return (sina->sin_addr.s_addr == sinb->sin_addr.s_addr &&
+	  sina->sin_port == sinb->sin_port);
+}
 
 static void inet_prefix_mask(int len, union gen_addr *mask)
   { mask->v4.s_addr = htonl(!len ? 0 : 0xffffffff << (32 - len)); }
@@ -82,9 +91,9 @@ static void inet_rev_mkaddr(union gen_addr *addr, const byte *ipv)
 			  (ipv[1]<<8) | (ipv[0]));
 }
 
-static char *inet_rev_mkname(struct sockaddr *sa, char *buf)
+static char *inet_rev_mkname(const struct sockaddr *sa, char *buf)
 {
-  unsigned long a = ntohl(SIN(sa)->sin_addr.s_addr);
+  unsigned long a = ntohl(CSIN(sa)->sin_addr.s_addr);
   int i;
 
   for (i = 0; i < 4; i++) {
@@ -97,7 +106,8 @@ static char *inet_rev_mkname(struct sockaddr *sa, char *buf)
 
 const afinfo adns__inet_afinfo = {
   AF_INET, 32, '.', 4, 3, adns_r_a,
-  inet_sockaddr_to_inaddr, inet_prefix_mask, inet_guess_len, inet_matchp,
+  inet_sockaddr_to_inaddr, inet_sockaddr_equalp,
+  inet_prefix_mask, inet_guess_len, inet_matchp,
   inet_rev_parsecomp, inet_rev_mkaddr, inet_rev_mkname
 };
 
@@ -106,9 +116,21 @@ const afinfo adns__inet_afinfo = {
  */
 
 #define SIN6(sa) ((struct sockaddr_in6 *)(sa))
+#define CSIN6(sa) ((const struct sockaddr_in6 *)(sa))
 
 static void *inet6_sockaddr_to_inaddr(struct sockaddr *sa)
   { return &SIN6(sa)->sin6_addr; }
+
+static int inet6_sockaddr_equalp(const struct sockaddr *sa,
+				 const struct sockaddr *sb)
+{
+  const struct sockaddr_in6 *sin6a = CSIN6(sa), *sin6b = CSIN6(sb);
+  return (memcmp(sin6a->sin6_addr.s6_addr,
+		 sin6b->sin6_addr.s6_addr,
+		 sizeof(sin6a->sin6_addr.s6_addr)) == 0 &&
+	  sin6a->sin6_port == sin6b->sin6_port &&
+	  sin6a->sin6_scope_id == sin6b->sin6_scope_id);
+}
 
 static void inet6_prefix_mask(int len, union gen_addr *mask)
 {
@@ -156,9 +178,9 @@ static void inet6_rev_mkaddr(union gen_addr *addr, const byte *ipv)
     a[i] = (ipv[31-2*i] << 4) | (ipv[30-2*i] << 0);
 }
 
-static char *inet6_rev_mkname(struct sockaddr *sa, char *buf)
+static char *inet6_rev_mkname(const struct sockaddr *sa, char *buf)
 {
-  unsigned char *a = SIN6(sa)->sin6_addr.s6_addr + 16;
+  const unsigned char *a = CSIN6(sa)->sin6_addr.s6_addr + 16;
   unsigned c, y;
   int i, j;
 
@@ -177,6 +199,7 @@ static char *inet6_rev_mkname(struct sockaddr *sa, char *buf)
 
 const afinfo adns__inet6_afinfo = {
   AF_INET6, 128, ':', 32, 1, adns_r_aaaa,
-  inet6_sockaddr_to_inaddr, inet6_prefix_mask, inet6_guess_len, inet6_matchp,
+  inet6_sockaddr_to_inaddr, inet6_sockaddr_equalp,
+  inet6_prefix_mask, inet6_guess_len, inet6_matchp,
   inet6_rev_parsecomp, inet6_rev_mkaddr, inet6_rev_mkname
 };

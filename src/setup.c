@@ -41,24 +41,52 @@
 
 static void readconfig(adns_state ads, const char *filename, int warnmissing);
 
-static void addserver(adns_state ads, struct in_addr addr) {
+static const afinfo *const transport_aftab[] = {
+  &adns__inet_afinfo,
+  &adns__inet6_afinfo,
+  0
+};
+
+static const afinfo *find_afinfo(int af)
+{
   int i;
-  struct server *ss;
+
+  for (i = 0; transport_aftab[i]; i++)
+    if (transport_aftab[i]->af == af) return transport_aftab[i];
+  return 0;
+}
+
+static void addserver(adns_state ads, struct sockaddr *sa, int n) {
+  int i;
+  adns_rr_addr *ss;
+  const afinfo *ai;
+
+  ai = find_afinfo(sa->sa_family);
+  if (!ai) {
+    adns__diag(ads,-1,0,
+	       "nameserver %s for unknown address family %d ignored",
+	       adns__sockaddr_ntoa(sa, n), sa->sa_family);
+  }
   
   for (i=0; i<ads->nservers; i++) {
-    if (ads->servers[i].addr.s_addr == addr.s_addr) {
-      adns__debug(ads,-1,0,"duplicate nameserver %s ignored",inet_ntoa(addr));
+    if (ads->servers[i].addr.sa.sa_family == sa->sa_family &&
+	ai->sockaddr_equalp(sa, &ads->servers[i].addr.sa)) {
+      adns__debug(ads,-1,0,"duplicate nameserver %s ignored",
+		  adns__sockaddr_ntoa(sa, n));
       return;
     }
   }
   
   if (ads->nservers>=MAXSERVERS) {
-    adns__diag(ads,-1,0,"too many nameservers, ignoring %s",inet_ntoa(addr));
+    adns__diag(ads,-1,0,"too many nameservers, ignoring %s",
+	       adns__sockaddr_ntoa(sa, n));
     return;
   }
 
   ss= ads->servers+ads->nservers;
-  ss->addr= addr;
+  assert(n <= sizeof(ss->addr));
+  ss->len = n;
+  memcpy(&ss->addr, sa, n);
   ads->nservers++;
 }
 
@@ -105,14 +133,24 @@ static int nextword(const char **bufp_io, const char **word_r, int *l_r) {
 
 static void ccf_nameserver(adns_state ads, const char *fn,
 			   int lno, const char *buf) {
-  struct in_addr ia;
-  
-  if (!inet_aton(buf,&ia)) {
-    configparseerr(ads,fn,lno,"invalid nameserver address `%s'",buf);
+  struct addrinfo *ai, ai_hint = { 0 };
+  int err;
+
+  ai_hint.ai_family = AF_UNSPEC;
+  ai_hint.ai_socktype = SOCK_DGRAM;
+  ai_hint.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV;
+
+  err = getaddrinfo(buf, STRINGIFY(DNS_PORT), &ai_hint, &ai);
+  if (err) {
+    configparseerr(ads,fn,lno,"invalid nameserver address `%s' (%s)",
+		   buf, gai_strerror(err));
     return;
   }
-  adns__debug(ads,-1,0,"using nameserver %s",inet_ntoa(ia));
-  addserver(ads,ia);
+
+  adns__debug(ads,-1,0,"using nameserver %s",
+	      adns__sockaddr_ntoa(ai->ai_addr, ai->ai_addrlen));
+  addserver(ads, ai->ai_addr, ai->ai_addrlen);
+  freeaddrinfo(ai);
 }
 
 static void ccf_search(adns_state ads, const char *fn,
@@ -534,7 +572,8 @@ static int init_begin(adns_state *ads_r, adns_initflags flags,
   LIST_INIT(ads->output);
   ads->forallnext= 0;
   ads->nextid= 0x311f;
-  ads->udpsocket= ads->tcpsocket= -1;
+  ads->nudp= 0;
+  ads->tcpsocket= -1;
   adns__vbuf_init(&ads->tcpsend);
   adns__vbuf_init(&ads->tcprecv);
   ads->tcprecv_skip= 0;
@@ -554,28 +593,46 @@ static int init_begin(adns_state *ads_r, adns_initflags flags,
 }
 
 static int init_finish(adns_state ads) {
-  struct in_addr ia;
+  struct sockaddr_in sin;
   struct protoent *proto;
+  struct udpsocket *udp;
+  int i, j;
   int r;
   
   if (!ads->nservers) {
     if (ads->logfn && ads->iflags & adns_if_debug)
-      adns__lprintf(ads,"adns: no nameservers, using localhost\n");
-    ia.s_addr= htonl(INADDR_LOOPBACK);
-    addserver(ads,ia);
+      adns__lprintf(ads,"adns: no nameservers, using IPv4 localhost\n");
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_port = htons(DNS_PORT);
+    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addserver(ads,(struct sockaddr *)&sin, sizeof(sin));
   }
 
   proto= getprotobyname("udp"); if (!proto) { r= ENOPROTOOPT; goto x_free; }
-  ads->udpsocket= socket(AF_INET,SOCK_DGRAM,proto->p_proto);
-  if (ads->udpsocket<0) { r= errno; goto x_free; }
+  ads->nudp = 0;
+  for (i = 0; i < ads->nservers; i++) {
+    for (j = 0; j < ads->nudp; j++) {
+      if (ads->udpsocket[j].ai->af == ads->servers[i].addr.sa.sa_family)
+	goto afmatch;
+    }
 
-  r= adns__setnonblock(ads,ads->udpsocket);
-  if (r) { r= errno; goto x_closeudp; }
+    assert(ads->nudp < MAXUDP);
+    udp = &ads->udpsocket[ads->nudp];
+    udp->ai = find_afinfo(ads->servers[i].addr.sa.sa_family);
+    assert(udp->ai);
+    udp->fd = socket(udp->ai->af,SOCK_DGRAM,proto->p_proto);
+    if (udp->fd < 0) { r= errno; goto x_free; }
+    r= adns__setnonblock(ads,udp->fd);
+    if (r) { r= errno; goto x_closeudp; }
+    ads->nudp++;
+
+  afmatch:;
+  }
   
   return 0;
 
  x_closeudp:
-  close(ads->udpsocket);
+  for (j = 0; j < ads->nudp; j++) close(ads->udpsocket[j].fd);
  x_free:
   free(ads);
   return r;
@@ -682,6 +739,7 @@ int adns_init_logfn(adns_state *newstate_r, adns_initflags flags,
 }
 
 void adns_finish(adns_state ads) {
+  int i;
   adns__consistency(ads,0,cc_entex);
   for (;;) {
     if (ads->udpw.head) adns_cancel(ads->udpw.head);
@@ -690,7 +748,7 @@ void adns_finish(adns_state ads) {
     else if (ads->output.head) adns_cancel(ads->output.head);
     else break;
   }
-  close(ads->udpsocket);
+  for (i = 0; i < ads->nudp; i++) close(ads->udpsocket[i].fd);
   if (ads->tcpsocket >= 0) close(ads->tcpsocket);
   adns__vbuf_free(&ads->tcpsend);
   adns__vbuf_free(&ads->tcprecv);

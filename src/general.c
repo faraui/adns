@@ -32,10 +32,21 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 #include "internal.h"
 
 /* Core diagnostic functions */
+
+const char *adns__sockaddr_ntoa(struct sockaddr *sa, size_t n)
+{
+  static char buf[64];
+  int err;
+
+  err = getnameinfo(sa, n, buf, sizeof(buf), 0, 0, NI_NUMERICHOST);
+  assert(!err);
+  return buf;
+}
 
 void adns__vlprintf(adns_state ads, const char *fmt, va_list al) {
   ads->logfn(ads,ads->logfndata,fmt,al);
@@ -83,7 +94,9 @@ void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
   }
   
   if (serv>=0) {
-    adns__lprintf(ads,"%sNS=%s",bef,inet_ntoa(ads->servers[serv].addr));
+    adns__lprintf(ads,"%sNS=%s",bef,
+		  adns__sockaddr_ntoa(&ads->servers[serv].addr.sa,
+				      ads->servers[serv].len));
     bef=", "; aft=")\n";
   }
 
