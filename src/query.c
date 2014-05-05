@@ -274,6 +274,8 @@ int adns_submit(adns_state ads,
   return r;
 }
 
+static const char *default_zone = "<magic>";
+
 int adns_submit_reverse_any(adns_state ads,
 			    const struct sockaddr *addr,
 			    const char *zone,
@@ -281,27 +283,39 @@ int adns_submit_reverse_any(adns_state ads,
 			    adns_queryflags flags,
 			    void *context,
 			    adns_query *query_r) {
-  const unsigned char *iaddr;
-  char *buf, *buf_free;
+  char *buf, *buf_free, *p;
   char shortbuf[100];
+  const afinfo *ai;
   int r, lreq;
 
   flags &= ~adns_qf_search;
 
-  if (addr->sa_family != AF_INET) return ENOSYS;
-  iaddr= (const unsigned char*)
-    &(((const struct sockaddr_in*)addr) -> sin_addr);
+  switch (addr->sa_family) {
+    case AF_INET:
+      ai = &adns__inet_afinfo;
+      if (zone == default_zone) zone = "in-addr.arpa";
+      break;
+    case AF_INET6:
+      ai = &adns__inet6_afinfo;
+      if (zone == default_zone) zone = "ip6.arpa";
+      break;
+    default:
+      return ENOSYS;
+  }
 
-  lreq= strlen(zone) + 4*4 + 1;
+  lreq= strlen(zone) + ai->nrevcomp*(ai->revcompwd + 1) + 1;
   if (lreq > sizeof(shortbuf)) {
-    buf= malloc(strlen(zone) + 4*4 + 1);
+    buf= malloc(lreq);
     if (!buf) return errno;
     buf_free= buf;
   } else {
     buf= shortbuf;
     buf_free= 0;
   }
-  sprintf(buf, "%d.%d.%d.%d.%s", iaddr[3], iaddr[2], iaddr[1], iaddr[0], zone);
+
+  p = ai->rev_mkname(addr, buf);
+  *p++ = '.';
+  strcpy(p, zone);
 
   r= adns_submit(ads,buf,type,flags,context,query_r);
   free(buf_free);
@@ -315,7 +329,7 @@ int adns_submit_reverse(adns_state ads,
 			void *context,
 			adns_query *query_r) {
   if (type != adns_r_ptr && type != adns_r_ptr_raw) return EINVAL;
-  return adns_submit_reverse_any(ads,addr,"in-addr.arpa",
+  return adns_submit_reverse_any(ads,addr,default_zone,
 				 type,flags,context,query_r);
 }
 

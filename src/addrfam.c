@@ -64,9 +64,41 @@ static int inet_matchp(const union gen_addr *addr,
 		       const union gen_addr *mask)
   { return (addr->v4.s_addr & mask->v4.s_addr) == base->v4.s_addr; }
 
+static int inet_rev_parsecomp(const char *p, size_t n)
+{
+  int i = 0;
+  if (n > 3) return -1;
+
+  while (n--) {
+    if ('0' <= *p && *p <= '9') i = 10*i + *p++ - '0';
+    else return -1;
+  }
+  return i;
+}
+
+static void inet_rev_mkaddr(union gen_addr *addr, const byte *ipv)
+{
+  addr->v4.s_addr = htonl((ipv[3]<<24) | (ipv[2]<<16) |
+			  (ipv[1]<<8) | (ipv[0]));
+}
+
+static char *inet_rev_mkname(struct sockaddr *sa, char *buf)
+{
+  unsigned long a = ntohl(SIN(sa)->sin_addr.s_addr);
+  int i;
+
+  for (i = 0; i < 4; i++) {
+    if (i) *buf++ = '.';
+    buf += sprintf(buf, "%d", (int)(a & 0xff));
+    a >>= 8;
+  }
+  return buf;
+}
+
 const afinfo adns__inet_afinfo = {
-  AF_INET, 32, '.',
-  inet_sockaddr_to_inaddr, inet_prefix_mask, inet_guess_len, inet_matchp
+  AF_INET, 32, '.', 4, 3, adns_r_a,
+  inet_sockaddr_to_inaddr, inet_prefix_mask, inet_guess_len, inet_matchp,
+  inet_rev_parsecomp, inet_rev_mkaddr, inet_rev_mkname
 };
 
 /*
@@ -106,7 +138,45 @@ static int inet6_matchp(const union gen_addr *addr,
   return 1;
 }
 
+static int inet6_rev_parsecomp(const char *p, size_t n)
+{
+  if (n != 1) return -1;
+  else if ('0' <= *p && *p <= '9') return *p - '0';
+  else if ('a' <= *p && *p <= 'f') return *p - 'a' + 10;
+  else if ('A' <= *p && *p <= 'F') return *p - 'a' + 10;
+  else return -1;
+}
+
+static void inet6_rev_mkaddr(union gen_addr *addr, const byte *ipv)
+{
+  unsigned char *a = addr->v6.s6_addr;
+  int i;
+
+  for (i = 0; i < 16; i++)
+    a[i] = (ipv[31-2*i] << 4) | (ipv[30-2*i] << 0);
+}
+
+static char *inet6_rev_mkname(struct sockaddr *sa, char *buf)
+{
+  unsigned char *a = SIN6(sa)->sin6_addr.s6_addr + 16;
+  unsigned c, y;
+  int i, j;
+
+  for (i = 0; i < 16; i++) {
+    c = *--a;
+    for (j = 0; j < 2; j++) {
+      if (i || j) *buf++ = '.';
+      y = c & 0xf;
+      if (y < 10) *buf++ = y + '0';
+      else *buf++ = y - 10 + 'a';
+      c >>= 4;
+    }
+  }
+  return buf;
+}
+
 const afinfo adns__inet6_afinfo = {
-  AF_INET6, 128, ':',
-  inet6_sockaddr_to_inaddr, inet6_prefix_mask, inet6_guess_len, inet6_matchp
+  AF_INET6, 128, ':', 32, 1, adns_r_aaaa,
+  inet6_sockaddr_to_inaddr, inet6_prefix_mask, inet6_guess_len, inet6_matchp,
+  inet6_rev_parsecomp, inet6_rev_mkaddr, inet6_rev_mkname
 };

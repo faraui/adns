@@ -69,6 +69,7 @@ typedef unsigned char byte;
 #define DNS_CLASS_IN 1
 
 #define DNS_INADDR_ARPA "in-addr", "arpa"
+#define DNS_IP6_ARPA "ip6", "arpa"
 
 #define MAX_POLLFDS  ADNS_POLLFDS_RECOMMENDED
 
@@ -121,12 +122,20 @@ typedef struct {
   int af;
   int width;
   int delim;
+  int nrevcomp;
+  int revcompwd;
+  adns_rrtype rrtype;
   void *(*sockaddr_to_inaddr)(struct sockaddr *sa);
   void (*prefix_mask)(int len, union gen_addr *a);
   int (*guess_len)(const union gen_addr *a);
   int (*matchp)(const union gen_addr *addr,
 		const union gen_addr *base, const union gen_addr *mask);
+  int (*rev_parsecomp)(const char *p, size_t n);
+  void (*rev_mkaddr)(union gen_addr *addr, const byte *ipv);
+  char *(*rev_mkname)(struct sockaddr *sa, char *buf);
 } afinfo;
+
+struct afinfo_addr { const afinfo *ai; union gen_addr addr; };
 
 typedef struct typeinfo {
   adns_rrtype typekey;
@@ -207,7 +216,7 @@ typedef struct {
   void *ext;
   void (*callback)(adns_query parent, adns_query child);
   union {
-    adns_rr_addr ptr_parent_addr;
+    struct afinfo_addr ptr_parent_addr;
     adns_rr_hostaddr *hostaddr;
   } info;
 } qcontext;
