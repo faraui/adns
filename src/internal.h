@@ -93,7 +93,8 @@ typedef enum {
 } dns_rcode;
 
 enum {
-  adns__qf_senddirect = 0x00100000 /* don't call the `query_send' type hook */
+  adns__qf_senddirect = 0x00100000,/* don't call the `query_send' type hook */
+  adns__qf_nosend     = 0x00200000 /* don't send the query when submitting */
 };
 
 /* Shared data structures */
@@ -133,7 +134,7 @@ typedef struct {
   int nrevcomp;
   int revcompwd;
   adns_rrtype rrtype;
-  void *(*sockaddr_to_inaddr)(struct sockaddr *sa);
+  const void *(*sockaddr_to_inaddr)(const struct sockaddr *sa);
   int (*sockaddr_equalp)(const struct sockaddr *sa,
 			 const struct sockaddr *sb);
   void (*prefix_mask)(int len, union gen_addr *a);
@@ -496,6 +497,10 @@ adns_status adns__internal_submit(adns_state ads, adns_query *query_r,
  * The query datagram should already have been assembled in qumsg_vb;
  * the memory for it is _taken over_ by this routine whether it
  * succeeds or fails (if it succeeds, the vbuf is reused for qu->vb).
+ *
+ * If adns__qf_nosend is set in flags, then the query is not sent: doing
+ * whatever is necessary to send the query and link it onto the appropriate
+ * queue is left as the caller's responsibility.
  *
  * *ctx is copied byte-for-byte into the query.
  *

@@ -105,7 +105,9 @@ static void query_submit(adns_state ads, adns_query qu,
   qu->query_dglen= qu->vb.used;
   memcpy(qu->query_dgram,qu->vb.buf,qu->vb.used);
 
-  if (typei->query_send && !(qu->flags & adns__qf_senddirect))
+  if (flags & adns__qf_nosend)
+    ;
+  else if (typei->query_send && !(flags & adns__qf_senddirect))
     typei->query_send(qu,now);
   else
     adns__query_send(qu, now);
@@ -118,7 +120,7 @@ adns_status adns__internal_submit(adns_state ads, adns_query *query_r,
 				  const qcontext *ctx) {
   adns_query qu;
 
-  qu= query_alloc(ads,typei,type,flags,now);
+  qu= query_alloc(ads,typei,type,flags & ~adns__qf_nosend,now);
   if (!qu) { adns__vbuf_free(qumsg_vb); return adns_s_nomemory; }
   *query_r= qu;
 

@@ -119,10 +119,11 @@ typedef enum { /* In general, or together the desired flags: */
  adns_qf_cname_loose=    0x00000100,/* allow refs to CNAMEs - without, get _s_cname */
  adns_qf_cname_forbid=   0x00000200,/* don't follow CNAMEs, instead give _s_cname */
  adns_qf_ipv4_only=	 0x00000400,/* only ever return IPv4 addresses */
- adns_qf_ipv6_ok=	 0x00000800,/* returning IPv6 addresses is acceptable */
- adns_qf_ipv6_mapv4=	 0x00001800,/*  ... and IPv4 addresses should be v6-mapped */
- adns_qf_ipv6_only=	 0x00002800,/*  ... and don't bother looking for IPv4 */
- adns__qf_afmask=	 0x00003800,/* all the above flag bits */
+ adns_qf_ipv6_only=	 0x00000800,/*  ... and don't bother looking for IPv4 */
+ adns_qf_ipv6_ok=	 0x00000c00,/* returning IPv6 addresses is acceptable */
+ adns_qf_domapv4=	 0x00001000,/*  ... any IPv4 addresses should be v6-mapped */
+ adns_qf_ipv6_mapv4=	 adns_qf_ipv6_ok|adns_qf_domapv4,
+ adns__qf_afmask=	 0x00001c00,/* all the above flag bits */
  adns__qf_internalmask=  0x0ff00000
 } adns_queryflags;
 

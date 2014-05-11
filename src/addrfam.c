@@ -44,8 +44,8 @@
 #define SIN(sa) ((struct sockaddr_in *)(sa))
 #define CSIN(sa) ((const struct sockaddr_in *)(sa))
 
-static void *inet_sockaddr_to_inaddr(struct sockaddr *sa)
-  { return &SIN(sa)->sin_addr; }
+static const void *inet_sockaddr_to_inaddr(const struct sockaddr *sa)
+  { return &CSIN(sa)->sin_addr; }
 
 static int inet_sockaddr_equalp(const struct sockaddr *sa,
 				const struct sockaddr *sb)
@@ -118,8 +118,8 @@ const afinfo adns__inet_afinfo = {
 #define SIN6(sa) ((struct sockaddr_in6 *)(sa))
 #define CSIN6(sa) ((const struct sockaddr_in6 *)(sa))
 
-static void *inet6_sockaddr_to_inaddr(struct sockaddr *sa)
-  { return &SIN6(sa)->sin6_addr; }
+static const void *inet6_sockaddr_to_inaddr(const struct sockaddr *sa)
+  { return &CSIN6(sa)->sin6_addr; }
 
 static int inet6_sockaddr_equalp(const struct sockaddr *sa,
 				 const struct sockaddr *sb)
