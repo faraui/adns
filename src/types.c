@@ -482,7 +482,7 @@ static size_t addr_rrsz(adns_query qu)
     sizeof(adns_rr_addr) : sizeof(adns_rr_addr_v4only);
 }
 
-static adns_status append_addrs(adns_query qu, size_t rrsz,
+static adns_status append_addrs(adns_query qu, adns_query from, size_t rrsz,
 				adns_rr_addr **dp, int *dlen,
 				const adns_rr_addr *sp, int slen)
 {
@@ -496,6 +496,7 @@ static adns_status append_addrs(adns_query qu, size_t rrsz,
   memcpy(p + drrsz, sp, srrsz);
   *dlen += slen;
   *dp = (adns_rr_addr *)p;
+  if (from && qu->expires > from->expires) qu->expires = from->expires;
   return adns_s_ok;
 }
 
@@ -528,12 +529,10 @@ static void icb_addr(adns_query parent, adns_query child)
   }
 
   assert(pans->rrsz == cans->rrsz);
-  err = append_addrs(parent, pans->rrsz,
+  err = append_addrs(parent, child, pans->rrsz,
 		     &pans->rrs.addr, &pans->nrrs,
 		     cans->rrs.addr, cans->nrrs);
   if (err) { adns__query_fail(parent, err); return; }
-
-  if (parent->expires > child->expires) parent->expires = child->expires;
 
   if (parent->children.head) LIST_LINK_TAIL(ads->childw, parent);
   else if (!pans->nrrs) adns__query_fail(parent, adns_s_nodata);
@@ -724,7 +723,7 @@ static adns_status pap_findaddrs(const parseinfo *pai, adns_rr_hostaddr *ha,
     naddrs++;
   }
   if (naddrs > 0) {
-    st = append_addrs(pai->qu, addrsz, &ha->addrs, &ha->naddrs,
+    st = append_addrs(pai->qu, 0, addrsz, &ha->addrs, &ha->naddrs,
 		      (const adns_rr_addr *)pai->qu->vb.buf, naddrs);
     if (st) return st;
     ha->astatus= adns_s_ok;
@@ -749,8 +748,7 @@ static void icb_hostaddr(adns_query parent, adns_query child) {
 
   if (st) goto done;
   assert(addrsz == cans->rrsz);
-  if (parent->expires > child->expires) parent->expires = child->expires;
-  st = append_addrs(parent, addrsz,
+  st = append_addrs(parent, child, addrsz,
 		    &rrp->addrs, &rrp->naddrs,
 		    cans->rrs.addr, cans->nrrs);
   if (st) goto done;
