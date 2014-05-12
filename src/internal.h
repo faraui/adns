@@ -94,7 +94,10 @@ typedef enum {
 
 enum {
   adns__qf_senddirect = 0x00100000,/* don't call the `query_send' type hook */
-  adns__qf_nosend     = 0x00200000 /* don't send the query when submitting */
+  adns__qf_nosend     = 0x00200000,/* don't send the query when submitting */
+  adns__qf_addr_answer= 0x01000000,/* addr query received an answer */
+  adns__qf_addr_cnhack= 0x02000000,/* addr query found cname inconsistency */
+  adns__qf_addr_cname = 0x04000000 /* addr subquery performed on cname */
 };
 
 /* Shared data structures */

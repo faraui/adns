@@ -339,6 +339,27 @@ static adns_status cs_in6addr(vbuf *vb, const void *datap) {
  *		addr_rrtypes, addr_rrsz)
  */
 
+/* About CNAME handling in addr queries.
+ *
+ * A user-level addr query is translated into a number of protocol-level
+ * queries, and its job is to reassemble the results.  This gets tricky if
+ * the answers aren't consistent.  In particular, if the answers report
+ * inconsistent indirection via CNAME records (e.g., different CNAMEs, or
+ * some indirect via a CNAME, and some don't) then we have trouble.
+ *
+ * Once we've received an answer, even if it was NODATA, we set
+ * adns__qf_addr_answer on the parent query.  This will let us detect a
+ * conflict between a no-CNAME-with-NODATA reply and a subsequent CNAME.
+ *
+ * If we detect a conflict of any kind, then at least one answer came back
+ * with a CNAME record, so we pick the first such answer (somewhat
+ * arbitrarily) as being the `right' canonical name, and set this in the
+ * parent query's answer->cname slot.  We discard address records from the
+ * wrong name.  And finally we cancel the outstanding child queries, and
+ * resubmit address queries for the address families we don't yet have, with
+ * adns__qf_addr_cname set so that we know that we're in the fixup state.
+ */
+
 static adns_status pap_addr(const parseinfo *pai, int rrty, size_t rrsz,
 			    int *cbyte_io, int max, adns_rr_addr *storeto)
 {
@@ -508,9 +529,8 @@ static void icb_addr(adns_query parent, adns_query child)
   adns_status err;
   const struct timeval *now = 0;
 
-  /* Must handle CNAMEs correctly.  This gets very hairy if the answers we
-   * get are inconsistent.
-   */
+  if (child->cname || parent->cname) {
+  }
 
   if ((parent->flags & adns_qf_search) &&
       cans->status == adns_s_nxdomain) {
