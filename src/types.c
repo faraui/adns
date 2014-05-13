@@ -485,9 +485,21 @@ static void addr_rrtypes(adns_state ads, adns_rrtype type,
 {
   size_t n = 0;
   adns_rrtype qtf = type & adns__qtf_deref;
+  adns_queryflags permitaf = 0, hackaf = 0;
 
   if (!(type & adns__qtf_bigaddr) || !(type & adns__qtf_manyaf))
     qf = (qf & adns__qf_afmask) | adns_qf_ipv4_only;
+  else if (ads->iflags & adns_if_afmask) {
+    if (ads->iflags & adns_if_af_v4only) {
+      permitaf |= adns_qf_ipv4_only;
+      hackaf |= adns_qf_domapv4;
+    }
+    if (ads->iflags & adns_if_af_v6only)
+      permitaf |= adns_qf_ipv6_only;
+    if (qf & permitaf)
+      qf &= hackaf | permitaf | ~adns__qf_afmask;
+  }
+
 
   if (qf & adns_qf_ipv4_only) rrty[n++] = adns_r_a | qtf;
   if (qf & adns_qf_ipv6_only) rrty[n++] = adns_r_aaaa | qtf;

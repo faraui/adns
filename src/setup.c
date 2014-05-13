@@ -310,6 +310,19 @@ static void ccf_options(adns_state ads, const char *fn,
       }
       continue;
     }
+    if (l>=8 && !memcmp(word,"adns_af:",8)) {
+      if (!strcmp(word+8,"v4only"))
+	ads->iflags = (ads->iflags & ~adns_if_afmask) | adns_if_af_v4only;
+      else if (!strcmp(word+8,"v6only"))
+	ads->iflags = (ads->iflags & ~adns_if_afmask) | adns_if_af_v6only;
+      else if (!strcmp(word+8,"any"))
+	ads->iflags = (ads->iflags & ~adns_if_afmask);
+      else {
+	configparseerr(ads,fn,lno, "option adns_af has bad value `%s' "
+		       "(must be any, v4only or v6only", word+8);
+      }
+      continue;
+    }
     adns__diag(ads,-1,0,"%s:%d: unknown option `%.*s'", fn,lno, l,word);
   }
 }

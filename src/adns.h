@@ -104,7 +104,18 @@ typedef enum { /* In general, or together the desired flags: */
  adns_if_eintr=       0x0020,/* allow _wait and _synchronous to return EINTR */
  adns_if_nosigpipe=   0x0040,/* applic has SIGPIPE ignored, do not protect */
  adns_if_checkc_entex=0x0100,/* consistency checks on entry/exit to adns fns */
- adns_if_checkc_freq= 0x0300 /* consistency checks very frequently (slow!) */
+ adns_if_checkc_freq= 0x0300,/* consistency checks very frequently (slow!) */
+
+ adns_if_af_v4only=   0x0400,/* only return IPv4 addresses, given the choice */
+ adns_if_af_v6only=   0x0800,/* only return IPv6 addresses, ... */
+ adns_if_afmask=      adns_if_af_v4only|adns_if_af_v6only
+   /* Only set one of these.  They are policy flags, and overridden by the
+    * adns_af:... options in resolv.conf.  If the adns_qf_ipv... query
+    * flags are incompatible with these settings (in the sense that no
+    * address families are permitted at all) then the query flags take
+    * precedence; otherwise only records which satisfy all of the stated
+    * requirements are allowed.
+    */
 } adns_initflags;
 
 typedef enum { /* In general, or together the desired flags: */
@@ -555,6 +566,17 @@ int adns_init_logfn(adns_state *newstate_r, adns_initflags flags,
  *   Changes the consistency checking frequency; this overrides the
  *   setting of adns_if_check_entex, adns_if_check_freq, or neither,
  *   in the flags passed to adns_init.
+ *
+ *  adns_af:v4only
+ *  adns_af:v6only
+ *  adns_af:any
+ *   Controls whether ADNS looks for IPv4 (A records) and IPv6 (AAAA
+ *   records) addresses when it's trying to build a socket address.
+ *   The default is `any' which means to allow both.  The `sortlist'
+ *   directive can be used to control the relative preference of IPv4
+ *   and IPv6 addresses if both are returned for the same query.
+ *   These override the corresponding init flags (covered by
+ *   adns_if_afmask).
  * 
  * There are a number of environment variables which can modify the
  * behaviour of adns.  They take effect only if adns_init is used, and
