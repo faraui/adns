@@ -96,8 +96,7 @@ enum {
   adns__qf_senddirect = 0x00100000,/* don't call the `query_send' type hook */
   adns__qf_nosend     = 0x00200000,/* don't send the query when submitting */
   adns__qf_addr_answer= 0x01000000,/* addr query received an answer */
-  adns__qf_addr_cnhack= 0x02000000,/* addr query found cname inconsistency */
-  adns__qf_addr_cname = 0x04000000 /* addr subquery performed on cname */
+  adns__qf_addr_cname = 0x02000000 /* addr subquery performed on cname */
 };
 
 /* Shared data structures */
@@ -555,8 +554,7 @@ void *adns__alloc_preserved(adns_query qu, size_t sz);
  *  answer->cname and answer->owner are _preserved.
  */
 
-void adns__transfer_interim(adns_query from, adns_query to,
-			    void *block, size_t sz);
+void adns__transfer_interim(adns_query from, adns_query to, void *block);
 /* Transfers an interim allocation from one query to another, so that
  * the `to' query will have room for the data when we get to makefinal
  * and so that the free will happen when the `to' query is freed
