@@ -72,6 +72,8 @@ typedef unsigned char byte;
 #define DNS_INADDR_ARPA "in-addr", "arpa"
 #define DNS_IP6_ARPA "ip6", "arpa"
 
+#define ADDR_MAXRRTYPES 2
+
 #define STRINGIFY(x) REALLY_STRINGIFY(x)
 #define REALLY_STRINGIFY(x) #x
 
@@ -292,6 +294,13 @@ struct adns__query {
   unsigned long udpsent; /* bitmap indexed by server */
   struct timeval timeout;
   time_t expires; /* Earliest expiry time of any record we used. */
+
+  union {
+    struct {
+      size_t nrrty, onrrty;
+      adns_rrtype rrty[ADDR_MAXRRTYPES];
+    } addr;
+  } t;					/* type-specific state */
 
   qcontext ctx;
 

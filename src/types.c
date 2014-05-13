@@ -479,8 +479,6 @@ static adns_status cs_addr(vbuf *vb, const void *datap) {
   return csp_addr(vb,rrp);
 }
 
-#define ADDR_MAXRRTYPES 2
-
 static void addr_rrtypes(adns_state ads, adns_rrtype type,
 			 adns_queryflags qf,
 			 adns_rrtype *rrty, size_t *nrrty)
@@ -524,8 +522,7 @@ static adns_status append_addrs(adns_query qu, adns_query from, size_t rrsz,
 static void icb_addr(adns_query parent, adns_query child);
 
 static void addr_subqueries(adns_query qu, struct timeval now,
-			    const byte *qd_dgram, int qd_dglen,
-			    const adns_rrtype *rrty, size_t nrrty)
+			    const byte *qd_dgram, int qd_dglen)
 {
   int i, err, id;
   adns_query cqu;
@@ -543,11 +540,12 @@ static void addr_subqueries(adns_query qu, struct timeval now,
    */
   memset(&ctx, 0, sizeof(ctx));
   ctx.callback = icb_addr;
-  for (i = 0; i < nrrty; i++) {
-    err = adns__mkquery_frdgram(qu->ads, &qu->vb, &id, qd_dgram,
-				qd_dglen, DNS_HDRSIZE, rrty[i], qf);
+  qu->t.addr.onrrty = qu->t.addr.nrrty;
+  for (i = 0; i < qu->t.addr.nrrty; i++) {
+    err = adns__mkquery_frdgram(qu->ads, &qu->vb, &id, qd_dgram, qd_dglen,
+				DNS_HDRSIZE, qu->t.addr.rrty[i], qf);
     if (err) goto x_error;
-    err = adns__internal_submit(qu->ads, &cqu, qu->typei, rrty[i],
+    err = adns__internal_submit(qu->ads, &cqu, qu->typei, qu->t.addr.rrty[i],
 				&qu->vb, id, qf, now, &ctx);
     if (err) goto x_error;
     cqu->answer->rrsz = qu->answer->rrsz;
@@ -579,20 +577,24 @@ static adns_status addr_submit(adns_query parent, adns_query *query_r,
    */
 
   adns_state ads = parent->ads;
+  adns_query qu;
   adns_status err;
   adns_rrtype type =
     (adns_r_addr & adns_rrt_reprmask) |
     (parent->answer->type & ~adns_rrt_reprmask);
 
-  err = adns__internal_submit(ads, query_r, adns__findtype(adns_r_addr),
+  err = adns__internal_submit(ads, &qu, adns__findtype(adns_r_addr),
 			      type, qumsg_vb, id, flags | adns__qf_nosend,
 			      now, ctx);
   if (err) return err;
 
-  (*query_r)->parent = parent;
-  LIST_LINK_TAIL_PART(parent->children, *query_r, siblings.);
-  addr_subqueries(*query_r, now, parent->query_dgram,
-		  parent->query_dglen, rrty, nrrty);
+  qu->parent = parent;
+  LIST_LINK_TAIL_PART(parent->children, qu, siblings.);
+
+  memcpy(qu->t.addr.rrty, rrty, nrrty*sizeof(*rrty));
+  qu->t.addr.nrrty = nrrty;
+  addr_subqueries(qu, now, parent->query_dgram, parent->query_dglen);
+  *query_r = qu;
   return adns_s_ok;
 }
 
@@ -607,6 +609,16 @@ static adns_status copy_cname_from_child(adns_query parent, adns_query child)
   return adns_s_ok;
 }
 
+static void done_addr_type(adns_query qu, adns_rrtype type)
+{
+  size_t i;
+
+  for (i = 0; i < qu->t.addr.nrrty && type != qu->t.addr.rrty[i]; i++);
+  assert(i < qu->t.addr.nrrty);
+  qu->t.addr.rrty[i] = qu->t.addr.rrty[--qu->t.addr.nrrty];
+  qu->t.addr.rrty[qu->t.addr.nrrty] = type;
+}
+
 static void icb_addr(adns_query parent, adns_query child)
 {
   adns_state ads = parent->ads;
@@ -614,11 +626,7 @@ static void icb_addr(adns_query parent, adns_query child)
   struct timeval tvbuf;
   adns_status err;
   const struct timeval *now = 0;
-  adns_rrtype rrty[ADDR_MAXRRTYPES], ty;
-  byte *p;
-  adns_rr_addr *a;
-  int i, j, id;
-  size_t nrrty;
+  int id;
 
   if (!(child->flags & adns__qf_addr_cname) &&
       (parent->flags & adns__qf_addr_answer) &&
@@ -638,6 +646,8 @@ static void icb_addr(adns_query parent, adns_query child)
       adns__transfer_interim(child, parent, cans->rrs.bytes);
       pans->rrs.bytes = cans->rrs.bytes;
       pans->nrrs = cans->nrrs;
+      parent->t.addr.nrrty = parent->t.addr.onrrty;
+      done_addr_type(parent, cans->type);
       err = copy_cname_from_child(parent, child); if (err) goto x_err;
     }
 
@@ -651,30 +661,12 @@ static void icb_addr(adns_query parent, adns_query child)
 			adns_r_addr, parent->flags);
     if (err) goto x_err;
 
-    /* Work out which address rrtypes we want but don't have. */
-    addr_rrtypes(ads, pans->type, parent->flags, rrty, &nrrty);
-    for (i = 0, p = pans->rrs.bytes; i < pans->nrrs; i++, p += pans->rrsz) {
-      a = (adns_rr_addr *)p;
-      ty = 0;
-      switch (a->addr.sa.sa_family) {
-	case AF_INET: ty = adns_r_a; break;
-	case AF_INET6: ty = adns_r_aaaa; break;
-      }
-      assert(ty);
-      for (j = 0; j < nrrty && ty != (rrty[j] & adns_rrt_typemask); j++);
-      if (j < nrrty) rrty[j] = rrty[--nrrty];
-    }
-    assert(nrrty);
-
     /* Now cancel the remaining children, and try again with the CNAME we've
      * settled on.
      */
     adns__cancel_children(parent);
     adns__must_gettimeofday(ads, &now, &tvbuf);
-    if (now) {
-      addr_subqueries(parent, *now, child->vb.buf,
-		      child->vb.used, rrty, nrrty);
-    }
+    if (now) addr_subqueries(parent, *now, child->vb.buf, child->vb.used);
     return;
   }
 
@@ -706,6 +698,7 @@ static void icb_addr(adns_query parent, adns_query child)
 		     &pans->rrs.addr, &pans->nrrs,
 		     cans->rrs.addr, cans->nrrs);
   if (err) goto x_err;
+  done_addr_type(parent, cans->type);
 
   if (parent->children.head) LIST_LINK_TAIL(ads->childw, parent);
   else if (!pans->nrrs) adns__query_fail(parent, adns_s_nodata);
@@ -719,12 +712,9 @@ x_err:
 
 static void qs_addr(adns_query qu, struct timeval now)
 {
-  adns_rrtype rrty[ADDR_MAXRRTYPES];
-  size_t nrrty;
-
-  addr_rrtypes(qu->ads, qu->answer->type, qu->flags, rrty, &nrrty);
-  addr_subqueries(qu, now, qu->query_dgram,
-		  qu->query_dglen, rrty, nrrty);
+  addr_rrtypes(qu->ads, qu->answer->type, qu->flags,
+	       qu->t.addr.rrty, &qu->t.addr.nrrty);
+  addr_subqueries(qu, now, qu->query_dgram, qu->query_dglen);
 }
 
 /*
