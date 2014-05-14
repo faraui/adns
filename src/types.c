@@ -608,7 +608,7 @@ static adns_status addr_submit(adns_query parent, adns_query *query_r,
 
   memcpy(qu->t.addr.rrty, rrty, nrrty*sizeof(*rrty));
   qu->t.addr.nrrty = nrrty;
-  addr_subqueries(qu, now, parent->query_dgram, parent->query_dglen);
+  addr_subqueries(qu, now, qu->query_dgram, qu->query_dglen);
   *query_r = qu;
   return adns_s_ok;
 }
