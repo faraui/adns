@@ -69,7 +69,7 @@ $(ALL_OBJS):	$(srcdir)/../src/adns.h $(srcdir)/../src/internal.h
 $(ALL_OBJS):	harness.h hsyscalls.h
 $(ADH_OBJS):	$(srcdir)/../client/adnshost.h
 
-%::	%.m4 hmacros.i4 hsyscalls.i4
+%::	%.m4 -I$(srcdir) hmacros.i4 hsyscalls.i4
 	$(M4) -P $< >$@-a.new
 	sed -e 's/hm_comma/,/g; s/hm_squote/'\''/g; /^[	 ]*$$/d' <$@-a.new >$@-b.new
 	@mv -f $@-b.new $@; rm -f $@-a.new
