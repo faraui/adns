@@ -854,7 +854,6 @@ static void icb_hostaddr(adns_query parent, adns_query child) {
   size_t addrsz = addr_rrsz(parent);
 
   st= cans->status == adns_s_nodata ? adns_s_ok : cans->status;
-  rrp->astatus= st;
 
   if (st) goto done;
   assert(addrsz == cans->rrsz);
@@ -872,9 +871,10 @@ static void icb_hostaddr(adns_query parent, adns_query child) {
 done:
   if (st) {
     adns__free_interim(parent, rrp->addrs);
-    rrp->naddrs= (st>0 && st<=adns_s_max_tempfail) ? -1 : cans->nrrs;
+    rrp->naddrs= (st>0 && st<=adns_s_max_tempfail) ? -1 : 0;
   }
 
+  rrp->astatus= st;
   if (parent->children.head) {
     LIST_LINK_TAIL(ads->childw,parent);
   } else {
