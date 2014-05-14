@@ -222,7 +222,7 @@ adns_status adns_rr_info(adns_rrtype type,
 
   if (rrtname_r) *rrtname_r= typei->rrtname;
   if (fmtname_r) *fmtname_r= typei->fmtname;
-  if (len_r) *len_r= typei->rrsz;
+  if (len_r) *len_r= typei->getrrsz ? typei->getrrsz(type) : typei->rrsz;
 
   if (!datap) return adns_s_ok;
   

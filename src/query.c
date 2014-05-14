@@ -83,7 +83,7 @@ static adns_query query_alloc(adns_state ads,
   qu->answer->expires= -1;
   qu->answer->nrrs= 0;
   qu->answer->rrs.untyped= 0;
-  qu->answer->rrsz= typei->rrsz;
+  qu->answer->rrsz= typei->getrrsz ? typei->getrrsz(type) : typei->rrsz;
 
   return qu;
 }

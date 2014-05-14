@@ -616,6 +616,7 @@ static int init_finish(adns_state ads) {
     if (ads->logfn && ads->iflags & adns_if_debug)
       adns__lprintf(ads,"adns: no nameservers, using IPv4 localhost\n");
     memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
     sin.sin_port = htons(DNS_PORT);
     sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     addserver(ads,(struct sockaddr *)&sin, sizeof(sin));

@@ -51,7 +51,7 @@
  * _txt                       (pa)
  * _inaddr                    (pa,cs,di, +search_sortlist, dip_genaddr)
  * _in6addr                   (pa,cs,di)
- * _addr                      (pap,pa,di,csp,cs,qs,  +search_sortlist_sa,
+ * _addr                      (pap,pa,di,csp,cs,gsz,qs,  +search_sortlist_sa,
  *				dip_sockaddr, rrtypes)
  * _domain                    (pap)
  * _host_raw                  (pa)
@@ -335,8 +335,8 @@ static adns_status cs_in6addr(vbuf *vb, const void *datap) {
 }
 
 /*
- * _addr   (pap,pa,di,csp,cs,qs, +search_sortlist_sa, dip_sockaddr,
- *		addr_rrtypes, addr_rrsz)
+ * _addr   (pap,pa,di,csp,cs,gsz,qs, +search_sortlist_sa, dip_sockaddr,
+ *		addr_rrtypes)
  */
 
 /* About CNAME handling in addr queries.
@@ -487,6 +487,8 @@ static void addr_rrtypes(adns_state ads, adns_rrtype type,
   adns_rrtype qtf = type & adns__qtf_deref;
   adns_queryflags permitaf = 0, hackaf = 0;
 
+  if (!(qf & (adns_qf_ipv4_only | adns_qf_ipv6_only)))
+    qf |= adns_qf_ipv4_only | adns_qf_ipv6_only;
   if (!(type & adns__qtf_bigaddr) || !(type & adns__qtf_manyaf))
     qf = (qf & adns__qf_afmask) | adns_qf_ipv4_only;
   else if (ads->iflags & adns_if_afmask) {
@@ -500,16 +502,15 @@ static void addr_rrtypes(adns_state ads, adns_rrtype type,
       qf &= hackaf | permitaf | ~adns__qf_afmask;
   }
 
-
   if (qf & adns_qf_ipv4_only) rrty[n++] = adns_r_a | qtf;
   if (qf & adns_qf_ipv6_only) rrty[n++] = adns_r_aaaa | qtf;
 
   *nrrty = n;
 }
 
-static size_t addr_rrsz(adns_query qu)
+static int gsz_addr(adns_rrtype type)
 {
-  return qu->answer->type & adns__qtf_bigaddr ?
+  return type & adns__qtf_bigaddr ?
     sizeof(adns_rr_addr) : sizeof(adns_rr_addr_v4only);
 }
 
@@ -545,9 +546,6 @@ static void addr_subqueries(adns_query qu, struct timeval now,
     (qu->flags | adns__qf_senddirect) &
     ~(adns_qf_search);
   qcontext ctx;
-
-  if (!(qu->answer->type & adns__qtf_bigaddr))
-    qu->answer->rrsz = sizeof(adns_rr_addr_v4only);
 
   /* This always makes child queries, even if there's only the one.  This
    * seems wasteful, but there's only one case where it'd be safe -- namely
@@ -854,7 +852,7 @@ static void icb_hostaddr(adns_query parent, adns_query child) {
   adns_rr_hostaddr *rrp= child->ctx.info.hostaddr;
   adns_state ads= parent->ads;
   adns_status st;
-  size_t addrsz = addr_rrsz(parent);
+  size_t addrsz = gsz_addr(parent->answer->type);
 
   st= cans->status == adns_s_nodata ? adns_s_ok : cans->status;
 
@@ -895,7 +893,7 @@ static adns_status pap_hostaddr(const parseinfo *pai, int *cbyte_io,
   adns_queryflags nflags;
   adns_rrtype rrty[ADDR_MAXRRTYPES];
   size_t nrrty;
-  size_t addrsz = addr_rrsz(pai->qu);
+  size_t addrsz = gsz_addr(pai->qu->answer->type);
 
   dmstart= cbyte= *cbyte_io;
   st= pap_domain(pai, &cbyte, max, &rrp->host,
@@ -1688,14 +1686,14 @@ static void mf_flat(adns_query qu, void *data) { }
 
 #define DEEP_TYPE(code,rrt,fmt,memb,parser,comparer,printer)	\
 { adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb),	\
-    mf_##memb, printer,parser,comparer, adns__qdpl_normal,0,0 }
+    mf_##memb, printer,parser,comparer, adns__qdpl_normal,0,0,0 }
 #define FLAT_TYPE(code,rrt,fmt,memb,parser,comparer,printer)	\
 { adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb),	\
-     mf_flat, printer,parser,comparer, adns__qdpl_normal,0,0 }
+    mf_flat, printer,parser,comparer, adns__qdpl_normal,0,0,0 }
 #define XTRA_TYPE(code,rrt,fmt,memb,parser,comparer,printer,		   \
-		  makefinal,qdpl,postsort,sender)			   \
+		  makefinal,qdpl,postsort,getrrsz,sender)		   \
 { adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb), makefinal,	   \
-    printer,parser,comparer,qdpl,postsort,sender }
+    printer,parser,comparer,qdpl,postsort,getrrsz,sender }
 
 static const typeinfo typeinfos[] = {
 /* Must be in ascending order of rrtype ! */
@@ -1712,15 +1710,15 @@ DEEP_TYPE(txt,    "TXT",   0,   manyistr,pa_txt,     0,        cs_txt        ),
 DEEP_TYPE(rp_raw, "RP",   "raw",strpair, pa_rp,      0,        cs_rp         ),
 FLAT_TYPE(aaaa,   "AAAA",  0,   in6addr, pa_in6addr, di_in6addr,cs_in6addr   ),
 XTRA_TYPE(srv_raw,"SRV",  "raw",srvraw , pa_srvraw,  di_srv,   cs_srvraw,
-					 mf_srvraw, qdpl_srv, postsort_srv, 0),
+				      mf_srvraw, qdpl_srv, postsort_srv, 0, 0),
 
 XTRA_TYPE(addr,   "A",  "addr", addr,    pa_addr,    di_addr,  cs_addr,
-				       mf_flat, adns__qdpl_normal, 0, qs_addr),
+			     mf_flat, adns__qdpl_normal, 0, gsz_addr, qs_addr),
 DEEP_TYPE(ns,     "NS", "+addr",hostaddr,pa_hostaddr,di_hostaddr,cs_hostaddr ),
 DEEP_TYPE(ptr,    "PTR","checked",str,   pa_ptr,     0,        cs_domain     ),
 DEEP_TYPE(mx,     "MX", "+addr",inthostaddr,pa_mx,   di_mx,    cs_inthostaddr),
 XTRA_TYPE(srv,    "SRV","+addr",srvha,   pa_srvha,   di_srv,   cs_srvha,
-					  mf_srvha, qdpl_srv, postsort_srv, 0),
+				       mf_srvha, qdpl_srv, postsort_srv, 0, 0),
 
 DEEP_TYPE(soa,    "SOA","822",  soa,     pa_soa,     0,        cs_soa        ),
 DEEP_TYPE(rp,     "RP", "822",  strpair, pa_rp,      0,        cs_rp         ),
