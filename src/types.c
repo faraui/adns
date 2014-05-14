@@ -518,7 +518,10 @@ static adns_status append_addrs(adns_query qu, adns_query from, size_t rrsz,
 				const adns_rr_addr *sp, int slen)
 {
   size_t drrsz = *dlen*rrsz, srrsz = slen*rrsz;
-  byte *p = adns__alloc_interim(qu, drrsz + srrsz);
+  byte *p;
+
+  /* if (!slen) return adns_s_ok; */
+  p = adns__alloc_interim(qu, drrsz + srrsz);
   if (!p) R_NOMEM;
   if (*dlen) {
     memcpy(p, *dp, drrsz);
