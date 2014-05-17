@@ -636,9 +636,8 @@ static void icb_addr(adns_query parent, adns_query child)
 {
   adns_state ads = parent->ads;
   adns_answer *pans = parent->answer, *cans = child->answer;
-  struct timeval tvbuf;
+  struct timeval now;
   adns_status err;
-  const struct timeval *now = 0;
   int id;
 
   if (!(child->flags & adns__qf_addr_cname) &&
@@ -678,8 +677,8 @@ static void icb_addr(adns_query parent, adns_query child)
      * settled on.
      */
     adns__cancel_children(parent);
-    adns__must_gettimeofday(ads, &now, &tvbuf);
-    if (now) addr_subqueries(parent, *now, child->vb.buf, child->vb.used);
+    if (gettimeofday(&now, 0)) goto x_gtod;
+    addr_subqueries(parent, now, child->vb.buf, child->vb.used);
     return;
   }
 
@@ -698,8 +697,8 @@ static void icb_addr(adns_query parent, adns_query child)
     adns__cancel_children(parent);
     adns__free_interim(parent, pans->rrs.bytes);
     pans->rrs.bytes = 0; pans->nrrs = 0;
-    adns__must_gettimeofday(ads, &now, &tvbuf);
-    if (now) adns__search_next(ads, parent, *now);
+    if (gettimeofday(&now, 0)) goto x_gtod;
+    adns__search_next(ads, parent, now);
     return;
   }
 
@@ -718,6 +717,11 @@ static void icb_addr(adns_query parent, adns_query child)
   else adns__query_done(parent);
   parent->flags |= adns__qf_addr_answer;
   return;
+
+x_gtod:
+  adns__diag(ads, -1, parent, "gettimeofday failed: %s", strerror(errno));
+  err = adns_s_systemfail;
+  goto x_err;
 
 x_err:
   adns__query_fail(parent, err);
