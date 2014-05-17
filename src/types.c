@@ -339,6 +339,8 @@ static adns_status cs_in6addr(vbuf *vb, const void *datap) {
  *		addr_rrtypes)
  */
 
+static const typeinfo tinfo_addrsub;
+
 /* About CNAME handling in addr queries.
  *
  * A user-level addr query is translated into a number of protocol-level
@@ -542,9 +544,7 @@ static void addr_subqueries(adns_query qu, struct timeval now,
 {
   int i, err, id;
   adns_query cqu;
-  adns_queryflags qf =
-    (qu->flags | adns__qf_senddirect) &
-    ~(adns_qf_search);
+  adns_queryflags qf =qu->flags & ~adns_qf_search;
   qcontext ctx;
 
   /* This always makes child queries, even if there's only the one.  This
@@ -558,7 +558,7 @@ static void addr_subqueries(adns_query qu, struct timeval now,
     err = adns__mkquery_frdgram(qu->ads, &qu->vb, &id, qd_dgram, qd_dglen,
 				DNS_HDRSIZE, qu->ctx.tinfo.addr.rrty[i], qf);
     if (err) goto x_error;
-    err = adns__internal_submit(qu->ads, &cqu, qu->typei,
+    err = adns__internal_submit(qu->ads, &cqu, &tinfo_addrsub,
 				qu->ctx.tinfo.addr.rrty[i],
 				&qu->vb, id, qf, now, &ctx);
     if (err) goto x_error;
@@ -1733,6 +1733,10 @@ XTRA_TYPE(srv,    "SRV","+addr",srvha,   pa_srvha,   di_srv,   cs_srvha,
 DEEP_TYPE(soa,    "SOA","822",  soa,     pa_soa,     0,        cs_soa        ),
 DEEP_TYPE(rp,     "RP", "822",  strpair, pa_rp,      0,        cs_rp         ),
 };
+
+static const typeinfo tinfo_addrsub =
+XTRA_TYPE(none,	  "<addr>","sub",addr,	 pa_addr,    0,	       cs_addr,
+				   mf_flat, adns__qdpl_normal, 0, gsz_addr, 0);
 
 static const typeinfo typeinfo_unknown=
 DEEP_TYPE(unknown,0, "unknown",byteblock,pa_opaque,  0,        cs_opaque     );
