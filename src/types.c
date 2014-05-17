@@ -647,8 +647,8 @@ static void icb_addr(adns_query parent, adns_query child)
 
   if (!(child->flags & adns__qf_addr_cname) &&
       (parent->flags & adns__qf_addr_answer) &&
-      (!pans->cname != !cans->cname ||
-       (pans->cname && strcmp(pans->cname, pans->cname) != 0))) {
+      (!!pans->cname != !!cans->cname ||
+       (pans->cname && strcmp(pans->cname, cans->cname) != 0))) {
     /* We've detected an inconsistency in CNAME records, and must deploy
      * countermeasures.
      */
