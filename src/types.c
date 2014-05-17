@@ -521,7 +521,7 @@ static adns_status append_addrs(adns_query qu, adns_query from, size_t rrsz,
   size_t drrsz = *dlen*rrsz, srrsz = slen*rrsz;
   byte *p;
 
-  /* if (!slen) return adns_s_ok; */
+  if (!slen) return adns_s_ok;
   p = adns__alloc_interim(qu, drrsz + srrsz);
   if (!p) R_NOMEM;
   if (*dlen) {
