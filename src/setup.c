@@ -60,26 +60,27 @@ static void addserver(adns_state ads, struct sockaddr *sa, int n) {
   int i;
   adns_rr_addr *ss;
   const afinfo *ai;
+  char buf[MAX_ADDRSTRLEN];
 
   ai = find_afinfo(sa->sa_family);
   if (!ai) {
     adns__diag(ads,-1,0,
 	       "nameserver %s for unknown address family %d ignored",
-	       adns__sockaddr_ntoa(sa, n), sa->sa_family);
+	       adns__sockaddr_ntoa(sa, n, buf), sa->sa_family);
   }
   
   for (i=0; i<ads->nservers; i++) {
     if (ads->servers[i].addr.sa.sa_family == sa->sa_family &&
 	ai->sockaddr_equalp(sa, &ads->servers[i].addr.sa)) {
       adns__debug(ads,-1,0,"duplicate nameserver %s ignored",
-		  adns__sockaddr_ntoa(sa, n));
+		  adns__sockaddr_ntoa(sa, n, buf));
       return;
     }
   }
   
   if (ads->nservers>=MAXSERVERS) {
     adns__diag(ads,-1,0,"too many nameservers, ignoring %s",
-	       adns__sockaddr_ntoa(sa, n));
+	       adns__sockaddr_ntoa(sa, n, buf));
     return;
   }
 
@@ -134,6 +135,7 @@ static int nextword(const char **bufp_io, const char **word_r, int *l_r) {
 static void ccf_nameserver(adns_state ads, const char *fn,
 			   int lno, const char *buf) {
   struct addrinfo *ai, ai_hint = { 0 };
+  char addrbuf[MAX_ADDRSTRLEN];
   int err;
 
   ai_hint.ai_family = AF_UNSPEC;
@@ -148,7 +150,7 @@ static void ccf_nameserver(adns_state ads, const char *fn,
   }
 
   adns__debug(ads,-1,0,"using nameserver %s",
-	      adns__sockaddr_ntoa(ai->ai_addr, ai->ai_addrlen));
+	      adns__sockaddr_ntoa(ai->ai_addr, ai->ai_addrlen, addrbuf));
   addserver(ads, ai->ai_addr, ai->ai_addrlen);
   freeaddrinfo(ai);
 }

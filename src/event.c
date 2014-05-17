@@ -339,6 +339,7 @@ int adns__pollfds(adns_state ads, struct pollfd pollfds_buf[MAX_POLLFDS]) {
 int adns_processreadable(adns_state ads, int fd, const struct timeval *now) {
   int want, dgramlen, r, i, udpaddrlen, serv, old_skip;
   byte udpbuf[DNS_MAXUDP];
+  char addrbuf[MAX_ADDRSTRLEN];
   struct udpsocket *udp;
   adns_sockaddr udpaddr;
   
@@ -414,7 +415,7 @@ int adns_processreadable(adns_state ads, int fd, const struct timeval *now) {
 	     serv++);
 	if (serv >= ads->nservers) {
 	  adns__warn(ads,-1,0,"datagram received from unknown nameserver %s",
-		     adns__sockaddr_ntoa(&udpaddr.sa, udpaddrlen));
+		     adns__sockaddr_ntoa(&udpaddr.sa, udpaddrlen, addrbuf));
 	  continue;
 	}
 	adns__procdgram(ads,udpbuf,r,serv,0,*now);

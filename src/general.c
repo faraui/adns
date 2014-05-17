@@ -38,12 +38,11 @@
 
 /* Core diagnostic functions */
 
-const char *adns__sockaddr_ntoa(struct sockaddr *sa, size_t n)
+const char *adns__sockaddr_ntoa(struct sockaddr *sa, size_t n, char *buf)
 {
-  static char buf[64];
   int err;
 
-  err = getnameinfo(sa, n, buf, sizeof(buf), 0, 0, NI_NUMERICHOST);
+  err = getnameinfo(sa, n, buf, MAX_ADDRSTRLEN, 0, 0, NI_NUMERICHOST);
   assert(!err);
   return buf;
 }
@@ -61,6 +60,7 @@ void adns__lprintf(adns_state ads, const char *fmt, ...) {
 
 void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
 		 int serv, adns_query qu, const char *fmt, va_list al) {
+  char buf[MAX_ADDRSTRLEN];
   const char *bef, *aft;
   vbuf vb;
   
@@ -96,7 +96,7 @@ void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
   if (serv>=0) {
     adns__lprintf(ads,"%sNS=%s",bef,
 		  adns__sockaddr_ntoa(&ads->servers[serv].addr.sa,
-				      ads->servers[serv].len));
+				      ads->servers[serv].len, buf));
     bef=", "; aft=")\n";
   }
 

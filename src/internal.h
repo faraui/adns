@@ -73,6 +73,7 @@ typedef unsigned char byte;
 #define DNS_IP6_ARPA "ip6", "arpa"
 
 #define ADDR_MAXRRTYPES 2
+#define MAX_ADDRSTRLEN 64
 
 #define STRINGIFY(x) REALLY_STRINGIFY(x)
 #define REALLY_STRINGIFY(x) #x
@@ -411,7 +412,9 @@ int adns__setnonblock(adns_state ads, int fd); /* => errno value */
 
 /* From general.c: */
 
-const char *adns__sockaddr_ntoa(struct sockaddr *sa, size_t n);
+const char *adns__sockaddr_ntoa(struct sockaddr *sa, size_t n, char *buf);
+/* Buffer must be at least MAX_ADDRSTRLEN bytes long. */
+
 void adns__vlprintf(adns_state ads, const char *fmt, va_list al);
 void adns__lprintf(adns_state ads, const char *fmt,
 		   ...) PRINTFFORMAT(2,3);
