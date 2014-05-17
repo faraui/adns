@@ -553,12 +553,13 @@ static void addr_subqueries(adns_query qu, struct timeval now,
    */
   memset(&ctx, 0, sizeof(ctx));
   ctx.callback = icb_addr;
-  qu->t.addr.onrrty = qu->t.addr.nrrty;
-  for (i = 0; i < qu->t.addr.nrrty; i++) {
+  qu->ctx.tinfo.addr.onrrty = qu->ctx.tinfo.addr.nrrty;
+  for (i = 0; i < qu->ctx.tinfo.addr.nrrty; i++) {
     err = adns__mkquery_frdgram(qu->ads, &qu->vb, &id, qd_dgram, qd_dglen,
-				DNS_HDRSIZE, qu->t.addr.rrty[i], qf);
+				DNS_HDRSIZE, qu->ctx.tinfo.addr.rrty[i], qf);
     if (err) goto x_error;
-    err = adns__internal_submit(qu->ads, &cqu, qu->typei, qu->t.addr.rrty[i],
+    err = adns__internal_submit(qu->ads, &cqu, qu->typei,
+				qu->ctx.tinfo.addr.rrty[i],
 				&qu->vb, id, qf, now, &ctx);
     if (err) goto x_error;
     cqu->answer->rrsz = qu->answer->rrsz;
@@ -604,8 +605,8 @@ static adns_status addr_submit(adns_query parent, adns_query *query_r,
   qu->parent = parent;
   LIST_LINK_TAIL_PART(parent->children, qu, siblings.);
 
-  memcpy(qu->t.addr.rrty, rrty, nrrty*sizeof(*rrty));
-  qu->t.addr.nrrty = nrrty;
+  memcpy(qu->ctx.tinfo.addr.rrty, rrty, nrrty*sizeof(*rrty));
+  qu->ctx.tinfo.addr.nrrty = nrrty;
   addr_subqueries(qu, now, qu->query_dgram, qu->query_dglen);
   *query_r = qu;
   return adns_s_ok;
@@ -626,10 +627,14 @@ static void done_addr_type(adns_query qu, adns_rrtype type)
 {
   size_t i;
 
-  for (i = 0; i < qu->t.addr.nrrty && type != qu->t.addr.rrty[i]; i++);
-  assert(i < qu->t.addr.nrrty);
-  qu->t.addr.rrty[i] = qu->t.addr.rrty[--qu->t.addr.nrrty];
-  qu->t.addr.rrty[qu->t.addr.nrrty] = type;
+  for (i = 0;
+       i < qu->ctx.tinfo.addr.nrrty &&
+	 type != qu->ctx.tinfo.addr.rrty[i];
+       i++);
+  assert(i < qu->ctx.tinfo.addr.nrrty);
+  qu->ctx.tinfo.addr.rrty[i] =
+    qu->ctx.tinfo.addr.rrty[--qu->ctx.tinfo.addr.nrrty];
+  qu->ctx.tinfo.addr.rrty[qu->ctx.tinfo.addr.nrrty] = type;
 }
 
 static void icb_addr(adns_query parent, adns_query child)
@@ -658,7 +663,7 @@ static void icb_addr(adns_query parent, adns_query child)
       adns__transfer_interim(child, parent, cans->rrs.bytes);
       pans->rrs.bytes = cans->rrs.bytes;
       pans->nrrs = cans->nrrs;
-      parent->t.addr.nrrty = parent->t.addr.onrrty;
+      parent->ctx.tinfo.addr.nrrty = parent->ctx.tinfo.addr.onrrty;
       done_addr_type(parent, cans->type);
       err = copy_cname_from_child(parent, child); if (err) goto x_err;
     }
@@ -730,7 +735,7 @@ x_err:
 static void qs_addr(adns_query qu, struct timeval now)
 {
   addr_rrtypes(qu->ads, qu->answer->type, qu->flags,
-	       qu->t.addr.rrty, &qu->t.addr.nrrty);
+	       qu->ctx.tinfo.addr.rrty, &qu->ctx.tinfo.addr.nrrty);
   addr_subqueries(qu, now, qu->query_dgram, qu->query_dglen);
 }
 
@@ -853,7 +858,7 @@ static adns_status pap_findaddrs(const parseinfo *pai, adns_rr_hostaddr *ha,
 
 static void icb_hostaddr(adns_query parent, adns_query child) {
   adns_answer *cans= child->answer;
-  adns_rr_hostaddr *rrp= child->ctx.info.hostaddr;
+  adns_rr_hostaddr *rrp= child->ctx.pinfo.hostaddr;
   adns_state ads= parent->ads;
   adns_status st;
   size_t addrsz = gsz_addr(parent->answer->type);
@@ -931,7 +936,7 @@ static adns_status pap_hostaddr(const parseinfo *pai, int *cbyte_io,
 
   ctx.ext= 0;
   ctx.callback= icb_hostaddr;
-  ctx.info.hostaddr= rrp;
+  ctx.pinfo.hostaddr= rrp;
   
   nflags= adns_qf_quoteok_query | (pai->qu->flags & adns__qf_afmask);
   if (!(pai->qu->flags & adns_qf_cname_loose)) nflags |= adns_qf_cname_forbid;
@@ -1136,7 +1141,7 @@ static void icb_ptr(adns_query parent, adns_query child) {
     return;
   }
 
-  queried= &parent->ctx.info.ptr_parent_addr.addr;
+  queried= &parent->ctx.pinfo.ptr_parent_addr.addr;
   for (i=0, found=cans->rrs.bytes; i<cans->nrrs; i++, found += cans->rrsz) {
     if (!memcmp(queried,found,cans->rrsz)) {
       if (!parent->children.head) {
@@ -1179,7 +1184,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart,
   if (st) return st;
   if (cbyte != max) return adns_s_invaliddata;
 
-  ap= &pai->qu->ctx.info.ptr_parent_addr;
+  ap= &pai->qu->ctx.pinfo.ptr_parent_addr;
   if (!ap->ai) {
     adns__findlabel_start(&fls, pai->ads, -1, pai->qu,
 			  pai->qu->query_dgram, pai->qu->query_dglen,
@@ -1234,7 +1239,8 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart,
 
   ctx.ext= 0;
   ctx.callback= icb_ptr;
-  memset(&ctx.info,0,sizeof(ctx.info));
+  memset(&ctx.pinfo,0,sizeof(ctx.pinfo));
+  memset(&ctx.tinfo,0,sizeof(ctx.tinfo));
   st= adns__internal_submit(pai->ads, &nqu, adns__findtype(ap->ai->rrtype),
 			    ap->ai->rrtype, &pai->qu->vb, id,
 			    adns_qf_quoteok_query, pai->now, &ctx);

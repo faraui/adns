@@ -243,10 +243,20 @@ union maxalign {
 typedef struct {
   void *ext;
   void (*callback)(adns_query parent, adns_query child);
+
   union {
     struct afinfo_addr ptr_parent_addr;
     adns_rr_hostaddr *hostaddr;
-  } info;
+  } pinfo; /* state for use by parent's callback function */
+
+  union {
+    struct {
+      size_t nrrty, onrrty;
+      adns_rrtype rrty[ADDR_MAXRRTYPES];
+    } addr;
+  } tinfo; /* type-specific state for the query itself: zero-init if you
+	    * don't know better. */
+
 } qcontext;
 
 struct adns__query {
@@ -300,13 +310,6 @@ struct adns__query {
   unsigned long udpsent; /* bitmap indexed by server */
   struct timeval timeout;
   time_t expires; /* Earliest expiry time of any record we used. */
-
-  union {
-    struct {
-      size_t nrrty, onrrty;
-      adns_rrtype rrty[ADDR_MAXRRTYPES];
-    } addr;
-  } t;					/* type-specific state */
 
   qcontext ctx;
 
