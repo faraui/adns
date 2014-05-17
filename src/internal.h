@@ -72,7 +72,6 @@ typedef unsigned char byte;
 #define DNS_INADDR_ARPA "in-addr", "arpa"
 #define DNS_IP6_ARPA "ip6", "arpa"
 
-#define ADDR_MAXRRTYPES 2
 #define MAX_ADDRSTRLEN 64
 
 #define STRINGIFY(x) REALLY_STRINGIFY(x)
@@ -96,8 +95,6 @@ typedef enum {
 } dns_rcode;
 
 enum {
-  adns__qf_senddirect = 0x00100000,/* don't call the `query_send' type hook */
-  adns__qf_nosend     = 0x00200000,/* don't send the query when submitting */
   adns__qf_addr_answer= 0x01000000,/* addr query received an answer */
   adns__qf_addr_cname = 0x02000000 /* addr subquery performed on cname */
 };
@@ -251,8 +248,7 @@ typedef struct {
 
   union {
     struct {
-      size_t nrrty, onrrty;
-      adns_rrtype rrty[ADDR_MAXRRTYPES];
+      unsigned want, have;
     } addr;
   } tinfo; /* type-specific state for the query itself: zero-init if you
 	    * don't know better. */
