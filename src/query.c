@@ -223,9 +223,6 @@ int adns_submit(adns_state ads,
 
   adns__consistency(ads,0,cc_entex);
 
-  if (!(type & adns__qtf_bigaddr) || !(type & adns__qtf_manyaf))
-    flags = (flags & ~adns__qf_afmask) | adns_qf_ipv4_only;
-
   typei= adns__findtype(type);
   if (!typei) return ENOSYS;
 
