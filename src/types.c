@@ -66,13 +66,13 @@
  * _mailbox                   (pap +pap_mailbox822)
  * _rp                        (pa)
  * _soa                       (pa,mf,cs)
- * _srv*                      (qdpl,(pap),pa,mf,di,(csp),cs,postsort)
+ * _srv*                      (ckl,(pap),pa,mf,di,(csp),cs,postsort)
  * _byteblock                 (mf)
  * _opaque                    (pa,cs)
  * _flat                      (mf)
  *
  * within each section:
- *    qdpl_*
+ *    ckl_*
  *    pap_*
  *    pa_*
  *    dip_*
@@ -1459,36 +1459,18 @@ static adns_status cs_soa(vbuf *vb, const void *datap) {
 }
 
 /*
- * _srv*  (pa*2,di,cs*2,qdpl,postsort)
+ * _srv*  (pa*2,di,cs*2,ckl,postsort)
  */
 
-static adns_status qdpl_srv(adns_state ads,
-			    const char **p_io, const char *pe, int labelnum,
-			    char label_r[DNS_MAXDOMAIN], int *ll_io,
-			    adns_queryflags flags,
-			    const typeinfo *typei) {
-  int useflags;
-  const char *p_orig;
-  adns_status st;
-
-  if (labelnum < 2 && !(flags & adns_qf_quoteok_query)) {
-    useflags= adns_qf_quoteok_query;
-    p_orig= *p_io;
-  } else {
-    useflags= flags;
-    p_orig= 0;
+static adns_status ckl_srv(adns_state ads, adns_queryflags flags,
+			   union checklabel_state *css, qcontext *ctx,
+			   int labnum, const char *label, int lablen)
+{
+  if (labnum < 2 && !(flags & adns_qf_quoteok_query)) {
+    if (!lablen || label[0] != '_') return adns_s_querydomaininvalid;
+    label++; lablen--;
   }
-  st= adns__qdpl_normal(ads, p_io,pe, labelnum,label_r, ll_io, useflags,typei);
-  if (st) return st;
-
-  if (p_orig) {
-    int ll= *ll_io;
-    if (!ll || label_r[0]!='_')
-      return adns_s_querydomaininvalid;
-    if (memchr(p_orig+1, '\\', pe - (p_orig+1)))
-      return adns_s_querydomaininvalid;
-  }
-  return adns_s_ok;
+  return adns__ckl_hostname(ads, flags, css, ctx, labnum, label, lablen);
 }
 
 static adns_status pap_srv_begin(const parseinfo *pai, int *cbyte_io, int max,
@@ -1704,14 +1686,14 @@ static void mf_flat(adns_query qu, void *data) { }
 
 #define DEEP_TYPE(code,rrt,fmt,memb,parser,comparer,printer)	\
 { adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb),	\
-    mf_##memb, printer,parser,comparer, adns__qdpl_normal,0,0,0 }
+    mf_##memb, printer,parser,comparer, adns__ckl_hostname,0,0,0 }
 #define FLAT_TYPE(code,rrt,fmt,memb,parser,comparer,printer)	\
 { adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb),	\
-    mf_flat, printer,parser,comparer, adns__qdpl_normal,0,0,0 }
+    mf_flat, printer,parser,comparer, adns__ckl_hostname,0,0,0 }
 #define XTRA_TYPE(code,rrt,fmt,memb,parser,comparer,printer,		   \
-		  makefinal,qdpl,postsort,getrrsz,sender)		   \
+		  makefinal,ckl,postsort,getrrsz,sender)		   \
 { adns_r_##code & adns_rrt_reprmask, rrt,fmt,TYPESZ_M(memb), makefinal,	   \
-    printer,parser,comparer,qdpl,postsort,getrrsz,sender }
+    printer,parser,comparer,ckl,postsort,getrrsz,sender }
 
 static const typeinfo typeinfos[] = {
 /* Must be in ascending order of rrtype ! */
@@ -1728,15 +1710,15 @@ DEEP_TYPE(txt,    "TXT",   0,   manyistr,pa_txt,     0,        cs_txt        ),
 DEEP_TYPE(rp_raw, "RP",   "raw",strpair, pa_rp,      0,        cs_rp         ),
 FLAT_TYPE(aaaa,   "AAAA",  0,   in6addr, pa_in6addr, di_in6addr,cs_in6addr   ),
 XTRA_TYPE(srv_raw,"SRV",  "raw",srvraw , pa_srvraw,  di_srv,   cs_srvraw,
-				      mf_srvraw, qdpl_srv, postsort_srv, 0, 0),
+				       mf_srvraw, ckl_srv, postsort_srv, 0, 0),
 
 XTRA_TYPE(addr,   "A",  "addr", addr,    pa_addr,    di_addr,  cs_addr,
-			     mf_flat, adns__qdpl_normal, 0, gsz_addr, qs_addr),
+			    mf_flat, adns__ckl_hostname, 0, gsz_addr, qs_addr),
 DEEP_TYPE(ns,     "NS", "+addr",hostaddr,pa_hostaddr,di_hostaddr,cs_hostaddr ),
 DEEP_TYPE(ptr,    "PTR","checked",str,   pa_ptr,     0,        cs_domain     ),
 DEEP_TYPE(mx,     "MX", "+addr",inthostaddr,pa_mx,   di_mx,    cs_inthostaddr),
 XTRA_TYPE(srv,    "SRV","+addr",srvha,   pa_srvha,   di_srv,   cs_srvha,
-				       mf_srvha, qdpl_srv, postsort_srv, 0, 0),
+					mf_srvha, ckl_srv, postsort_srv, 0, 0),
 
 DEEP_TYPE(soa,    "SOA","822",  soa,     pa_soa,     0,        cs_soa        ),
 DEEP_TYPE(rp,     "RP", "822",  strpair, pa_rp,      0,        cs_rp         ),
@@ -1744,7 +1726,7 @@ DEEP_TYPE(rp,     "RP", "822",  strpair, pa_rp,      0,        cs_rp         ),
 
 static const typeinfo tinfo_addrsub =
 XTRA_TYPE(none,	  "<addr>","sub",addr,	 pa_addr,    0,	       cs_addr,
-				   mf_flat, adns__qdpl_normal, 0, gsz_addr, 0);
+				  mf_flat, adns__ckl_hostname, 0, gsz_addr, 0);
 
 static const typeinfo typeinfo_unknown=
 DEEP_TYPE(unknown,0, "unknown",byteblock,pa_opaque,  0,        cs_opaque     );

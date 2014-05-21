@@ -74,55 +74,11 @@ static adns_status mkquery_footer(vbuf *vb, adns_rrtype type) {
   return adns_s_ok;
 }
 
-adns_status adns__qdpl_normal(adns_state ads,
-			      const char **p_io, const char *pe, int labelnum,
-			      char label_r[], int *ll_io,
-			      adns_queryflags flags,
-			      const typeinfo *typei) {
-  int ll, c;
-  const char *p;
-
-  ll= 0;
-  p= *p_io;
-  
-  while (p!=pe && (c= *p++)!='.') {
-    if (c=='\\') {
-      if (!(flags & adns_qf_quoteok_query)) return adns_s_querydomaininvalid;
-      if (ctype_digit(p[0])) {
-	if (p+1==pe || p+2==pe) return adns_s_querydomaininvalid;
-	if (ctype_digit(p[1]) && ctype_digit(p[2])) {
-	  c= (*p++ - '0')*100;
-	  c += (*p++ - '0')*10;
-	  c += (*p++ - '0');
-	  if (c >= 256) return adns_s_querydomaininvalid;
-	} else {
-	  return adns_s_querydomaininvalid;
-	}
-      } else if (!(c= *p++)) {
-	return adns_s_querydomaininvalid;
-      }
-    }
-    if (!(flags & adns_qf_quoteok_query)) {
-      if (c == '-') {
-	if (!ll) return adns_s_querydomaininvalid;
-      } else if (!ctype_alpha(c) && !ctype_digit(c)) {
-	return adns_s_querydomaininvalid;
-      }
-    }
-    if (ll == *ll_io) return adns_s_querydomaininvalid;
-    label_r[ll++]= c;
-  }
-  
-  *p_io= p;
-  *ll_io= ll;
-  return adns_s_ok;
-}
-
 adns_status adns__mkquery(adns_state ads, vbuf *vb, int *id_r,
 			  const char *owner, int ol,
 			  const typeinfo *typei, adns_rrtype type,
 			  adns_queryflags flags) {
-  int labelnum, ll, nbytes;
+  int labelnum, ll, c, nbytes;
   byte label[255];
   byte *rqp;
   const char *p, *pe;
@@ -136,11 +92,28 @@ adns_status adns__mkquery(adns_state ads, vbuf *vb, int *id_r,
   nbytes= 0;
   labelnum= 0;
   while (p!=pe) {
-    ll= sizeof(label);
-    st= typei->qdparselabel(ads, &p,pe, labelnum++, label, &ll, flags, typei);
-    if (st) return st;
+
+    ll= 0;
+    while (p!=pe && (c= *p++)!='.') {
+      if (c=='\\') {
+	if (ctype_digit(p[0])) {
+	  if (p+1==pe || p+2==pe) return adns_s_querydomaininvalid;
+	  if (ctype_digit(p[1]) && ctype_digit(p[2])) {
+	    c= (*p++ - '0')*100;
+	    c += (*p++ - '0')*10;
+	    c += (*p++ - '0');
+	    if (c >= 256) return adns_s_querydomaininvalid;
+	  } else {
+	    return adns_s_querydomaininvalid;
+	  }
+	} else if (!(c= *p++)) {
+	  return adns_s_querydomaininvalid;
+	}
+      }
+      if (ll >= DNS_MAXLABEL) return adns_s_querydomaintoolong;
+      label[ll++]= c;
+    }
     if (!ll) return adns_s_querydomaininvalid;
-    if (ll > DNS_MAXLABEL) return adns_s_querydomaintoolong;
     nbytes+= ll+1;
     if (nbytes >= DNS_MAXDOMAIN) return adns_s_querydomaintoolong;
     MKQUERY_ADDB(ll);

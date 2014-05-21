@@ -129,6 +129,10 @@ union gen_addr {
   struct in6_addr v6;
 };
 
+union checklabel_state {
+  int dummy;
+};
+
 typedef struct {
   int af;
   int width;
@@ -149,6 +153,24 @@ typedef struct {
 } afinfo;
 
 struct afinfo_addr { const afinfo *ai; union gen_addr addr; };
+
+typedef struct {
+  void *ext;
+  void (*callback)(adns_query parent, adns_query child);
+
+  union {
+    struct afinfo_addr ptr_parent_addr;
+    adns_rr_hostaddr *hostaddr;
+  } pinfo; /* state for use by parent's callback function */
+
+  union {
+    struct {
+      unsigned want, have;
+    } addr;
+  } tinfo; /* type-specific state for the query itself: zero-init if you
+	    * don't know better. */
+
+} qcontext;
 
 typedef struct typeinfo {
   adns_rrtype typekey;
@@ -185,16 +207,17 @@ typedef struct typeinfo {
    * 0 otherwise.  Must not fail.
    */
 
-  adns_status (*qdparselabel)(adns_state ads,
-			      const char **p_io, const char *pe, int labelnum,
-			      char label_r[DNS_MAXDOMAIN], int *ll_io,
-			      adns_queryflags flags,
-			      const struct typeinfo *typei);
-  /* Parses one label from the query domain string.  On entry, *p_io
-   * points to the next character to parse and *ll_io is the size of
-   * the buffer.  pe points just after the end of the query domain
-   * string.  On successful return, label_r[] and *ll_io are filled in
-   * and *p_io points to *pe or just after the label-ending `.'.  */
+  adns_status (*checklabel)(adns_state ads, adns_queryflags flags,
+			    union checklabel_state *css, qcontext *ctx,
+			    int labnum, const char *label, int lablen);
+  /* Check a label from the query domain string.  The label is not
+   * necessarily null-terminated.  The query has not yet been constructed,
+   * and this hook can refuse its submission by returning a nonzero status.
+   * State can be stored in *css between calls, and useful information can be
+   * stashed in ctx->tinfo, to be stored with the query (e.g., it will be
+   * available to the parse hook).  This hook can detect a first call because
+   * labnum is zero, and a final call because lablen is zero.
+   */
 
   void (*postsort)(adns_state ads, void *array, int nrrs,
 		   const struct typeinfo *typei);
@@ -215,13 +238,12 @@ typedef struct typeinfo {
    */
 } typeinfo;
 
-adns_status adns__qdpl_normal(adns_state ads,
-			      const char **p_io, const char *pe, int labelnum,
-			      char label_r[], int *ll_io,
-			      adns_queryflags flags,
-			      const typeinfo *typei);
-  /* implemented in transmit.c, used by types.c as default
-   * and as part of implementation for some fancier types */
+adns_status adns__ckl_hostname(adns_state ads, adns_queryflags flags,
+			       union checklabel_state *css,
+			       qcontext *ctx, int labnum,
+			       const char *label, int lablen);
+/* implemented in query.c, used by types.c as default
+ * and as part of implementation for some fancier types */
 
 typedef struct allocnode {
   struct allocnode *next, *back;
@@ -236,24 +258,6 @@ union maxalign {
   void (*fp)(void);
   union maxalign *up;
 } data;
-
-typedef struct {
-  void *ext;
-  void (*callback)(adns_query parent, adns_query child);
-
-  union {
-    struct afinfo_addr ptr_parent_addr;
-    adns_rr_hostaddr *hostaddr;
-  } pinfo; /* state for use by parent's callback function */
-
-  union {
-    struct {
-      unsigned want, have;
-    } addr;
-  } tinfo; /* type-specific state for the query itself: zero-init if you
-	    * don't know better. */
-
-} qcontext;
 
 struct adns__query {
   adns_state ads;
@@ -507,7 +511,7 @@ adns_status adns__internal_submit(adns_state ads, adns_query *query_r,
 				  const typeinfo *typei, adns_rrtype,
 				  vbuf *qumsg_vb, int id,
 				  adns_queryflags flags, struct timeval now,
-				  const qcontext *ctx);
+				  qcontext *ctx);
 /* Submits a query (for internal use, called during external submits).
  *
  * The new query is returned in *query_r, or we return adns_s_nomemory.
