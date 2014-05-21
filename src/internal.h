@@ -130,7 +130,11 @@ union gen_addr {
 };
 
 union checklabel_state {
-  int dummy;
+  struct {
+#define PTR_NDOMAIN 2
+    unsigned domainmap;			/* which domains are still live */
+    byte ipv[PTR_NDOMAIN][32];		/* address components so far */
+  } ptr;
 };
 
 typedef struct {
@@ -159,11 +163,13 @@ typedef struct {
   void (*callback)(adns_query parent, adns_query child);
 
   union {
-    struct afinfo_addr ptr_parent_addr;
     adns_rr_hostaddr *hostaddr;
   } pinfo; /* state for use by parent's callback function */
 
   union {
+    struct {
+      struct afinfo_addr addr;
+    } ptr;
     struct {
       unsigned want, have;
     } addr;

@@ -1149,7 +1149,7 @@ static void icb_ptr(adns_query parent, adns_query child) {
     return;
   }
 
-  queried= &parent->ctx.pinfo.ptr_parent_addr.addr;
+  queried= &parent->ctx.tinfo.ptr.addr.addr;
   for (i=0, found=cans->rrs.bytes; i<cans->nrrs; i++, found += cans->rrsz) {
     if (!memcmp(queried,found,cans->rrsz)) {
       if (!parent->children.head) {
@@ -1165,24 +1165,75 @@ static void icb_ptr(adns_query parent, adns_query child) {
   adns__query_fail(parent,adns_s_inconsistent);
 }
 
+static const struct ptr_expectdomain {
+  const afinfo *ai;
+  const char *const tail[3];
+} ptr_expectdomain[PTR_NDOMAIN] = {
+  { &adns__inet_afinfo, { DNS_INADDR_ARPA, 0 } },
+  { &adns__inet6_afinfo, { DNS_IP6_ARPA, 0 } }
+};
+
+static adns_status ckl_ptr(adns_state ads, adns_queryflags flags,
+			   union checklabel_state *css, qcontext *ctx,
+			   int labnum, const char *label, int lablen)
+{
+  int i, found, ac;
+  unsigned f = labnum ? css->ptr.domainmap : (1 << PTR_NDOMAIN) - 1;
+  unsigned d;
+  const char *tp;
+  const struct ptr_expectdomain *ed;
+  struct afinfo_addr *ap;
+
+  if (lablen) {
+    for (ed = ptr_expectdomain, i = 0, d = 1;
+	 i < PTR_NDOMAIN;
+	 ed++, i++, d <<= 1) {
+      if (!(f & d)) continue;
+      if (labnum < ed->ai->nrevcomp) {
+	ac = ed->ai->rev_parsecomp(label, lablen);
+	if (ac < 0) goto mismatch;
+	assert(labnum < sizeof(css->ptr.ipv[i]));
+	css->ptr.ipv[i][labnum] = ac;
+      } else {
+	tp = ed->tail[labnum - ed->ai->nrevcomp];
+	if (!tp || strncmp(label, tp, lablen) != 0 || tp[lablen])
+	  goto mismatch;
+      }
+      continue;
+
+    mismatch:
+      f &= ~d;
+      if (!f) return adns_s_querydomainwrong;
+    }
+  } else {
+    found = -1;
+    for (ed = ptr_expectdomain, i = 0, d = 1;
+	 i < PTR_NDOMAIN;
+	 ed++, i++, d <<= 1) {
+      if (!(f & d)) continue;
+      if (labnum >= ed->ai->nrevcomp && !ed->tail[labnum - ed->ai->nrevcomp])
+	{ found = i; continue; }
+      f &= ~d;
+      if (!f) return adns_s_querydomainwrong;
+    }
+    assert(found >= 0 && f == (1 << found));
+
+    ed = &ptr_expectdomain[found];
+    ap = &ctx->tinfo.ptr.addr;
+    ap->ai = ed->ai;
+    ed->ai->rev_mkaddr(&ap->addr, css->ptr.ipv[found]);
+  }
+
+  css->ptr.domainmap = f;
+  return adns_s_ok;
+}
+
 static adns_status pa_ptr(const parseinfo *pai, int dmstart,
 			  int max, void *datap) {
-  static const struct {
-    const afinfo *ai;
-    const char *const tail[3];
-  } expectdomain[] = {
-    { &adns__inet_afinfo, { DNS_INADDR_ARPA, 0 } },
-    { &adns__inet6_afinfo, { DNS_IP6_ARPA, 0 } }
-  };
-  enum { n_ed = sizeof(expectdomain)/sizeof(expectdomain[0]) };
-  
   char **rrp= datap;
   adns_status st;
   struct afinfo_addr *ap;
-  findlabel_state fls;
-  byte ipv[n_ed][32];
-  int cbyte, i, j, foundj = -1, lablen, labstart, id, f, ac;
-  const char *tp;
+  int cbyte, id;
   adns_query nqu;
   qcontext ctx;
 
@@ -1192,53 +1243,8 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart,
   if (st) return st;
   if (cbyte != max) return adns_s_invaliddata;
 
-  ap= &pai->qu->ctx.pinfo.ptr_parent_addr;
-  if (!ap->ai) {
-    adns__findlabel_start(&fls, pai->ads, -1, pai->qu,
-			  pai->qu->query_dgram, pai->qu->query_dglen,
-			  pai->qu->query_dglen, DNS_HDRSIZE, 0);
-
-    f = (1 << n_ed) - 1; /* superposition of address types */
-    for (i = 0;; i++) {
-      st= adns__findlabel_next(&fls,&lablen,&labstart); assert(!st);
-      if (lablen <= 0) break;
-      for (j = 0; j < n_ed; j++) {
-	if (!(f & (1 << j))) continue;
-	if (i < expectdomain[j].ai->nrevcomp) {
-	  ac = expectdomain[j].ai->rev_parsecomp(
-	    pai->qu->query_dgram + labstart, lablen);
-	  if (ac < 0) goto mismatch;
-	  assert(i < sizeof(ipv[j]));
-	  ipv[j][i] = ac;
-	} else {
-	  tp = expectdomain[j].tail[i - expectdomain[j].ai->nrevcomp];
-	  if (!tp ||
-	      strncmp(pai->qu->query_dgram + labstart, tp, lablen) != 0 ||
-	      tp[lablen] != 0)
-	    goto mismatch;
-	}
-	continue;
-
-      mismatch:
-	f &= ~(1 << j);
-	if (!f) return adns_s_querydomainwrong;
-      }
-    }
-
-    if (lablen < 0) return adns_s_querydomainwrong;
-    for (j = 0; j < n_ed; j++) {
-      if (!(f & (1 << j))) continue;
-      if (i >= expectdomain[j].ai->nrevcomp &&
-	  !expectdomain[j].tail[i - expectdomain[j].ai->nrevcomp])
-	{ foundj = j; continue; }
-      f &= ~(1 << j);
-      if (!f) return adns_s_querydomainwrong;
-    }
-    assert(foundj >= 0 && f == (1 << foundj)); /* collapsed to a single type */
-
-    ap->ai = expectdomain[foundj].ai;
-    ap->ai->rev_mkaddr(&ap->addr, ipv[foundj]);
-  }
+  ap= &pai->qu->ctx.tinfo.ptr.addr;
+  assert(ap->ai);
 
   st= adns__mkquery_frdgram(pai->ads, &pai->qu->vb, &id,
 			    pai->dgram, pai->dglen, dmstart,
@@ -1715,7 +1721,8 @@ XTRA_TYPE(srv_raw,"SRV",  "raw",srvraw , pa_srvraw,  di_srv,   cs_srvraw,
 XTRA_TYPE(addr,   "A",  "addr", addr,    pa_addr,    di_addr,  cs_addr,
 			    mf_flat, adns__ckl_hostname, 0, gsz_addr, qs_addr),
 DEEP_TYPE(ns,     "NS", "+addr",hostaddr,pa_hostaddr,di_hostaddr,cs_hostaddr ),
-DEEP_TYPE(ptr,    "PTR","checked",str,   pa_ptr,     0,        cs_domain     ),
+XTRA_TYPE(ptr,    "PTR","checked",str,   pa_ptr,     0,        cs_domain,
+						     mf_str, ckl_ptr, 0, 0, 0),
 DEEP_TYPE(mx,     "MX", "+addr",inthostaddr,pa_mx,   di_mx,    cs_inthostaddr),
 XTRA_TYPE(srv,    "SRV","+addr",srvha,   pa_srvha,   di_srv,   cs_srvha,
 					mf_srvha, ckl_srv, postsort_srv, 0, 0),
