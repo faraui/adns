@@ -275,10 +275,9 @@ static int search_sortlist(adns_state ads, int af, const void *ad) {
 
   for (i=0, slp=ads->sortlist;
        i<ads->nsortlist &&
-       !(af == slp->ai->af &&
-	 slp->ai->matchp(ad, &slp->base, &slp->mask)) &&
-       !(v6mappedp && slp->ai->af == AF_INET &&
-	 slp->ai->matchp(&a, &slp->base, &slp->mask));
+	 !adns__addr_match_p(af,ad, slp->af,&slp->base,&slp->mask) &&
+	 !(v6mappedp &&
+	   adns__addr_match_p(AF_INET,&a, slp->af,&slp->base,&slp->mask));
        i++, slp++);
   return i;
 }
@@ -449,15 +448,7 @@ static adns_status pa_addr(const parseinfo *pai, int cbyte,
 
 static int search_sortlist_sa(adns_state ads, const struct sockaddr *sa)
 {
-  const afinfo *ai = 0;
-
-  switch (sa->sa_family) {
-    case AF_INET: ai = &adns__inet_afinfo; break;
-    case AF_INET6: ai = &adns__inet6_afinfo; break;
-  }
-  assert(ai);
-
-  return search_sortlist(ads, sa->sa_family, ai->sockaddr_to_inaddr(sa));
+  return search_sortlist(ads, sa->sa_family, adns__sockaddr_to_inaddr(sa));
 }
 
 static int dip_sockaddr(adns_state ads,
@@ -1165,66 +1156,19 @@ static void icb_ptr(adns_query parent, adns_query child) {
   adns__query_fail(parent,adns_s_inconsistent);
 }
 
-static const struct ptr_expectdomain {
-  const afinfo *ai;
-  const char *const tail[3];
-} ptr_expectdomain[PTR_NDOMAIN] = {
-  { &adns__inet_afinfo, { DNS_INADDR_ARPA, 0 } },
-  { &adns__inet6_afinfo, { DNS_IP6_ARPA, 0 } }
-};
-
 static adns_status ckl_ptr(adns_state ads, adns_queryflags flags,
 			   union checklabel_state *css, qcontext *ctx,
 			   int labnum, const char *label, int lablen)
 {
-  int i, found, ac;
-  unsigned f = labnum ? css->ptr.domainmap : (1 << PTR_NDOMAIN) - 1;
-  unsigned d;
-  const char *tp;
-  const struct ptr_expectdomain *ed;
-  struct afinfo_addr *ap;
-
   if (lablen) {
-    for (ed = ptr_expectdomain, i = 0, d = 1;
-	 i < PTR_NDOMAIN;
-	 ed++, i++, d <<= 1) {
-      if (!(f & d)) continue;
-      if (labnum < ed->ai->nrevcomp) {
-	ac = ed->ai->rev_parsecomp(label, lablen);
-	if (ac < 0) goto mismatch;
-	assert(labnum < sizeof(css->ptr.ipv[i]));
-	css->ptr.ipv[i][labnum] = ac;
-      } else {
-	tp = ed->tail[labnum - ed->ai->nrevcomp];
-	if (!tp || strncmp(label, tp, lablen) != 0 || tp[lablen])
-	  goto mismatch;
-      }
-      continue;
-
-    mismatch:
-      f &= ~d;
-      if (!f) return adns_s_querydomainwrong;
-    }
+    if (adns__revparse_label(&css->ptr, labnum, label,lablen))
+      return adns_s_querydomainwrong;
   } else {
-    found = -1;
-    for (ed = ptr_expectdomain, i = 0, d = 1;
-	 i < PTR_NDOMAIN;
-	 ed++, i++, d <<= 1) {
-      if (!(f & d)) continue;
-      if (labnum >= ed->ai->nrevcomp && !ed->tail[labnum - ed->ai->nrevcomp])
-	{ found = i; continue; }
-      f &= ~d;
-      if (!f) return adns_s_querydomainwrong;
-    }
-    assert(found >= 0 && f == (1 << found));
-
-    ed = &ptr_expectdomain[found];
-    ap = &ctx->tinfo.ptr.addr;
-    ap->ai = ed->ai;
-    ed->ai->rev_mkaddr(&ap->addr, css->ptr.ipv[found]);
+    if (adns__revparse_done(&css->ptr, labnum,
+			    &ctx->tinfo.ptr.rev_rrtype,
+			    &ctx->tinfo.ptr.addr))
+      return adns_s_querydomainwrong;
   }
-
-  css->ptr.domainmap = f;
   return adns_s_ok;
 }
 
@@ -1232,7 +1176,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart,
 			  int max, void *datap) {
   char **rrp= datap;
   adns_status st;
-  struct afinfo_addr *ap;
+  adns_rrtype rrtype = pai->qu->ctx.tinfo.ptr.rev_rrtype;
   int cbyte, id;
   adns_query nqu;
   qcontext ctx;
@@ -1243,20 +1187,17 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart,
   if (st) return st;
   if (cbyte != max) return adns_s_invaliddata;
 
-  ap= &pai->qu->ctx.tinfo.ptr.addr;
-  assert(ap->ai);
-
   st= adns__mkquery_frdgram(pai->ads, &pai->qu->vb, &id,
 			    pai->dgram, pai->dglen, dmstart,
-			    ap->ai->rrtype, adns_qf_quoteok_query);
+			    rrtype, adns_qf_quoteok_query);
   if (st) return st;
 
   ctx.ext= 0;
   ctx.callback= icb_ptr;
   memset(&ctx.pinfo,0,sizeof(ctx.pinfo));
   memset(&ctx.tinfo,0,sizeof(ctx.tinfo));
-  st= adns__internal_submit(pai->ads, &nqu, adns__findtype(ap->ai->rrtype),
-			    ap->ai->rrtype, &pai->qu->vb, id,
+  st= adns__internal_submit(pai->ads, &nqu, adns__findtype(rrtype),
+			    rrtype, &pai->qu->vb, id,
 			    adns_qf_quoteok_query, pai->now, &ctx);
   if (st) return st;
 

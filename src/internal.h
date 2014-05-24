@@ -129,34 +129,17 @@ union gen_addr {
   struct in6_addr v6;
 };
 
-union checklabel_state {
-  struct {
-#define PTR_NDOMAIN 2
-    unsigned domainmap;			/* which domains are still live */
-    byte ipv[PTR_NDOMAIN][32];		/* address components so far */
-  } ptr;
+#define NREVDOMAINS 2			/* keep in sync with addrfam! */
+struct revparse_state {
+  unsigned map;				/* which domains are still live */
+  byte ipv[NREVDOMAINS][32];		/* address components so far */
 };
 
-typedef struct {
-  int af;
-  int width;
-  int delim;
-  int nrevcomp;
-  int revcompwd;
-  adns_rrtype rrtype;
-  const void *(*sockaddr_to_inaddr)(const struct sockaddr *sa);
-  int (*sockaddr_equalp)(const struct sockaddr *sa,
-			 const struct sockaddr *sb);
-  void (*prefix_mask)(int len, union gen_addr *a);
-  int (*guess_len)(const union gen_addr *a);
-  int (*matchp)(const union gen_addr *addr,
-		const union gen_addr *base, const union gen_addr *mask);
-  int (*rev_parsecomp)(const char *p, size_t n);
-  void (*rev_mkaddr)(union gen_addr *addr, const byte *ipv);
-  char *(*rev_mkname)(const struct sockaddr *sa, char *buf);
-} afinfo;
+union checklabel_state {
+  struct revparse_state ptr;
+};
 
-struct afinfo_addr { const afinfo *ai; union gen_addr addr; };
+struct af_addr { int af; union gen_addr addr; };
 
 typedef struct {
   void *ext;
@@ -168,7 +151,8 @@ typedef struct {
 
   union {
     struct {
-      struct afinfo_addr addr;
+      adns_rrtype rev_rrtype;
+      struct af_addr addr;
     } ptr;
     struct {
       unsigned want, have;
@@ -385,7 +369,7 @@ struct adns__state {
   struct query_queue udpw, tcpw, childw, output;
   adns_query forallnext;
   int nextid, tcpsocket;
-  struct udpsocket { const afinfo *ai; int fd; } udpsocket[MAXUDP];
+  struct udpsocket { int af; int fd; } udpsocket[MAXUDP];
   int nudp;
   vbuf tcpsend, tcprecv;
   int nservers, nsortlist, nsearchlist, searchndots, tcpserver, tcprecv_skip;
@@ -404,7 +388,7 @@ struct adns__state {
   struct pollfd pollfds_buf[MAX_POLLFDS];
   adns_rr_addr servers[MAXSERVERS];
   struct sortlist {
-    const afinfo *ai;
+    int af;
     union gen_addr base, mask;
   } sortlist[MAXSORTLIST];
   char **searchlist;
@@ -413,7 +397,87 @@ struct adns__state {
 
 /* From addrfam.c: */
 
-extern const afinfo adns__inet_afinfo, adns__inet6_afinfo;
+extern int adns__af_supported_p(int af);
+/* Return nonzero if the address family af known to the library and supported
+ * by the other addrfam operations.  Note that the other operations will
+ * abort on an unrecognized address family rather than returning an error
+ * code.
+ */
+
+extern int adns__sockaddr_equal_p(const struct sockaddr *sa,
+				  const struct sockaddr *sb);
+/* Return nonzero if the two socket addresses are equal (in all significant
+ * respects).
+ */
+
+extern int adns__gen_pton(const char *p, int *af_r, union gen_addr *addr_r);
+/* Parse an address at p, deciding which address family it belongs to.  On
+ * success, returns 1 (like inet_aton) having stashed the address family in
+ * *af_r and the parsed address in *addr_r.  If the address string is
+ * invalid, returns 0.
+ */
+
+extern int adns__addr_width(int af);
+/* Return the width of addresses of family af, in bits. */
+
+extern void adns__prefix_mask(int af, int len, union gen_addr *mask_r);
+/* Store in mask_r an address mask for address family af, whose first len
+ * bits are set and the remainder are clear.  This is what you want for
+ * converting a prefix length into a netmask.
+ */
+
+extern int adns__guess_prefix_length(int af, const union gen_addr *addr);
+/* Given a network base address, guess the appropriate prefix length based on
+ * the appropriate rules for the address family (e.g., for IPv4, this uses
+ * the old address classes).
+ */
+
+extern int adns__addr_match_p(int addraf, const union gen_addr *addr,
+			      int netaf, const union gen_addr *base,
+			      const union gen_addr *mask);
+/* Given an address af (with family addraf) and a network (with family netaf,
+ * base address base, and netmask mask), return nonzero if the address lies
+ * within the network.
+ */
+
+const void *adns__sockaddr_to_inaddr(const struct sockaddr *sa);
+/* Given a socket address, return a pointer to the actual network address
+ * within it.
+ */
+
+extern int adns__make_reverse_domain(const struct sockaddr *sa,
+				     const char *zone,
+				     char **buf_io, size_t bufsz,
+				     char **buf_free_r);
+/* Construct a reverse domain string, given a socket address and a parent
+ * zone.  If zone is null, then use the standard reverse-lookup zone for the
+ * address family.  If the length of the resulting string is no larger than
+ * bufsz, then the result is stored starting at *buf_io; otherwise a new
+ * buffer is allocated is used, and a pointer to it is stored in both *buf_io
+ * and *buf_free_r (the latter of which should be null on entry).  If
+ * something goes wrong, then an errno value is returned: ENOSYS if the
+ * address family of sa isn't recognized, or ENOMEM if the attempt to
+ * allocate an output buffer failed.
+ */
+
+extern int adns__revparse_label(struct revparse_state *rps, int labnum,
+				const char *label, int lablen);
+/* Parse a label in a reverse-domain name, given its index labnum (starting
+ * from zero), a pointer to its contents (which need not be null-terminated),
+ * and its length.  The state in *rps is initialized implicitly when labnum
+ * is zero.
+ *
+ * Returns zero if the parse was successful, nonzero if the domain name is
+ * definitely invalid and the parse must be abandoned.
+ */
+
+extern int adns__revparse_done(struct revparse_state *rps, int nlabels,
+			       adns_rrtype *rrtype_r, struct af_addr *addr_r);
+/* Finishes parsing a reverse-domain name, given the total number of labels
+ * in the name.  On success, fills in the address in *addr_r, and the forward
+ * query type in *rrtype_r (because that turns out to be useful).  Returns
+ * nonzero if the parse must be abandoned.
+ */
 
 /* From setup.c: */
 

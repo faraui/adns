@@ -332,40 +332,15 @@ int adns_submit_reverse_any(adns_state ads,
 			    adns_queryflags flags,
 			    void *context,
 			    adns_query *query_r) {
-  char *buf, *buf_free, *p;
+  char *buf, *buf_free = 0;
   char shortbuf[100];
-  const afinfo *ai;
-  int r, lreq;
+  int r;
 
   flags &= ~adns_qf_search;
 
-  switch (addr->sa_family) {
-    case AF_INET:
-      ai = &adns__inet_afinfo;
-      if (!zone) zone = "in-addr.arpa";
-      break;
-    case AF_INET6:
-      ai = &adns__inet6_afinfo;
-      if (!zone) zone = "ip6.arpa";
-      break;
-    default:
-      return ENOSYS;
-  }
-
-  lreq= strlen(zone) + ai->nrevcomp*(ai->revcompwd + 1) + 1;
-  if (lreq > sizeof(shortbuf)) {
-    buf= malloc(lreq);
-    if (!buf) return errno;
-    buf_free= buf;
-  } else {
-    buf= shortbuf;
-    buf_free= 0;
-  }
-
-  p = ai->rev_mkname(addr, buf);
-  *p++ = '.';
-  strcpy(p, zone);
-
+  buf = shortbuf;
+  r= adns__make_reverse_domain(addr,zone, &buf,sizeof(shortbuf),&buf_free);
+  if (r) return r;
   r= adns_submit(ads,buf,type,flags,context,query_r);
   free(buf_free);
   return r;
