@@ -325,8 +325,6 @@ int adns_submit(adns_state ads,
   return r;
 }
 
-static const char *default_zone = "<magic>";
-
 int adns_submit_reverse_any(adns_state ads,
 			    const struct sockaddr *addr,
 			    const char *zone,
@@ -344,11 +342,11 @@ int adns_submit_reverse_any(adns_state ads,
   switch (addr->sa_family) {
     case AF_INET:
       ai = &adns__inet_afinfo;
-      if (zone == default_zone) zone = "in-addr.arpa";
+      if (!zone) zone = "in-addr.arpa";
       break;
     case AF_INET6:
       ai = &adns__inet6_afinfo;
-      if (zone == default_zone) zone = "ip6.arpa";
+      if (!zone) zone = "ip6.arpa";
       break;
     default:
       return ENOSYS;
@@ -380,8 +378,7 @@ int adns_submit_reverse(adns_state ads,
 			void *context,
 			adns_query *query_r) {
   if (type != adns_r_ptr && type != adns_r_ptr_raw) return EINVAL;
-  return adns_submit_reverse_any(ads,addr,default_zone,
-				 type,flags,context,query_r);
+  return adns_submit_reverse_any(ads,addr,0,type,flags,context,query_r);
 }
 
 int adns_synchronous(adns_state ads,
