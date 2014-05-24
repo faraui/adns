@@ -501,6 +501,15 @@ void adns__querysend_tcp(adns_query qu, struct timeval now);
  * might be broken, but no reconnect will be attempted.
  */
 
+struct udpsocket *adns__udpsocket_by_af(adns_state ads, int af);
+/* Find the UDP socket structure in ads which has the given address family.
+ * Return null if there isn't one.
+ *
+ * This is used during initialization, so ads is only partially filled in.
+ * The requirements are that nudp is set, and that udpsocket[i].af are
+ * defined for 0<=i<nudp.
+ */
+
 void adns__query_send(adns_query qu, struct timeval now);
 /* Query must be in state tosend/NONE; it will be moved to a new state,
  * and no further processing can be done on it for now.

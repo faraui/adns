@@ -627,11 +627,8 @@ static int init_finish(adns_state ads) {
   proto= getprotobyname("udp"); if (!proto) { r= ENOPROTOOPT; goto x_free; }
   ads->nudp = 0;
   for (i = 0; i < ads->nservers; i++) {
-    for (j = 0; j < ads->nudp; j++) {
-      if (ads->udpsocket[j].ai->af == ads->servers[i].addr.sa.sa_family)
-	goto afmatch;
-    }
-
+    if (adns__udpsocket_by_af(ads, ads->servers[i].addr.sa.sa_family))
+      continue;
     assert(ads->nudp < MAXUDP);
     udp = &ads->udpsocket[ads->nudp];
     udp->ai = find_afinfo(ads->servers[i].addr.sa.sa_family);
@@ -641,8 +638,6 @@ static int init_finish(adns_state ads) {
     r= adns__setnonblock(ads,udp->fd);
     if (r) { r= errno; goto x_closeudp; }
     ads->nudp++;
-
-  afmatch:;
   }
   
   return 0;
