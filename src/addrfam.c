@@ -213,44 +213,6 @@ const void *adns__sockaddr_to_inaddr(const struct sockaddr *sa)
 # define af_debug(fmt,...) ((void)("" fmt "", __VA_ARGS__))
 #endif
 
-int adns_addr2text(const struct sockaddr *sa,
-		   char *addr_buffer, int *addr_buflen,
-		   int *port_r) {
-  const void *src;
-  int port;
-
-  if (*addr_buflen < ADNS_ADDR2TEXT_BUFLEN) {
-    *addr_buflen = ADNS_ADDR2TEXT_BUFLEN;
-    return ENOSPC;
-  }
-
-  switch (sa->sa_family) {
-    AF_CASES(af);
-    af_inet:  src= &CSIN(sa)->sin_addr;    port= CSIN(sa)->sin_port;    break;
-    af_inet6: src= &CSIN6(sa)->sin6_addr;  port= CSIN6(sa)->sin6_port;  break;
-    default: return EAFNOSUPPORT;
-  }
-
-  const char *ok= inet_ntop(sa->sa_family, src, addr_buffer, *addr_buflen);
-  assert(ok);
-
-  if (sa->sa_family == AF_INET6) {
-    uint32_t scope = CSIN6(sa)->sin6_scope_id;
-    if (scope) {
-      scope = ntohl(scope);
-      int scopeoffset = strlen(addr_buffer);
-      int remain = *addr_buflen - scopeoffset;
-      int r = snprintf(addr_buffer + scopeoffset, remain,
-		       "%%%"PRIu32"", scope);
-      assert(r < *addr_buflen - scopeoffset);
-      af_debug("printed scoped address `%s'", addr_buffer);
-    }
-  }
-
-  if (port_r) *port_r= ntohs(port);
-  return 0;
-}
-
 int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 		   socklen_t *salen /* set if OK or ENOSPC */) {
   int af;
@@ -373,6 +335,44 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
     SIN6(sa)->sin6_scope_id= htonl(scope);
   } /* if (scopestr) */
 
+  return 0;
+}
+
+int adns_addr2text(const struct sockaddr *sa,
+		   char *addr_buffer, int *addr_buflen,
+		   int *port_r) {
+  const void *src;
+  int port;
+
+  if (*addr_buflen < ADNS_ADDR2TEXT_BUFLEN) {
+    *addr_buflen = ADNS_ADDR2TEXT_BUFLEN;
+    return ENOSPC;
+  }
+
+  switch (sa->sa_family) {
+    AF_CASES(af);
+    af_inet:  src= &CSIN(sa)->sin_addr;    port= CSIN(sa)->sin_port;    break;
+    af_inet6: src= &CSIN6(sa)->sin6_addr;  port= CSIN6(sa)->sin6_port;  break;
+    default: return EAFNOSUPPORT;
+  }
+
+  const char *ok= inet_ntop(sa->sa_family, src, addr_buffer, *addr_buflen);
+  assert(ok);
+
+  if (sa->sa_family == AF_INET6) {
+    uint32_t scope = CSIN6(sa)->sin6_scope_id;
+    if (scope) {
+      scope = ntohl(scope);
+      int scopeoffset = strlen(addr_buffer);
+      int remain = *addr_buflen - scopeoffset;
+      int r = snprintf(addr_buffer + scopeoffset, remain,
+		       "%%%"PRIu32"", scope);
+      assert(r < *addr_buflen - scopeoffset);
+      af_debug("printed scoped address `%s'", addr_buffer);
+    }
+  }
+
+  if (port_r) *port_r= ntohs(port);
   return 0;
 }
 
