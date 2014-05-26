@@ -682,6 +682,24 @@ void adns_finish(adns_state ads);
  * they will be cancelled.
  */
 
+#define ADNS_ADDR2TEXT_BUFLEN (INET6_ADDRSTRLEN +1/*%*/ +9/*uint32*/ +1/*nul*/)
+
+int adns_addr2text(adns_state ads /* may be 0!  used for debug log only */,
+		   const struct sockaddr *sa, socklen_t salen,
+		   char *addr_buffer, int *addr_buflen /* set iff ENOSPC */,
+		   int *port_r);
+int adns_text2addr(adns_state ads /* may be 0!  used for debug log only */,
+		   const char *addr, int port, struct sockaddr *sa,
+		   socklen_t *salen /* set if OK or ENOSPC */);
+  /* These DO NOT return an adns_status.  Instead, 0 on success,
+   * or an errno value on failure.  Error values are:
+   *   EAFNOSUPPORT addr2text only
+   *   EINVAL       addr has invalid syntax
+   *   ENOSPC       only if *buflen < _BUFLEN or *salen < sizeof(adns_sockaddr)
+   *   ENXIO        addr specifies a scope name and if_nametoindex failed
+   * port is always in host byte order and is simply copied to and
+   * from the appropriate sockaddr field (byteswapped as necessary).
+   */
 
 void adns_forallqueries_begin(adns_state ads);
 adns_query adns_forallqueries_next(adns_state ads, void **context_r);

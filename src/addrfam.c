@@ -198,6 +198,103 @@ const void *adns__sockaddr_to_inaddr(const struct sockaddr *sa)
 }
 
 /*
+ * addr2text and text2addr
+ */
+
+int adns__addr2text(adns_state ads /* 0 ok */, adns_query qu /* 0 ok */,
+		   const struct sockaddr *sa,
+		   char *addr_buffer, int *addr_buflen,
+		   int *port_r) {
+  void *src;
+  int port;
+
+  if (*addr_buflen < ADNS_ADDR2TEXT_BUFLEN) {
+    *addr_buflen = ADNS_ADDR2TEXT_BUFLEN;
+    return ENOSPC;
+  }
+
+  switch (sa->sa_family) {
+    AF_CASES(af);
+    af_inet:  src= &CSIN(sa)->sin_addr;    port= SIN(sa)->sin_port;    break;
+    af_inet6: src= &CSIN6(sa)->sin6_addr;  port= SIN6(sa)->sin6_port;  break;
+    default: return EAFNOSUPPORT;
+  }
+
+  const char *ok= inet_ntop(sa->sa_family, src, addr_buffer, *addr_buflen);
+  assert(ok);
+
+  if (sa->sa_family == AF_INET6) {
+    uint32_t scope = CSIN6(sa)->sin6_scope_id;
+    if (scope) {
+      scope = ntohl(scope);
+      int scopeoffset = strlen(addr_buffer);
+      int remain = *addr_buflen - scopeoffset,
+      int r = snprintf(addr_buffer + scopeoffset, remain,
+		       "%%%"PRIu32"", scope);
+      assert(r < *addr_buflen - scopeoffset);
+      adns__debug(ads,-1,qu, "addr2text: converted scoped address %s",
+		  addr_buffer);
+    }
+  }
+
+  if (port_r) *port_r= ntohs(port);
+  return 0;
+}
+
+int adns_addr2text(adns_state ads,
+		   const struct sockaddr *sa,
+		   char *addr_buffer, int *addr_buflen /* set iff ENOSPC */,
+		   int *port_r) {
+  return adns__addr2text(ads,0, sa,addr_buffer,addr_buflen,port_r);
+}
+
+static void text2addr_einval(adns_state ads, adns_query qu,
+			     const char *addr, const char *problem) {
+  if (!ads)
+  char dumpbuf[ADNS_ADDR2TEXT_BUFLEN * 4];
+  
+}
+
+int adns__text2addr(adns_state ads /* 0 ok */, adns_query qu /* 0 ok */,
+		   const char *addr, uint16_t port, struct sockaddr *sa,
+		   socklen_t *salen /* set if OK or ENOSPC */) {
+  int af;
+  char copybuf[INET6_ADDRSTRLEN];
+  char *parse;
+
+  if (strchr(addr, ":")) {
+
+    af= AF_INET6;
+
+    const char *percent= strchr(addr, "%");
+    if (percent) {
+      ptrdiff_t lhslen = percent - addr;
+      if (lhslen >= INET6_ADDRSTRLEN) {
+	adns__debug(ads,-1,qu, "text2addr: scoped addr lhs too long
+	return EINVAL;
+      }
+      memcpy(copy
+
+int adns_text2addr(adns_state ads /* may be 0!  used for debug log only */,
+		   const char *addr, int port, struct sockaddr *sa,
+		   socklen_t *salen /* set if OK or ENOSPC */);
+
+
+
+  assert(*addr_buflen > INET_ADDRSTRLEN && *addr_buflen > INET6_ADDRSTRLEN);
+  switch (sa->sa_family) {
+    AF_CASES(af);
+    af_inet:  dst= &CSIN(sa)->sin_addr;    port= CSIN(sa)->sin_port;    break;
+    af_inet6: dst= &CSIN6(sa)->sin6_addr;  port= CSIN6(sa)->sin6_port;  break;
+    default: return EAFNOSUPPORT;
+  }
+
+  inet_pton(sa->sa_family, 
+      const struct sockaddr *sin = 
+      
+    
+
+/*
  * Reverse-domain parsing and construction.
  */
 

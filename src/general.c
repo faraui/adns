@@ -64,7 +64,8 @@ void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
   const char *bef, *aft;
   vbuf vb;
   
-  if (!ads->logfn ||
+  if (!ads ||
+      !ads->logfn ||
       (!(ads->iflags & adns_if_debug)
        && (!prevent || (ads->iflags & prevent))))
     return;
