@@ -684,19 +684,22 @@ void adns_finish(adns_state ads);
 
 #define ADNS_ADDR2TEXT_BUFLEN (INET6_ADDRSTRLEN +1/*%*/ +9/*uint32*/ +1/*nul*/)
 
-int adns_addr2text(adns_state ads /* may be 0!  used for debug log only */,
-		   const struct sockaddr *sa, socklen_t salen,
+int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
+		   socklen_t *salen /* set if OK or ENOSPC; otherwise undef */);
+int adns_addr2text(const struct sockaddr *sa,
 		   char *addr_buffer, int *addr_buflen /* set iff ENOSPC */,
-		   int *port_r);
-int adns_text2addr(adns_state ads /* may be 0!  used for debug log only */,
-		   const char *addr, int port, struct sockaddr *sa,
-		   socklen_t *salen /* set if OK or ENOSPC */);
+		   int *port_r /* may be 0 */);
   /* These DO NOT return an adns_status.  Instead, 0 on success,
    * or an errno value on failure.  Error values are:
    *   EAFNOSUPPORT addr2text only
-   *   EINVAL       addr has invalid syntax
+   *   EINVAL       text2addr only: addr has invalid syntax
    *   ENOSPC       only if *buflen < _BUFLEN or *salen < sizeof(adns_sockaddr)
-   *   ENXIO        addr specifies a scope name and if_nametoindex failed
+   * Extra errors are possible from text2addr if addr specifies a scope
+   * name suffix (ie, it has a "%" and the scope suffix is not numeric):
+   *   ENOSYS       address is not link local
+   *   ENXIO        if_nametoindex said it wasn't a valid name
+   *   EIO          if_nametoindex went crazy (adns prints a message to stderr)
+   *   any other    if_nametoindex failed
    * port is always in host byte order and is simply copied to and
    * from the appropriate sockaddr field (byteswapped as necessary).
    */
