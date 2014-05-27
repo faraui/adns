@@ -689,13 +689,12 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 int adns_addr2text(const struct sockaddr *sa,
 		   char *addr_buffer, int *addr_buflen /* set iff ENOSPC */,
 		   int *port_r /* may be 0 */);
-  /* These DO NOT return an adns_status.  Instead, 0 on success,
-   * or an errno value on failure.  Error values are:
+  /* Error return values are:
    *   EAFNOSUPPORT addr2text only
    *   EINVAL       text2addr only: addr has invalid syntax
    *   ENOSPC       only if *buflen < _BUFLEN or *salen < sizeof(adns_sockaddr)
    * Extra errors are possible from text2addr if addr specifies a scope
-   * name suffix (ie, it has a "%" and the scope suffix is not numeric):
+   * name suffix (ie, it has a "%") and the scope suffix is not numeric:
    *   ENOSYS       address is not link local
    *   ENXIO        if_nametoindex said it wasn't a valid name
    *   EIO          if_nametoindex went crazy (adns prints a message to stderr)
