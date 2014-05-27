@@ -228,8 +228,6 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
   return EINVAL;				\
 }while(0)
 
-  port= htons(port);
-
   if (!strchr(addr, ':')) { /* INET */
 
 #define AFCORE(INETx,SINx,sinx)			\
@@ -268,6 +266,8 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
   *salen = needlen;
 
   memset(sa, 0, needlen);
+
+  sa->sa_family= af;
   *portp = htons(port);
 
   int r= inet_pton(af,parse,dst);
@@ -332,7 +332,7 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
       }
     } /* else; !!*ep */
 
-    SIN6(sa)->sin6_scope_id= htonl(scope);
+    SIN6(sa)->sin6_scope_id= scope;
   } /* if (scopestr) */
 
   return 0;
@@ -362,7 +362,6 @@ int adns_addr2text(const struct sockaddr *sa,
   if (sa->sa_family == AF_INET6) {
     uint32_t scope = CSIN6(sa)->sin6_scope_id;
     if (scope) {
-      scope = ntohl(scope);
       int scopeoffset = strlen(addr_buffer);
       int remain = *addr_buflen - scopeoffset;
       int r = snprintf(addr_buffer + scopeoffset, remain,
