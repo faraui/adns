@@ -124,9 +124,19 @@ static void dotest(const char *input) {
 	   air->ai_family, (long)air->ai_addrlen, air->ai_addr, air->ai_next);
   printf(":");
 
-  if (our_r==EINVAL && libc_r==EAI_NONAME && !air) {
-    printf(" invalid");
-    goto ok;
+  if (libc_r==EAI_NONAME && !air) {
+    if (strchr(input,'%') && (our_r==ENOSYS || our_r==ENXIO)) {
+      printf(" bad-scope");
+      goto ok;
+    }
+    if (strchr(input,'%') && our_r==ENOSYS) {
+      printf(" bad-scope");
+      goto ok;
+    }
+    if (our_r==EINVAL) {
+      printf(" invalid");
+      goto ok;
+    }
   }
   printf(" valid");
 
