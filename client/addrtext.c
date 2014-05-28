@@ -1,4 +1,22 @@
 /*
+  some test cases
+
+
+ ./addrtext_s fe80::1%wlanx
+ ./addrtext_s fe80::1%wlan0
+ ./addrtext_s fe80::1%23
+ ./addrtext_s fe80::1%1
+ ./addrtext_s 2001:ba8:1e3::%wlan0
+ ./addrtext_s 2001:ba8:1e3::%23
+ ./addrtext_s 2001:ba8:1e3::%1   # normally lo
+ ./addrtext_s 127.0.0.1x
+ ./addrtext_s 172.18.45.6
+ ./addrtext_s 12345
+
+
+  */
+
+/*
  * addrtext.c
  * - test program for address<->string conversion, not part of the library
  */
