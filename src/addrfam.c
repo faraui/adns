@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #include <sys/types.h>
 #include <netdb.h>
@@ -213,6 +214,14 @@ const void *adns__sockaddr_to_inaddr(const struct sockaddr *sa)
 # define af_debug(fmt,...) ((void)("" fmt "", __VA_ARGS__))
 #endif
 
+static bool addrtext_our_errno(int e) {
+  return
+    e==EAFNOSUPPORT ||
+    e==EINVAL ||
+    e==ENOSPC ||
+    e==ENOSYS;
+}
+
 int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 		   socklen_t *salen /* set if OK or ENOSPC */) {
   int af;
@@ -313,8 +322,7 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 		 strerror(errno));
 	if (errno==0) {
 	  return ENXIO;
-	} else if (errno==EAFNOSUPPORT || errno==EINVAL ||
-		   errno==ENOSPC || errno==ENOSYS) {
+	} else if (addrtext_our_errno(errno)) {
 	  /* we use these for other purposes, urgh. */
 	  perror("adns: adns_text2addr: if_nametoindex"
 		 " failed with unexpected error");
@@ -364,9 +372,27 @@ int adns_addr2text(const struct sockaddr *sa,
     if (scope) {
       int scopeoffset = strlen(addr_buffer);
       int remain = *addr_buflen - scopeoffset;
-      int r = snprintf(addr_buffer + scopeoffset, remain,
-		       "%%%"PRIu32"", scope);
-      assert(r < *addr_buflen - scopeoffset);
+      char *scopeptr =  addr_buffer + scopeoffset;
+      assert(remain >= IF_NAMESIZE+1/*%*/);
+      *scopeptr++= '%'; remain--;
+      char *ok = scope > UINT_MAX
+	? 0 /* we can't pass it to if_indextoname then */
+	: if_indextoname(scope, scopeptr);
+      if (!ok) {
+	if (errno==ENXIO) {
+	  /* fair enough, show it as a number then */
+	} else if (addrtext_our_errno(errno)) {
+	  /* we use these for other purposes, urgh. */
+	  perror("adns: adns_addr2text: if_indextoname"
+		 " failed with unexpected error");
+	  return EIO;
+	} else {
+	  return errno;
+	}
+	int r = snprintf(scopeptr, remain,
+			 "%"PRIu32"", scope);
+	assert(r < *addr_buflen - scopeoffset);
+      }
       af_debug("printed scoped address `%s'", addr_buffer);
     }
   }

@@ -66,6 +66,7 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <net/if.h>
 
 #ifdef __cplusplus
 extern "C" { /* I really dislike this - iwj. */
@@ -682,7 +683,10 @@ void adns_finish(adns_state ads);
  * they will be cancelled.
  */
 
-#define ADNS_ADDR2TEXT_BUFLEN (INET6_ADDRSTRLEN +1/*%*/ +9/*uint32*/ +1/*nul*/)
+#define ADNS_ADDR2TEXT_BUFLEN					\
+  (INET6_ADDRSTRLEN + 1/*%*/					\
+  + ((IF_NAMESIZE-1) > 9 ? (IF_NAMESIZE-1) : 9/*uint32*/)	\
+  + 1/* nul; included in IF_NAMESIZE */)
 
 int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 		   socklen_t *salen /* set if OK or ENOSPC; otherwise undef */);
@@ -698,6 +702,7 @@ int adns_addr2text(const struct sockaddr *sa,
    *   ENOSYS       address is not link local
    *   ENXIO        if_nametoindex said it wasn't a valid name
    *   EIO          if_nametoindex went crazy (adns prints a message to stderr)
+   * Extra errors are possible from text2addr and addr2text with scopes:
    *   any other    if_nametoindex failed
    * port is always in host byte order and is simply copied to and
    * from the appropriate sockaddr field (byteswapped as necessary).
