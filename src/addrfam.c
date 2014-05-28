@@ -222,6 +222,13 @@ static bool addrtext_our_errno(int e) {
     e==ENOSYS;
 }
 
+static bool addrtext_scope_use_ifname(const struct sockaddr *sa) {
+  const struct in6_addr *in6= &CSIN6(sa)->sin6_addr;
+  return
+    IN6_IS_ADDR_LINKLOCAL(in6) ||
+    IN6_IS_ADDR_MC_LINKLOCAL(in6);
+}
+
 int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 		   socklen_t *salen /* set if OK or ENOSPC */) {
   int af;
@@ -296,9 +303,7 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
       if (scope > ~(uint32_t)0)
 	INVAL("numeric scope id too large for uint32_t");
     } else { /* !!*ep */
-      const struct in6_addr *in6= &SIN6(sa)->sin6_addr;
-      if (!IN6_IS_ADDR_LINKLOCAL(in6) &&
-	  !IN6_IS_ADDR_MC_LINKLOCAL(in6)) {
+      if (!addrtext_scope_use_ifname(sa)) {
 	af_debug("cannot convert non-numeric scope"
 		 " in non-link-local addr `%s'", addr);
 	return ENOSYS;
@@ -375,20 +380,24 @@ int adns_addr2text(const struct sockaddr *sa,
       char *scopeptr =  addr_buffer + scopeoffset;
       assert(remain >= IF_NAMESIZE+1/*%*/);
       *scopeptr++= '%'; remain--;
-      char *ok = scope > UINT_MAX
-	? 0 /* we can't pass it to if_indextoname then */
-	: if_indextoname(scope, scopeptr);
-      if (!ok) {
-	if (errno==ENXIO) {
-	  /* fair enough, show it as a number then */
-	} else if (addrtext_our_errno(errno)) {
-	  /* we use these for other purposes, urgh. */
-	  perror("adns: adns_addr2text: if_indextoname"
-		 " failed with unexpected error");
-	  return EIO;
-	} else {
-	  return errno;
+      bool parsedname = 0;
+      if (scope <= UINT_MAX /* so we can pass it to if_indextoname */
+	  && addrtext_scope_use_ifname(sa)) {
+	parsedname = if_indextoname(scope, scopeptr);
+	if (!parsedname) {
+	  if (errno==ENXIO) {
+	    /* fair enough, show it as a number then */
+	  } else if (addrtext_our_errno(errno)) {
+	    /* we use these for other purposes, urgh. */
+	    perror("adns: adns_addr2text: if_indextoname"
+		   " failed with unexpected error");
+	    return EIO;
+	  } else {
+	    return errno;
+	  }
 	}
+      }
+      if (!parsedname) {
 	int r = snprintf(scopeptr, remain,
 			 "%"PRIu32"", scope);
 	assert(r < *addr_buflen - scopeoffset);
