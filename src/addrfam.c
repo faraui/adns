@@ -228,13 +228,13 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
   return EINVAL;				\
 }while(0)
 
-  if (!strchr(addr, ':')) { /* INET */
-
 #define AFCORE(INETx,SINx,sinx)			\
     af= AF_##INETx;				\
     dst = &SINx(sa)->sinx##_addr;		\
     portp = &SINx(sa)->sinx##_port;		\
     needlen= sizeof(*SINx(sa));
+
+  if (!strchr(addr, ':')) { /* INET */
 
     AFCORE(INET,SIN,sin);
 
@@ -255,9 +255,9 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
       af_debug("will parse scoped address `%s' %% `%s'", parse, scopestr);
     }
 
-#undef AFCORE
-
   }
+
+#undef AFCORE
 
   if (*salen < needlen) {
     *salen = needlen;
