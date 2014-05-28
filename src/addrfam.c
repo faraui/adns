@@ -325,7 +325,7 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
       } else { /* ix>0 */
 	if (scope > ~(uint32_t)0) {
 	  fprintf(stderr,"adns: adns_text2addr: if_nametoindex"
-		  " returned an interface index >2^32 which will not fit"
+		  " returned an interface index >=2^32 which will not fit"
 		  " in sockaddr_in6.sin6_scope_id");
 	  return EIO;
 	}
