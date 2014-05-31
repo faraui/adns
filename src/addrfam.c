@@ -208,8 +208,16 @@ const void *adns__sockaddr_to_inaddr(const struct sockaddr *sa)
 
 #define ADDRFAM_DEBUG
 #ifdef ADDRFAM_DEBUG
+static void af_debug_func(const char *fmt, ...) {
+  int esave= errno;
+  va_list al;
+  va_start(al,fmt);
+  vfprintf(stderr,fmt,al);
+  va_end(al);
+  errno= esave;
+}
 # define af_debug(fmt,...) \
-  (fprintf(stderr, "%s: " fmt "\n", __func__, __VA_ARGS__))
+  (af_debug_func("%s: " fmt "\n", __func__, __VA_ARGS__))
 #else
 # define af_debug(fmt,...) ((void)("" fmt "", __VA_ARGS__))
 #endif
@@ -381,10 +389,13 @@ int adns_addr2text(const struct sockaddr *sa,
       assert(remain >= IF_NAMESIZE+1/*%*/);
       *scopeptr++= '%'; remain--;
       bool parsedname = 0;
+      af_debug("will print scoped addr %s %% %"PRIu32"", addr_buffer, scope);
       if (scope <= UINT_MAX /* so we can pass it to if_indextoname */
 	  && addrtext_scope_use_ifname(sa)) {
 	parsedname = if_indextoname(scope, scopeptr);
 	if (!parsedname) {
+	  af_debug("if_indextoname rejected scope (errno=%s)",
+		   strerror(errno));
 	  if (errno==ENXIO) {
 	    /* fair enough, show it as a number then */
 	  } else if (addrtext_our_errno(errno)) {
