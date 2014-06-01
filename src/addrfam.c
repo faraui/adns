@@ -237,18 +237,18 @@ static bool addrtext_scope_use_ifname(const struct sockaddr *sa) {
     IN6_IS_ADDR_MC_LINKLOCAL(in6);
 }
 
-int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
-		   socklen_t *salen /* set if OK or ENOSPC */) {
+int adns_text2addr(const char *text, uint16_t port, adns_queryflags flags,
+		   struct sockaddr *sa, socklen_t *salen_io) {
   int af;
   char copybuf[INET6_ADDRSTRLEN];
-  const char *parse=addr;
+  const char *parse=text;
   const char *scopestr=0;
   socklen_t needlen;
   void *dst;
   uint16_t *portp;
 
 #define INVAL(how) do{				\
-  af_debug("invalid: %s: `%s'", how, addr);	\
+  af_debug("invalid: %s: `%s'", how, text);	\
   return EINVAL;				\
 }while(0)
 
@@ -258,7 +258,7 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
     portp = &SINx(sa)->sinx##_port;		\
     needlen= sizeof(*SINx(sa));
 
-  if (!strchr(addr, ':')) { /* INET */
+  if (!strchr(text, ':')) { /* INET */
 
     AFCORE(INET,SIN,sin);
 
@@ -266,11 +266,11 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 
     AFCORE(INET6,SIN6,sin6);
 
-    const char *percent= strchr(addr, '%');
+    const char *percent= strchr(text, '%');
     if (percent) {
-      ptrdiff_t lhslen = percent - addr;
+      ptrdiff_t lhslen = percent - text;
       if (lhslen >= INET6_ADDRSTRLEN) INVAL("scoped addr lhs too long");
-      memcpy(copybuf, addr, lhslen);
+      memcpy(copybuf, text, lhslen);
       copybuf[lhslen]= 0;
 
       parse= copybuf;
@@ -286,11 +286,10 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
   if (scopestr && (flags & adns_qf_addrlit_scope_forbid))
     INVAL("scoped addr but _scope_forbid");
 
-  if (*salen < needlen) {
-    *salen = needlen;
+  if (*salen_io < needlen) {
+    *salen_io = needlen;
     return ENOSPC;
   }
-  *salen = needlen;
 
   memset(sa, 0, needlen);
 
@@ -318,7 +317,7 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
 	INVAL("non-numeric scope but _scope_numeric");
       if (!addrtext_scope_use_ifname(sa)) {
 	af_debug("cannot convert non-numeric scope"
-		 " in non-link-local addr `%s'", addr);
+		 " in non-link-local addr `%s'", text);
 	return ENOSYS;
       }
       errno= 0;
@@ -361,17 +360,17 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
     SIN6(sa)->sin6_scope_id= scope;
   } /* if (scopestr) */
 
+  *salen_io = needlen;
   return 0;
 }
 
-int adns_addr2text(const struct sockaddr *sa,
-		   char *addr_buffer, int *addr_buflen,
-		   int *port_r) {
+int adns_addr2text(const struct sockaddr *sa, adns_queryflags flags,
+		   char *buffer, int *buflen_io, int *port_r) {
   const void *src;
   int port;
 
-  if (*addr_buflen < ADNS_ADDR2TEXT_BUFLEN) {
-    *addr_buflen = ADNS_ADDR2TEXT_BUFLEN;
+  if (*buflen_io < ADNS_ADDR2TEXT_BUFLEN) {
+    *buflen_io = ADNS_ADDR2TEXT_BUFLEN;
     return ENOSPC;
   }
 
@@ -382,7 +381,7 @@ int adns_addr2text(const struct sockaddr *sa,
     default: return EAFNOSUPPORT;
   }
 
-  const char *ok= inet_ntop(sa->sa_family, src, addr_buffer, *addr_buflen);
+  const char *ok= inet_ntop(sa->sa_family, src, buffer, *buflen_io);
   assert(ok);
 
   if (sa->sa_family == AF_INET6) {
@@ -390,13 +389,13 @@ int adns_addr2text(const struct sockaddr *sa,
     if (scope) {
       if (flags & adns_qf_addrlit_scope_forbid)
 	return EINVAL;
-      int scopeoffset = strlen(addr_buffer);
-      int remain = *addr_buflen - scopeoffset;
-      char *scopeptr =  addr_buffer + scopeoffset;
+      int scopeoffset = strlen(buffer);
+      int remain = *buflen_io - scopeoffset;
+      char *scopeptr =  buffer + scopeoffset;
       assert(remain >= IF_NAMESIZE+1/*%*/);
       *scopeptr++= '%'; remain--;
       bool parsedname = 0;
-      af_debug("will print scoped addr %s %% %"PRIu32"", addr_buffer, scope);
+      af_debug("will print scoped addr %s %% %"PRIu32"", buffer, scope);
       if (scope <= UINT_MAX /* so we can pass it to if_indextoname */
 	  && !(flags & adns_qf_addrlit_scope_numeric)
 	  && addrtext_scope_use_ifname(sa)) {
@@ -419,9 +418,9 @@ int adns_addr2text(const struct sockaddr *sa,
       if (!parsedname) {
 	int r = snprintf(scopeptr, remain,
 			 "%"PRIu32"", scope);
-	assert(r < *addr_buflen - scopeoffset);
+	assert(r < *buflen_io - scopeoffset);
       }
-      af_debug("printed scoped addr `%s'", addr_buffer);
+      af_debug("printed scoped addr `%s'", buffer);
     }
   }
 

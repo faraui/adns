@@ -691,10 +691,10 @@ void adns_finish(adns_state ads);
   + 1/* nul; included in IF_NAMESIZE */)
 
 int adns_text2addr(const char *text, uint16_t port, adns_queryflags flags,
-		   struct sockaddr *sa,
-		   socklen_t *salen /* set if OK or ENOSPC; otherwise undef */);
+		   struct sockaddr *sa_r,
+		   socklen_t *salen_io /* updated iff OK or ENOSPC */);
 int adns_addr2text(const struct sockaddr *sa, adns_queryflags flags,
-		   char *buffer, int *buflen /* set iff ENOSPC */,
+		   char *buffer, int *buflen_io /* updated ONLY on ENOSPC */,
 		   int *port_r /* may be 0 */);
   /*
    * port is always in host byte order and is simply copied to and
@@ -706,9 +706,9 @@ int adns_addr2text(const struct sockaddr *sa, adns_queryflags flags,
    * Error return values are:
    *
    *  ENOSPC    Output buffer is too small.  Can only happen if
-   *            *buflen < ADNS_ADDR2TEXT_BUFLEN or
-   *            *salen < sizeof(adns_sockaddr).  On return,
-   *            *buflen or *salen has been updated by adns.
+   *            *buflen_io < ADNS_ADDR2TEXT_BUFLEN or
+   *            *salen_io < sizeof(adns_sockaddr).  On return,
+   *            *buflen_io or *salen_io has been updated by adns.
    *
    *  EINVAL    text has invalid syntax.
    *
