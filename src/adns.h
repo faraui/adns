@@ -719,8 +719,8 @@ int adns_addr2text(const struct sockaddr *sa, adns_queryflags flags,
    *            sin6_scope_id nonzero) but caller specified
    *            adns_qf_addrlit_scope_forbid.
    *
-   *            Scope name supplied in text but caller specified
-   *            adns_qf_addrlit_scope_numeric.
+   *            Scope name (rather than number) supplied in text but
+   *            caller specified adns_qf_addrlit_scope_numeric.
    *
    *  EAFNOSUPPORT   sa->sa_family is not supported (addr2text only).
    *

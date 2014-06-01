@@ -276,12 +276,15 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
       parse= copybuf;
       scopestr= percent+1;
 
-      af_debug("will parse scoped address `%s' %% `%s'", parse, scopestr);
+      af_debug("will parse scoped addr `%s' %% `%s'", parse, scopestr);
     }
 
   }
 
 #undef AFCORE
+
+  if (scopestr && (flags & adns_qf_addrlit_scope_forbid))
+    INVAL("scoped addr but _scope_forbid");
 
   if (*salen < needlen) {
     *salen = needlen;
@@ -311,6 +314,8 @@ int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
       if (scope > ~(uint32_t)0)
 	INVAL("numeric scope id too large for uint32_t");
     } else { /* !!*ep */
+      if (flags & adns_qf_addrlit_scope_numeric)
+	INVAL("non-numeric scope but _scope_numeric");
       if (!addrtext_scope_use_ifname(sa)) {
 	af_debug("cannot convert non-numeric scope"
 		 " in non-link-local addr `%s'", addr);
@@ -383,6 +388,8 @@ int adns_addr2text(const struct sockaddr *sa,
   if (sa->sa_family == AF_INET6) {
     uint32_t scope = CSIN6(sa)->sin6_scope_id;
     if (scope) {
+      if (flags & adns_qf_addrlit_scope_forbid)
+	return EINVAL;
       int scopeoffset = strlen(addr_buffer);
       int remain = *addr_buflen - scopeoffset;
       char *scopeptr =  addr_buffer + scopeoffset;
@@ -391,6 +398,7 @@ int adns_addr2text(const struct sockaddr *sa,
       bool parsedname = 0;
       af_debug("will print scoped addr %s %% %"PRIu32"", addr_buffer, scope);
       if (scope <= UINT_MAX /* so we can pass it to if_indextoname */
+	  && !(flags & adns_qf_addrlit_scope_numeric)
 	  && addrtext_scope_use_ifname(sa)) {
 	parsedname = if_indextoname(scope, scopeptr);
 	if (!parsedname) {
@@ -413,7 +421,7 @@ int adns_addr2text(const struct sockaddr *sa,
 			 "%"PRIu32"", scope);
 	assert(r < *addr_buflen - scopeoffset);
       }
-      af_debug("printed scoped address `%s'", addr_buffer);
+      af_debug("printed scoped addr `%s'", addr_buffer);
     }
   }
 
