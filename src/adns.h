@@ -136,6 +136,8 @@ typedef enum { /* In general, or together the desired flags: */
  adns_qf_domapv4=	 0x00001000,/*  ... any IPv4 addresses should be v6-mapped */
  adns_qf_ipv6_mapv4=	 adns_qf_ipv6_ok|adns_qf_domapv4,
  adns__qf_afmask=	 0x00001c00,/* all the above flag bits */
+ adns_qf_addrlit_scope_forbid=0x00002000,/* forbid %<scope> in IPv6 literals */
+ adns_qf_addrlit_scope_numeric=0x00004000,/* %<scope> may only be numeric */
  adns__qf_internalmask=  0x0ff00000
 } adns_queryflags;
 
@@ -688,24 +690,54 @@ void adns_finish(adns_state ads);
   + ((IF_NAMESIZE-1) > 9 ? (IF_NAMESIZE-1) : 9/*uint32*/)	\
   + 1/* nul; included in IF_NAMESIZE */)
 
-int adns_text2addr(const char *addr, uint16_t port, struct sockaddr *sa,
+int adns_text2addr(const char *text, uint16_t port, adns_queryflags flags,
+		   struct sockaddr *sa,
 		   socklen_t *salen /* set if OK or ENOSPC; otherwise undef */);
-int adns_addr2text(const struct sockaddr *sa,
-		   char *addr_buffer, int *addr_buflen /* set iff ENOSPC */,
+int adns_addr2text(const struct sockaddr *sa, adns_queryflags flags,
+		   char *buffer, int *buflen /* set iff ENOSPC */,
 		   int *port_r /* may be 0 */);
-  /* Error return values are:
-   *   EAFNOSUPPORT addr2text only
-   *   EINVAL       text2addr only: addr has invalid syntax
-   *   ENOSPC       only if *buflen < _BUFLEN or *salen < sizeof(adns_sockaddr)
-   * Extra errors are possible from text2addr if addr specifies a scope
-   * name suffix (ie, it has a "%") and the scope suffix is not numeric:
-   *   ENOSYS       address is not link local
-   *   ENXIO        if_nametoindex said it wasn't a valid name
-   *   EIO          if_nametoindex went crazy (adns prints a message to stderr)
-   * Extra errors are possible from text2addr and addr2text with scopes:
-   *   any other    if_nametoindex failed
+  /*
    * port is always in host byte order and is simply copied to and
    * from the appropriate sockaddr field (byteswapped as necessary).
+   *
+   * The only flags supported are adns_qf_addrlit_...; others are
+   * ignored.
+   *
+   * Error return values are:
+   *
+   *  ENOSPC    Output buffer is too small.  Can only happen if
+   *            *buflen < ADNS_ADDR2TEXT_BUFLEN or
+   *            *salen < sizeof(adns_sockaddr).  On return,
+   *            *buflen or *salen has been updated by adns.
+   *
+   *  EINVAL    text has invalid syntax.
+   *
+   *            text represents an address family not supported by
+   *            this version of adns.
+   *
+   *            Scoped address supplied (text contained "%" or
+   *            sin6_scope_id nonzero) but caller specified
+   *            adns_qf_addrlit_scope_forbid.
+   *
+   *            Scope name supplied in text but caller specified
+   *            adns_qf_addrlit_scope_numeric.
+   *
+   *  EAFNOSUPPORT   sa->sa_family is not supported (addr2text only).
+   *
+   * Only if neither adns_qf_addrlit_scope_forbid nor
+   * adns_qf_addrlit_scope_numeric are set:
+   *
+   *  ENOSYS    Scope name supplied in text but IPv6 address part of
+   *            sockaddr is not a link local address.
+   *
+   *  ENXIO     Scope name supplied in text but if_nametoindex
+   *            said it wasn't a valid local interface name.
+   *
+   *  EIO       Scoped address supplied but if_nametoindex failed
+   *            in an unexpected way; adns has printed a message to
+   *            stderr.
+   *
+   *  any other   if_nametoindex failed in a more-or-less expected way.
    */
 
 void adns_forallqueries_begin(adns_state ads);
