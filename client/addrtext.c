@@ -109,7 +109,7 @@ static void dotest(const char *input) {
   memset(&ours,0,sizeof(ours));
 
   socklen= sizeof(ours);
-  int our_r= adns_text2addr(input,PORT,&ours.sa,&socklen);
+  int our_r= adns_text2addr(input,PORT,0,&ours.sa,&socklen);
 
   memset(&aip,0,sizeof(aip));
   aip.ai_flags= AI_NUMERICHOST|AI_NUMERICSERV;
@@ -160,7 +160,7 @@ static void dotest(const char *input) {
 
   int ourbuflen= sizeof(ourbuf);
   int ourport;
-  our_r= adns_addr2text(&ours.sa, ourbuf,&ourbuflen, &ourport);
+  our_r= adns_addr2text(&ours.sa,0, ourbuf,&ourbuflen, &ourport);
 
   printf(" us %s",strerror(our_r));
   if (!our_r)

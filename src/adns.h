@@ -138,6 +138,7 @@ typedef enum { /* In general, or together the desired flags: */
  adns__qf_afmask=	 0x00001c00,/* all the above flag bits */
  adns_qf_addrlit_scope_forbid=0x00002000,/* forbid %<scope> in IPv6 literals */
  adns_qf_addrlit_scope_numeric=0x00004000,/* %<scope> may only be numeric */
+ adns_qf_addrlit_ipv4_quadonly=0x00008000,/* reject non-dotted-quad ipv4 */
  adns__qf_internalmask=  0x0ff00000
 } adns_queryflags;
 

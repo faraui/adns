@@ -296,11 +296,14 @@ int adns_text2addr(const char *text, uint16_t port, adns_queryflags flags,
   sa->sa_family= af;
   *portp = htons(port);
 
-  int r= inet_pton(af,parse,dst);
-  if (!r) INVAL("inet_pton rejected");
-  if (r<0) {
-    af_debug("inet_pton failed on `%s'", parse);
-    return errno;
+  if (af == AF_INET && !(flags & adns_qf_addrlit_ipv4_quadonly)) {
+    /* we have to use inet_aton to deal with non-dotted-quad literals */
+    int r= inet_aton(parse,&SIN(sa)->sin_addr);
+    if (!r) INVAL("inet_aton rejected");
+  } else {
+    int r= inet_pton(af,parse,dst);
+    if (!r) INVAL("inet_pton rejected");
+    assert(r>0);
   }
 
   if (scopestr) {
