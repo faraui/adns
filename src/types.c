@@ -560,13 +560,11 @@ static void addr_subqueries(adns_query qu, struct timeval now,
     err= adns__mkquery_frdgram(qu->ads, &qu->vb, &id, qd_dgram,qd_dglen,
 			       DNS_HDRSIZE, addr_all_rrtypes[i], qf);
     if (err) goto x_error;
-    err= adns__internal_submit(qu->ads, &cqu, &tinfo_addrsub,
+    err= adns__internal_submit(qu->ads, &cqu, qu, &tinfo_addrsub,
 			       addr_all_rrtypes[i] | qtf,
 			       &qu->vb, id, qf, now, &ctx);
     if (err) goto x_error;
     cqu->answer->rrsz= qu->answer->rrsz;
-    cqu->parent= qu;
-    LIST_LINK_TAIL_PART(qu->children, cqu,siblings.);
   }
   qu->state= query_childw;
   LIST_LINK_TAIL(qu->ads->childw, qu);
@@ -600,12 +598,10 @@ static adns_status addr_submit(adns_query parent, adns_query *query_r,
 
   ctx->tinfo.addr.want= want;
   ctx->tinfo.addr.have= 0;
-  err= adns__internal_submit(ads, &qu, adns__findtype(adns_r_addr),
+  err= adns__internal_submit(ads, &qu, parent, adns__findtype(adns_r_addr),
 			     type, qumsg_vb, id, flags, now, ctx);
   if (err) return err;
 
-  qu->parent= parent;
-  LIST_LINK_TAIL_PART(parent->children, qu, siblings.);
   *query_r= qu;
   return adns_s_ok;
 }
@@ -1210,13 +1206,12 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart,
   ctx.callback= icb_ptr;
   memset(&ctx.pinfo,0,sizeof(ctx.pinfo));
   memset(&ctx.tinfo,0,sizeof(ctx.tinfo));
-  st= adns__internal_submit(pai->ads, &nqu, adns__findtype(rrtype),
+  st= adns__internal_submit(pai->ads, &nqu, pai->qu,
+			    adns__findtype(rrtype),
 			    rrtype, &pai->qu->vb, id,
 			    adns_qf_quoteok_query, pai->now, &ctx);
   if (st) return st;
 
-  nqu->parent= pai->qu;
-  LIST_LINK_TAIL_PART(pai->qu->children,nqu,siblings.);
   return adns_s_ok;
 }
 
