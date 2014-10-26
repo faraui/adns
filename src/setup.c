@@ -260,25 +260,27 @@ static void ccf_sortlist(adns_state ads, const char *fn,
 
 static void ccf_options(adns_state ads, const char *fn,
 			int lno, const char *buf) {
-  const char *word, *rhs;
+  const char *word, *endword;
   char *ep;
   unsigned long v;
   int i,l;
 
   if (!buf) return;
 
-#define OPTION__IS(s,op) (l op (sizeof(s)-1) && !memcmp(word,s,(sizeof(s)-1)))
+#define OPTION__IS(s,op) ((endword-word) op (sizeof(s)-1) && \
+			  !memcmp(word,s,(sizeof(s)-1)))
 #define OPTION_IS(s)     (OPTION__IS(s,==))
-#define OPTION_STARTS(s) (OPTION__IS(s,>=) ? ((rhs=word+sizeof(s)-1)) : 0)
+#define OPTION_STARTS(s) (OPTION__IS(s,>=) ? ((word+=sizeof(s)-1)) : 0)
 
   while (nextword(&buf,&word,&l)) {
+    endword=word+l;
     if (OPTION_IS("debug")) {
       ads->iflags |= adns_if_debug;
       continue;
     }
     if (OPTION_STARTS("ndots:")) {
-      v= strtoul(rhs,&ep,10);
-      if (ep==rhs || ep != word+l || v > INT_MAX) {
+      v= strtoul(word,&ep,10);
+      if (ep==rhs || ep != endword || v > INT_MAX) {
 	configparseerr(ads,fn,lno,"option `%.*s' malformed"
 		       " or has bad value",l,word);
 	continue;
