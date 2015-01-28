@@ -1,0 +1,69 @@
+./adnstest default -0x10
+:15 2/chiark.net
+ start 1422488885.111730
+ socket domain=AF_INET type=SOCK_DGRAM
+ socket=6
+ +0.000145
+ fcntl fd=6 cmd=F_GETFL
+ fcntl=~O_NONBLOCK&...
+ +0.000067
+ fcntl fd=6 cmd=F_SETFL O_NONBLOCK|...
+ fcntl=OK
+ +0.000058
+ socket domain=AF_INET type=SOCK_STREAM
+ socket=7
+ +0.000310
+ fcntl fd=7 cmd=F_GETFL
+ fcntl=~O_NONBLOCK&...
+ +0.000080
+ fcntl fd=7 cmd=F_SETFL O_NONBLOCK|...
+ fcntl=OK
+ +0.000086
+ connect fd=7 addr=172.18.45.6:53
+ connect=EINPROGRESS
+ +0.000509
+ recvfrom fd=6 buflen=512
+ recvfrom=EAGAIN
+ +0.000159
+ select max=8 rfds=null wfds=[7] efds=null to=0.000000
+ select=0 rfds=null wfds=[] efds=null
+ +0.000127
+ select max=8 rfds=[6] wfds=[7] efds=[] to=13.998729
+ select=1 rfds=[] wfds=[7] efds=[]
+ +0.003195
+ select max=8 rfds=null wfds=[7] efds=null to=0.000000
+ select=1 rfds=null wfds=[7] efds=null
+ +0.000101
+ read fd=7 buflen=1
+ read=EAGAIN
+ +0.000057
+ write fd=7
+     001c311f 01000001 00000000 00000663 68696172 6b036e65 7400000f 0001.
+ write=30
+ +0.000658
+ select max=8 rfds=[6,7] wfds=[] efds=[7] to=29.994718
+ select=1 rfds=[7] wfds=[] efds=[]
+ +0.085967
+ read fd=7 buflen=2
+ read=OK
+     00cc.
+ +0.000205
+ read fd=7 buflen=204
+ read=OK
+     311f8180 00010001 00030004 06636869 61726b03 6e657400 000f0001 c00c000f
+     00010000 0e100023 000a086d 782d7265 6c617906 63686961 726b0867 7265656e
+     656e6403 6f726702 756b00c0 0c000200 0100000e 10000c06 63686961 726b026e
+     73c00cc0 0c000200 0100000e 10000805 73746f72 6dc05ec0 0c000200 0100000e
+     10000906 70697761 7265c05e c02a0001 00010000 0e100004 d40dc5e5 c06f0001
+     00010000 0e100004 c2f29d2a c0570001 00010000 0e100004 d40dc5e5 c0830001
+     00010000 0e100004 d5095d46.
+ +0.000366
+ read fd=7 buflen=206
+ read=EAGAIN
+ +0.000116
+ close fd=6
+ close=OK
+ +0.000194
+ close fd=7
+ close=OK
+ +0.000382

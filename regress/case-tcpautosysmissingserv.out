@@ -1,0 +1,6 @@
+adns debug: using nameserver 172.18.45.10
+chiark.net flags 2 type 15 MX(raw) submitted
+adns warning: TCP connection failed: connect/read: No route to host (NS=172.18.45.10)
+adns warning: TCP connection failed: connect/read: No route to host (NS=172.18.45.10)
+chiark.net flags 2 type MX(raw): All nameservers failed; nrrs=0; cname=$; owner=$; ttl=604794
+rc=0
