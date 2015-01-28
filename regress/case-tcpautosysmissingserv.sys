@@ -1,0 +1,75 @@
+./adnstest missingserver -0x10
+:15 2/chiark.net
+ start 1422489379.676732
+ socket domain=AF_INET type=SOCK_DGRAM
+ socket=6
+ +0.000107
+ fcntl fd=6 cmd=F_GETFL
+ fcntl=~O_NONBLOCK&...
+ +0.000049
+ fcntl fd=6 cmd=F_SETFL O_NONBLOCK|...
+ fcntl=OK
+ +0.000041
+ socket domain=AF_INET type=SOCK_STREAM
+ socket=7
+ +0.000190
+ fcntl fd=7 cmd=F_GETFL
+ fcntl=~O_NONBLOCK&...
+ +0.000041
+ fcntl fd=7 cmd=F_SETFL O_NONBLOCK|...
+ fcntl=OK
+ +0.000037
+ connect fd=7 addr=172.18.45.10:53
+ connect=EINPROGRESS
+ +0.000164
+ recvfrom fd=6 buflen=512
+ recvfrom=EAGAIN
+ +0.000087
+ select max=8 rfds=null wfds=[7] efds=null to=0.000000
+ select=0 rfds=null wfds=[] efds=null
+ +0.000094
+ select max=8 rfds=[6] wfds=[7] efds=[] to=13.999387
+ select=1 rfds=[] wfds=[7] efds=[]
+ +3.012183
+ select max=8 rfds=null wfds=[7] efds=null to=0.000000
+ select=1 rfds=null wfds=[7] efds=null
+ +0.000139
+ read fd=7 buflen=1
+ read=EHOSTUNREACH
+ +0.000129
+ close fd=7
+ close=OK
+ +0.000202
+ select max=7 rfds=[6] wfds=[] efds=[] to=0.000000
+ select=0 rfds=[] wfds=[] efds=[]
+ +0.000113
+ socket domain=AF_INET type=SOCK_STREAM
+ socket=7
+ +0.000359
+ fcntl fd=7 cmd=F_GETFL
+ fcntl=~O_NONBLOCK&...
+ +0.000084
+ fcntl fd=7 cmd=F_SETFL O_NONBLOCK|...
+ fcntl=OK
+ +0.000093
+ connect fd=7 addr=172.18.45.10:53
+ connect=EINPROGRESS
+ +0.000175
+ select max=8 rfds=[6] wfds=[7] efds=[] to=13.999289
+ select=1 rfds=[] wfds=[7] efds=[]
+ +3.006034
+ select max=8 rfds=null wfds=[7] efds=null to=0.000000
+ select=1 rfds=null wfds=[7] efds=null
+ +0.000150
+ read fd=7 buflen=1
+ read=EHOSTUNREACH
+ +0.000065
+ close fd=7
+ close=OK
+ +0.000179
+ select max=7 rfds=[6] wfds=[] efds=[] to=0.000000
+ select=0 rfds=[] wfds=[] efds=[]
+ +0.000122
+ close fd=6
+ close=OK
+ +0.000177
