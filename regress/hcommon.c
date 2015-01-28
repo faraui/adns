@@ -167,6 +167,10 @@ void Tvbbytes(const void *buf, int len) {
 void Tvbfdset(int max, const fd_set *fds) {
   int i;
   const char *comma= "";
+  if (!fds) {
+    Tvba("null");
+    return;
+  }
   Tvba("[");
   for (i=0; i<max; i++) {
     if (!FD_ISSET(i,fds)) continue;

@@ -102,6 +102,10 @@ static void P_updatetime(void) {
 static void Pfdset(fd_set *set, int max) {
   int r, c;
   char *ep;
+  if (!set) {
+    Pstring("null","null fdset pointer");
+    return;
+  }
   if (vb2.buf[vb2.used++] != '[') Psyntax("fd set start not [");
   FD_ZERO(set);
   if (vb2.buf[vb2.used] == ']') { vb2.used++; return; }
