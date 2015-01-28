@@ -25,9 +25,12 @@ adnstest anarres -0x400
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.999290
  select=1 rfds=[] wfds=[5] efds=[]
  +0.000937
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=EAGAIN
- +0.000090
+ +0.000089
  write fd=5
      0035311f 01000001 00000000 00000474 65737403 69776a0a 72656c61 74697669
      74790867 7265656e 656e6403 6f726702 756b0000 010001.

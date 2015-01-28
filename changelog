@@ -3,6 +3,9 @@ adns (1.5.1~~) unstable; urgency=low
   * Portability fix for systems where socklen_t is bigger than int.
   * Fix for malicious optimisation of memcpy in test suite, which
     causes failure with gcc-4.1.9 -O3.  See Debian bug #772718.
+  * Fix TCP async connect handling.  The bug is hidden on Linux and on most
+    systems where the nameserver is on localhost.  If it is not hidden,
+    adns's TCP support is broken unless adns_if_noautosys is used.
 
  --
 

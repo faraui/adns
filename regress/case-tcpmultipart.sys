@@ -25,9 +25,12 @@ adnstest tunnel
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.998324
  select=1 rfds=[] wfds=[5] efds=[]
  +1.-647444
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=EAGAIN
- +0.000176
+ +0.000175
  write fd=5
      002d311f 01000001 00000000 00000331 33320237 36033232 34033139 3507696e
      2d616464 72046172 70610000 0c0001.

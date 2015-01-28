@@ -319,9 +319,12 @@ adnstest manyptrwrong -0x400
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.539402
  select=1 rfds=[] wfds=[5] efds=[]
  +0.008807
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=EAGAIN
- +0.000213
+ +0.000212
  write fd=5
      002b3123 01000001 00000000 00000332 35340130 02393903 32303307 696e2d61
      64647204 61727061 00000c00 01.

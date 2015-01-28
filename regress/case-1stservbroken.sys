@@ -68,10 +68,13 @@ adnstest 1stservbroken
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.987562
  select=1 rfds=[] wfds=[5] efds=[]
  +0.001172
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=OK
      .
- +0.001161
+ +0.001160
  write fd=5
      003b311f 01000001 00000000 00000574 72756e63 04746573 74036977 6a0a7265
      6c617469 76697479 08677265 656e656e 64036f72 6702756b 00000c00 01.
@@ -104,9 +107,12 @@ adnstest 1stservbroken
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.992868
  select=1 rfds=[] wfds=[5] efds=[]
  +0.001011
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=EAGAIN
- +0.000595
+ +0.000594
  write fd=5
      003b311f 01000001 00000000 00000574 72756e63 04746573 74036977 6a0a7265
      6c617469 76697479 08677265 656e656e 64036f72 6702756b 00000c00 01.

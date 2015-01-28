@@ -444,6 +444,22 @@ int adns_processwriteable(adns_state ads, int fd, const struct timeval *now) {
     assert(ads->tcprecv.used==0);
     assert(ads->tcprecv_skip==0);
     for (;;) {
+      /* This function can be called even if the fd wasn't actually
+       * flagged as writeable.  For asynch tcp connect we have to
+       * actually use the writeability to tell us the connect has
+       * completed (or failed), so we need to double check. */
+      fd_set writeable;
+      struct timeval timeout = { 0,0 };
+      FD_ZERO(&writeable);
+      FD_SET(ads->tcpsocket,&writeable);
+      r= select(ads->tcpsocket+1,0,&writeable,0,&timeout);
+      if (r==0) break;
+      if (r<0) {
+	if (errno==EINTR) continue;
+	adns__tcp_broken(ads,"select","failed connecting writeability check");
+	r= 0; goto xit;
+      }
+      assert(FD_ISSET(ads->tcpsocket,&writeable));
       if (!adns__vbuf_ensure(&ads->tcprecv,1)) { r= ENOMEM; goto xit; }
       r= read(ads->tcpsocket,&ads->tcprecv.buf,1);
       if (r==0 || (r<0 && (errno==EAGAIN || errno==EWOULDBLOCK))) {

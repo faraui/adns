@@ -25,9 +25,12 @@ adnstest default
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.997928
  select=1 rfds=[] wfds=[5] efds=[]
  +0.000536
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=EAGAIN
- +0.000118
+ +0.000117
  write fd=5
      002a311f 01000001 00000000 00000136 02343502 31380331 37320769 6e2d6164
      64720461 72706100 000c0001.
@@ -81,9 +84,12 @@ adnstest default
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.997928
  select=1 rfds=[] wfds=[5] efds=[]
  +0.000536
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=EAGAIN
- +0.000723
+ +0.000722
  write fd=5
      00353120 01000001 00000000 00000864 6176656e 616e740a 72656c61 74697669
      74790867 7265656e 656e6403 6f726702 756b0000 010001.

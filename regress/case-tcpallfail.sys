@@ -25,9 +25,12 @@ adnstest anarres -0x400
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.999272
  select=1 rfds=[] wfds=[5] efds=[]
  +0.000862
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=ECONNREFUSED
- +0.000087
+ +0.000086
  close fd=5
  close=OK
  +0.000109
@@ -49,9 +52,12 @@ adnstest anarres -0x400
  select max=6 rfds=[4] wfds=[5] efds=[] to=13.999414
  select=1 rfds=[] wfds=[5] efds=[]
  +0.000339
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=ECONNREFUSED
- +0.000075
+ +0.000074
  close fd=5
  close=OK
  +0.000084

@@ -109,9 +109,12 @@ adnstest default -0x416
  recvfrom fd=4 buflen=512
  recvfrom=EAGAIN
  +0.000116
+ select max=6 rfds=null wfds=[5] efds=null to=0.000000
+ select=1 rfds=null wfds=[5] efds=null
++0.000001
  read fd=5 buflen=1
  read=EAGAIN
- +0.000123
+ +0.000122
  write fd=5
      002b3123 01000001 00000000 00000134 03323034 02353003 31353807 696e2d61
      64647204 61727061 00000c00 01.
