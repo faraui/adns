@@ -1,0 +1,13 @@
+4 0 misquery 200 querydomainwrong huasenchem.com $ "Domain invalid for particular DNS query type"
+6 1 ok 0 ok huasenchem.com $ "OK"
+huasenchem.com SOA ns1.51dns.com dnsadmin@51dns.com 1421895306 28800 3600 604800 86400
+0 1 ok 0 ok huasenchem.com $ "OK"
+huasenchem.com A 104.216.47.20
+1 0 tempfail 60 rcodeservfail huasenchem.com $ "Nameserver reports failure"
+3 0 tempfail 60 rcodeservfail huasenchem.com $ "Nameserver reports failure"
+5 0 tempfail 60 rcodeservfail huasenchem.com $ "Nameserver reports failure"
+7 0 tempfail 60 rcodeservfail huasenchem.com $ "Nameserver reports failure"
+2 2 ok 0 ok huasenchem.com $ "OK"
+huasenchem.com NS ns2.51dns.com tempfail 60 rcodeservfail "Nameserver reports failure" ?
+huasenchem.com NS ns1.51dns.com tempfail 60 rcodeservfail "Nameserver reports failure" ?
+rc=0
