@@ -311,7 +311,7 @@ void *Hrealloc(void *op, size_t nsz) {
   return np;
 }
 
-void Hexit(int rv) {
+void Texit(int rv) {
   struct malloced *loopnode;
 
   Tshutdown();
@@ -325,6 +325,13 @@ void Hexit(int rv) {
     if (ferror(stderr)) exit(-1);
   }
   exit(rv);
+}
+
+void Hexit(int rv) {
+  vb.used= 0;
+  Tvbf("exit %d", rv);
+  Q_vb();
+  Texit(0);
 }
 
 pid_t Hgetpid(void) {

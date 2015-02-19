@@ -38,6 +38,8 @@
 
 #ifdef ADNS_REGRESS_TEST
 # include "hredirect.h"
+# undef exit
+# define exit Texit
 #endif
 
 struct myctx {

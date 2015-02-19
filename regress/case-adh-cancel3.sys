@@ -88,3 +88,4 @@
  close fd=6
  close=OK
  +0.000686
+ exit 0

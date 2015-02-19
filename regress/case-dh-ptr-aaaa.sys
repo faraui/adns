@@ -66,3 +66,4 @@
  close fd=6
  close=OK
  +0.000134
+ exit 0

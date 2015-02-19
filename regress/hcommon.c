@@ -289,7 +289,7 @@ void *Hrealloc(void *op, size_t nsz) {
   Hfree(op);
   return np;
 }
-void Hexit(int rv) {
+void Texit(int rv) {
   struct malloced *loopnode;
   Tshutdown();
   adns__vbuf_free(&vb);
@@ -302,6 +302,12 @@ void Hexit(int rv) {
     if (ferror(stderr)) exit(-1);
   }
   exit(rv);
+}
+void Hexit(int rv) {
+  vb.used= 0;
+  Tvbf("exit %d", rv);
+  Q_vb();
+  Texit(0);
 }
 pid_t Hgetpid(void) {
   return 2264; /* just some number */

@@ -32,3 +32,4 @@ chiark.greenend.org.uk
  close fd=4
  close=OK
  +0.000290
+ exit 0
