@@ -892,6 +892,7 @@ static void icb_hostaddr(adns_query parent, adns_query child) {
 done:
   if (st) {
     adns__free_interim(parent, rrp->addrs);
+    rrp->addrs = 0;
     rrp->naddrs= (st>0 && st<=adns_s_max_tempfail) ? -1 : 0;
   }
 
