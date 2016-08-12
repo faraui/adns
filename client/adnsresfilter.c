@@ -67,7 +67,7 @@ static int peroutqueuenode, outqueuelen;
 static struct sockaddr_in sa;
 static adns_state ads;
 
-static char addrtextbuf[14];
+static char addrtextbuf[18]; /* [ddd.ddd.ddd.ddd] + nul */
 static int cbyte, inbyte, inbuf;
 static unsigned char bytes[4];
 static struct timeval printbefore;

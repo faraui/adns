@@ -12,6 +12,8 @@ adns (1.5.1~~) UPSTREAM; urgency=low
     when one of the address queries returns a permanent error (although,
     the application almost certainly won't use this pointer because the
     associated count is zero).
+  * adnsresfilter: Fix addrtextbuf buffer size.  This is not actually a
+    problem in real compiled code but should be corrected.
 
  --
 
