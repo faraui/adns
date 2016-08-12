@@ -14,6 +14,8 @@ adns (1.5.1~~) UPSTREAM; urgency=low
     associated count is zero).
   * adnsresfilter: Fix addrtextbuf buffer size.  This is not actually a
     problem in real compiled code but should be corrected.
+  * Properly include harness.h in adnstest.c in regress/.  Suppresses
+    a couple of compiler warnings (implicit declaration of Texit, etc.)
 
  --
 

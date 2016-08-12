@@ -38,6 +38,7 @@
 
 #ifdef ADNS_REGRESS_TEST
 # include "hredirect.h"
+# include "harness.h"
 # undef exit
 # define exit Texit
 #endif
