@@ -1,4 +1,4 @@
-adns (1.5.1~~) UPSTREAM; urgency=low
+adns (1.5.1) UPSTREAM; urgency=medium
 
   * Portability fix for systems where socklen_t is bigger than int.
   * Fix for malicious optimisation of memcpy in test suite, which
@@ -17,7 +17,7 @@ adns (1.5.1~~) UPSTREAM; urgency=low
   * Properly include harness.h in adnstest.c in regress/.  Suppresses
     a couple of compiler warnings (implicit declaration of Texit, etc.)
 
- --
+ -- Ian Jackson <ijackson@chiark.greenend.org.uk>  Fri, 12 Aug 2016 22:53:59 +0100
 
 adns (1.5.0) UPSTREAM; urgency=low
 
