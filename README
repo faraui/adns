@@ -120,9 +120,9 @@ References and related projects
 
 Copyright and licensing
 
-   adns is Copyright 1997-2000,2003,2006,2014 Ian Jackson, Copyright 2014
-   Mark Wooding, Copyright 1999-2000,2003,2006 Tony Finch, and Copyright
-   (C) 1991 Massachusetts Institute of Technology.
+   adns is Copyright 1997-2000,2003,2006,2014-2016 Ian Jackson, Copyright
+   2014 Mark Wooding, Copyright 1999-2000,2003,2006 Tony Finch, and
+   Copyright (C) 1991 Massachusetts Institute of Technology.
 
    adns is free software; you can redistribute it and/or modify it under
    the terms of the GNU General Public License as published by the Free
@@ -143,7 +143,7 @@ Copyright and licensing
 
    [17]GNU home page; [18]chiark home page; [19]site or mirror home page
 
-   This web page is Copyright (C)1996-2005,2014 Ian Jackson. See the
+   This web page is Copyright (C)1996-2005,2014-2016 Ian Jackson. See the
    [20]Copyright/acknowledgements.
 
 References
@@ -166,5 +166,5 @@ References
   16. http://www.fsf.org/
   17. http://www.gnu.org/
   18. http://www.chiark.greenend.org.uk/
-  19. file://localhost/
+  19. file:///
   20. http://www.chiark.greenend.org.uk/~ian/sw-www-copy.html

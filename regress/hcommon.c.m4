@@ -3,7 +3,7 @@ m4_dnl (part of complex test harness, not of the library)
 m4_dnl - routines used for both record and playback
 
 m4_dnl  This file is part of adns, which is
-m4_dnl    Copyright (C) 1997-2000,2003,2006,2014  Ian Jackson
+m4_dnl    Copyright (C) 1997-2000,2003,2006,2014-2016  Ian Jackson
 m4_dnl    Copyright (C) 2014  Mark Wooding
 m4_dnl    Copyright (C) 1999-2000,2003,2006  Tony Finch
 m4_dnl    Copyright (C) 1991 Massachusetts Institute of Technology
