@@ -311,7 +311,7 @@ void *Hrealloc(void *op, size_t nsz) {
   return np;
 }
 
-void Texit(int rv) {
+void Tallocshutdown(void) {
   struct malloced *loopnode;
 
   Tshutdown();
@@ -324,6 +324,10 @@ void Texit(int rv) {
     putc('\n',stderr);
     if (ferror(stderr)) exit(-1);
   }
+}
+
+void Texit(int rv) {
+  Tallocshutdown();
   exit(rv);
 }
 
