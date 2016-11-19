@@ -147,11 +147,17 @@ static void ccf_search(adns_state ads, const char *fn,
   tl= 0;
   while (nextword(&bufp,&word,&l)) { count++; tl += l+1; }
 
-  newptrs= malloc(sizeof(char*)*count);
-  if (!newptrs) { saveerr(ads,errno); return; }
+  if (count) {
+    newptrs= malloc(sizeof(char*)*count);
+    if (!newptrs) { saveerr(ads,errno); return; }
 
-  newchars= malloc(tl);
-  if (!newchars) { saveerr(ads,errno); free(newptrs); return; }
+    newchars= malloc(tl);
+    if (!newchars) { saveerr(ads,errno); free(newptrs); return; }
+  } else {
+    assert(!tl);
+    newptrs= 0;
+    newchars= 0;
+  }
 
   bufp= buf;
   pp= newptrs;
