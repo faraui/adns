@@ -73,5 +73,6 @@ extern const struct Terrno { const char *n; int v; } Terrnos[];
 void Texit(int rv) NONRETURNING;
 
 void Tallocshutdown(void);
+int Ttestinputfd(void);
 
 #endif

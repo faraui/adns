@@ -69,16 +69,14 @@ static void Pcheckinput(void) {
 }
 
 void Tensurerecordfile(void) {
-  const char *fdstr;
   int fd;
   int chars;
   unsigned long sec, usec;
 
   if (Tinputfile) return;
   Tinputfile= stdin;
-  fdstr= getenv("ADNS_TEST_IN_FD");
-  if (fdstr) {
-    fd= atoi(fdstr);
+  fd = Ttestinputfd();
+  if (fd >= 0) {
     Tinputfile= fdopen(fd,"r"); if (!Tinputfile) Tfailed("fdopen ADNS_TEST_IN_FD");
   }
   setvbuf(Tinputfile,0,_IONBF,0);

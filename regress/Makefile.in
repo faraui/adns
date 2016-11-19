@@ -40,7 +40,7 @@ HARNLOBJS=	hcommon.o $(REDIRLIBOBJS)
 TARGETS=	$(addsuffix _record, $(CLIENTS)) \
 		$(addsuffix _playback, $(CLIENTS))
 ADH_OBJS=	adh-main_c.o adh-opts_c.o adh-query_c.o
-ALL_OBJS=	$(HARNLOBJS) dtest.o hrecord.o hplayback.o
+ALL_OBJS=	$(HARNLOBJS) dtest.o hrecord.o hplayback.o hnonfuzz.o
 
 .PRECIOUS:	$(AUTOCSRCS) $(AUTOCHDRS)
 
@@ -57,10 +57,10 @@ check-%:	case-%.sys
 
 LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-%_record:	%_c.o hrecord.o $(HARNLOBJS)
+%_record:	%_c.o hrecord.o hnonfuzz.o $(HARNLOBJS)
 		$(LINK_CMD)
 
-%_playback:	%_c.o hplayback.o $(HARNLOBJS)
+%_playback:	%_c.o hplayback.o hnonfuzz.o $(HARNLOBJS)
 		$(LINK_CMD)
 
 .SECONDARY: $(addsuffix _c.o, $(filter-out adnshost, $(CLIENTS)))
@@ -73,7 +73,7 @@ LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 #
 # See also Savannah #29620, http://savannah.gnu.org/bugs/index.php?29620
 
-adnshost_%:	$(ADH_OBJS) h%.o $(HARNLOBJS)
+adnshost_%:	$(ADH_OBJS) h%.o hnonfuzz.o $(HARNLOBJS)
 		$(LINK_CMD)
 
 %_d.o:		$(srcdir)/../src/%.c hredirect.h
