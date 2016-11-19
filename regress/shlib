@@ -1,0 +1,25 @@
+# -*- shell -*-
+
+playback_prepare () {
+	case="$srcdir/case-$casename"
+	ocase="output-$casename"
+
+	exec 4<"$case.sys"
+	read <&4 program initfile initflags
+	read <&4 queryargs
+
+	initstring="`cat $srcdir/init-$initfile.text`"
+	xinitflagsf=$srcdir/$program-xinitflags.text
+	if test -f $xinitflagsf
+	then
+		initflags="$initflags `cat $xinitflagsf`";
+	else
+		initflags="$initflags /"
+	fi
+
+	playback=./${program}_playback
+}
+
+playback_execute () {
+	playback_execute_callback $initflags"$initstring" $queryargs
+}

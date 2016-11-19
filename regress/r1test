@@ -24,25 +24,13 @@
 
 set -e
 : ${srcdir=.}
+. "$srcdir"/shlib
 mrc=1
 trap 'exit $mrc' 0
 
 casename="$1"
-case="$srcdir/case-$casename"
-ocase="output-$casename"
 
-exec 4<"$case.sys"
-read <&4 program initfile initflags
-read <&4 queryargs
-
-initstring="`cat $srcdir/init-$initfile.text`"
-xinitflagsf=$srcdir/$program-xinitflags.text
-if test -f $xinitflagsf
-then
-	initflags="$initflags `cat $xinitflagsf`";
-else
-	initflags="$initflags /"
-fi
+playback_prepare
 
 rm -f $ocase.*
 
@@ -56,7 +44,6 @@ else
 	exec </dev/null
 fi
 
-playback=./${program}_playback
 if test ! -e $playback
 then
 	printf "SKIPPED-$casename "
@@ -64,12 +51,15 @@ then
 	exit
 fi
 
-set +e
-ADNS_TEST_REPORT_FD=3 ADNS_TEST_IN_FD=4 \
- 3>>"$ocase.report" 4<&4 >"$ocase.out" 2>"$ocase.err" \
- $ADNS_TEST_DEBUG $playback $initflags"$initstring" $queryargs
-rc=$?
-set -e
+playback_execute_callback () {
+	set +e
+	ADNS_TEST_REPORT_FD=3 ADNS_TEST_IN_FD=4 \
+	 3>>"$ocase.report" 4<&4 >"$ocase.out" 2>"$ocase.err" \
+	 $ADNS_TEST_DEBUG $playback "$@"
+	rc=$?
+	set -e
+}
+playback_execute
 
 if [ "$rc" = 5 ]
 then
