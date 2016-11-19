@@ -431,10 +431,10 @@ void adns__free_interim(adns_query qu, void *p) {
 
   if (!an) return;
   assert(!qu->final_allocspace);
+  qu->interim_allocd -= sz;
+  assert(qu->interim_allocd >= 0);
   LIST_UNLINK(qu->allocations, an);
   free(an);
-  qu->interim_allocd -= sz;
-  assert(!qu->interim_allocd >= 0);
 }
 
 void *adns__alloc_mine(adns_query qu, size_t sz) {
