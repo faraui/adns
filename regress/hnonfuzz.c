@@ -27,6 +27,9 @@
 
 #include "harness.h"
 
+extern int Hmain(int argc, char **argv);
+int main(int argc, char **argv) { return Hmain(argc, argv); }
+
 FILE *Hfopen(const char *path, const char *mode) { return fopen(path,mode); }
 
 int Ttestinputfd(void) {

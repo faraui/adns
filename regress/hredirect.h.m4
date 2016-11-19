@@ -36,4 +36,7 @@ m4_define(`hm_specsyscall',`#undef $2
 #define $2 H$2')
 m4_include(`hsyscalls.i4')
 
+m4_dnl only usage site is definition of main
+#define main(C, V) Hmain(C, V); int Hmain(C, V)
+
 #endif
