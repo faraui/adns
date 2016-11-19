@@ -10,7 +10,7 @@ playback_prepare () {
 
 	initstring="`cat $srcdir/init-$initfile.text`"
 	xinitflagsf=$srcdir/$program-xinitflags.text
-	if test -f $xinitflagsf
+	if test -e $xinitflagsf
 	then
 		initflags="$initflags `cat $xinitflagsf`";
 	else
