@@ -32,6 +32,7 @@ dynamic/libadns.so.*
 regress/Makefile
 regress/*_record
 regress/*_playback
+regress/*_fuzz
 regress/output-*.*
 regress/pipe.out
 regress/pipe.err

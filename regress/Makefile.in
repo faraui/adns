@@ -38,9 +38,10 @@ HCPPFLAGS=	-DADNS_REGRESS_TEST -I.
 REDIRLIBOBJS=	$(addsuffix _d.o, $(basename $(LIBOBJS)))
 HARNLOBJS=	hcommon.o $(REDIRLIBOBJS)
 TARGETS=	$(addsuffix _record, $(CLIENTS)) \
-		$(addsuffix _playback, $(CLIENTS))
+		$(addsuffix _playback, $(CLIENTS)) \
+		$(addsuffix _fuzz, $(CLIENTS))
 ADH_OBJS=	adh-main_c.o adh-opts_c.o adh-query_c.o
-ALL_OBJS=	$(HARNLOBJS) dtest.o hrecord.o hplayback.o hnonfuzz.o
+ALL_OBJS=	$(HARNLOBJS) dtest.o hrecord.o hplayback.o hnonfuzz.o hfuzz.o
 
 .PRECIOUS:	$(AUTOCSRCS) $(AUTOCHDRS)
 
@@ -63,6 +64,9 @@ LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 %_playback:	%_c.o hplayback.o hnonfuzz.o $(HARNLOBJS)
 		$(LINK_CMD)
 
+%_fuzz:		%_c.o hplayback.o hfuzz.o $(HARNLOBJS)
+		$(LINK_CMD)
+
 .SECONDARY: $(addsuffix _c.o, $(filter-out adnshost, $(CLIENTS)))
 # Without this, make will remove <client>_c.o after building <client>.
 # This wastes effort.  (Debian bug #4073.)
@@ -74,6 +78,9 @@ LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 # See also Savannah #29620, http://savannah.gnu.org/bugs/index.php?29620
 
 adnshost_%:	$(ADH_OBJS) h%.o hnonfuzz.o $(HARNLOBJS)
+		$(LINK_CMD)
+
+adnshost_fuzz:	$(ADH_OBJS) hplayback.o hfuzz.o $(HARNLOBJS)
 		$(LINK_CMD)
 
 %_d.o:		$(srcdir)/../src/%.c hredirect.h
