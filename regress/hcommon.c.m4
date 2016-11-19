@@ -326,11 +326,6 @@ void Tallocshutdown(void) {
   }
 }
 
-void Texit(int rv) {
-  Tallocshutdown();
-  exit(rv);
-}
-
 void Hexit(int rv) {
   vb.used= 0;
   Tvbf("exit %d", rv);
