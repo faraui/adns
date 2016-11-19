@@ -1,3 +1,9 @@
+adns (1.5.2~) UPSTREAM; urgency=medium
+
+  * 
+
+ --
+
 adns (1.5.1) UPSTREAM; urgency=medium
 
   * Portability fix for systems where socklen_t is bigger than int.
