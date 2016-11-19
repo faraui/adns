@@ -27,6 +27,8 @@
 
 #include "harness.h"
 
+FILE *Hfopen(const char *path, const char *mode) { return fopen(path,mode); }
+
 int Ttestinputfd(void) {
   const char *fdstr= getenv("ADNS_TEST_IN_FD");
   if (!fdstr) return -1;

@@ -141,3 +141,5 @@ hm_specsyscall(void*, malloc, `size_t sz')
 hm_specsyscall(void, free, `void *ptr')
 hm_specsyscall(void*, realloc, `void *op, size_t nsz')
 hm_specsyscall(void, exit, `int rv', NONRETURNING)
+
+hm_specsyscall(FILE*, fopen, `const char *path, const char *mode')
