@@ -67,7 +67,8 @@ containing tsearch, such as the GNU C library.  It is best if tsearch
 uses an automatically-balancing tree algorithm, like the glibc version
 does.  Simple binary trees may perform badly.
 
-If you change the m4 input files in regress/ you may need GNU m4.
+You will need an m4 that supports: -P, -I, patsubst, ifelse, include,
+translit, and len.
 
 You will probably find that GNU Make is required.
 Please do not report this as a bug; install GNU Make instead.
