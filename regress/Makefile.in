@@ -53,8 +53,22 @@ check:		$(TARGETS) $(addprefix check-,$(ALL_TESTS))
 		@echo
 		@echo 'all tests passed or maybe skipped.'
 
+checkfuzz:	$(TARGETS) $(addprefix checkfuzz-,$(ALL_TESTS))
+		@echo
+		@echo 'all fuzzes passed or maybe skipped.'
+# this target is mostly useful as prep work for running the fuzzer;
+# it doesn't really test any of adns
+
 check-%:	case-%.sys
 		@srcdir=$(srcdir) $(srcdir)/r1test $* || test $$? = 5
+
+fuzz-%:		case-%.sys $(TARGETS) make1fuzz shlib
+		srcdir=$(srcdir) $(srcdir)/make1fuzz $*
+
+.PRECIOUS: fuzz-%
+
+checkfuzz-%:	fuzz-% $(TARGETS)
+		@srcdir=$(srcdir) $(srcdir)/check1fuzz $< || test $$? = 5
 
 LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 

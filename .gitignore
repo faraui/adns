@@ -34,6 +34,7 @@ regress/*_record
 regress/*_playback
 regress/*_fuzz
 regress/output-*.*
+regress/fuzz-*
 regress/pipe.out
 regress/pipe.err
 regress/harness.h

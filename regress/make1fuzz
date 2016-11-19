@@ -1,0 +1,49 @@
+#!/bin/sh
+set -e
+
+: ${srcdir=.}
+. "$srcdir"/shlib
+
+casename="$1"
+
+playback_prepare
+
+ofuzz="fuzz-$casename"
+
+rm -f "$ofuzz.tmp"
+exec >"$ofuzz.tmp"
+
+fuzzout_complete () {
+	mv "$ofuzz.tmp" "$ofuzz"
+	exit 0
+}
+
+if test ! -e $playback; then
+	echo 0
+	fuzzout_complete
+fi
+
+playback_execute_callback () {
+	set "${program}_fuzz" "$@"
+
+	printf "%d\n" "$#"
+	for a in "$@"; do
+		printf "%d\n" "${#a}"
+		printf "%s\n" "$a"
+	done
+}
+playback_execute
+
+if test -e "$case.in"
+then
+	inputsz=$(stat -c'%s' -L "$case.in")
+	printf "%d\n" "$inputsz"
+	cat "$case.in"
+else
+	echo 0
+fi
+echo
+
+cat <&4
+
+fuzzout_complete

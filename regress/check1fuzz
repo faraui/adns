@@ -1,0 +1,28 @@
+#!/bin/sh
+# usage: check1fuzz <fuzzer stimulus file>
+# fuzz check script, for checking that one fuzz input works
+
+set -e
+: ${srcdir=.}
+. "$srcdir"/shlib
+
+fuzzfile="$1"
+
+exec <"$fuzzfile"
+
+desc="${fuzzfile#fuzz-}"
+
+read nargs
+if [ "$nargs" = 0 ]; then printf "SKIPPED-$desc "; exit 5; fi
+
+read arg1len
+read program
+
+case "$program" in
+*/*)	;;
+*)	program="./$program" ;;
+esac
+
+${program} <"$fuzzfile" >/dev/null
+
+printf "$desc "
