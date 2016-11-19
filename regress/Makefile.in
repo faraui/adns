@@ -54,7 +54,7 @@ check:		$(TARGETS) $(addprefix check-,$(ALL_TESTS))
 		@echo 'all tests passed or maybe skipped.'
 
 check-%:	case-%.sys
-		@srcdir=$(srcdir) $(srcdir)/r1test $* || test $? = 5
+		@srcdir=$(srcdir) $(srcdir)/r1test $* || test $$? = 5
 
 LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
