@@ -29,7 +29,7 @@ clean mostlyclean:
 		rm -f $(TARGETS) $(AUTOCSRCS) $(AUTOCHDRS)
 		rm -f *.o *.tmp* *.so *.so.* pipe.*
 		rm -f output-*.err output-*.leftover
-		rm -f output-*.out output-*.report fuzz-*
+		rm -f output-*.out output-*.report fuzz-* fuzzcat.d
 
 distclean:		clean
 		rm -f *~ ./#*# core *.orig *.rej Makefile config.h

@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+out=fuzzcat.d
+
+rm -rf "$out"
+mkdir "$out"
+
+for case in "$@"; do
+	fuzz="fuzz-$case"
+	exec <"$fuzz"
+	read nargs
+	read arg0len
+	read program
+	program="${program##*/}"
+	mkdir -p "$out/$program"
+	ln "$fuzz" "$out/$program"/.
+done

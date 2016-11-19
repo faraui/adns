@@ -29,6 +29,7 @@ client/adnsresfilter
 client/adnsresfilter_s
 dynamic/Makefile
 dynamic/libadns.so.*
+regress/fuzzcat.d
 regress/Makefile
 regress/*_record
 regress/*_playback
