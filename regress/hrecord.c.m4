@@ -112,7 +112,7 @@ int H$1(hm_args_massage($3,void)) {
  m4_define(`hm_rv_must',`Tmust("$1","return",!r); Tvba("OK");')
  m4_define(`hm_rv_len',`
   if (r==-1) { Tvberrno(e); goto x_error; }
-  Tmust("$1","return",r<=$'`1);
+  Tmust("$'`1","return",r<=$'`1);
   Tvba("OK");')
  m4_define(`hm_rv_fcntl',`
   if (r==-1) { Tvberrno(e); goto x_error; }
