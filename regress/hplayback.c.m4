@@ -37,6 +37,8 @@ m4_include(hmacros.i4)
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <limits.h>
+
 
 #include "harness.h"
 
@@ -348,8 +350,11 @@ int H$1(hm_args_massage($3,void)) {
  m4_define(`hm_rv_len',`hm_rv_succfail')
  m4_define(`hm_rv_must',`hm_rv_succfail')
  m4_define(`hm_rv_any',`
-  r= strtoul(vb2.buf+hm_r_offset,&ep,10);
-  if (*ep && *ep!=hm_squote hm_squote) Psyntax("return value not E* or positive number");
+  unsigned long ul_r= strtoul(vb2.buf+hm_r_offset,&ep,10);
+  if (ul_r < 0 || ul_r > INT_MAX ||
+      (*ep && *ep!=hm_squote hm_squote))
+    Psyntax("return value not E* or positive number");
+  r= ul_r;
   vb2.used= ep - (char*)vb2.buf;
  ')
  m4_define(`hm_rv_fd',`hm_rv_any')
