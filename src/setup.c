@@ -228,11 +228,12 @@ static void ccf_sortlist(adns_state ads, const char *fn,
 	}
       } else {
 	maskwhat = "prefix length";
-	initial= strtoul(slash,&ep,10);
-	if (*ep || initial>adns__addr_width(sl->base.sa.sa_family)) {
+	unsigned long prefixlen = strtoul(slash,&ep,10);
+	if (*ep || prefixlen>adns__addr_width(sl->base.sa.sa_family)) {
 	  configparseerr(ads,fn,lno,"mask length `%s' invalid",slash);
 	  continue;
 	}
+	initial= prefixlen;
 	sl->mask.sa.sa_family= sl->base.sa.sa_family;
 	adns__prefix_mask(&sl->mask, initial);
       }
