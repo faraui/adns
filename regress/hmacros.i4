@@ -103,7 +103,7 @@ m4_define(`hm_create_hqcall_init',`
  m4_define(`hm_arg_fcntl_cmd_arg',`
   Tmust("$1","$'`1",$'`1==F_SETFL || $'`1==F_GETFL);
   if ($'`1 == F_SETFL) {
-    va_start(al,$'`1); $'`2= va_arg(al,long); va_end(al);
+    va_start(al,$'`1); $'`2= va_arg(al,int); va_end(al);
   } else {
     $'`2= 0;
   }')
