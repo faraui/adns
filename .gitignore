@@ -34,6 +34,7 @@ regress/Makefile
 regress/*_record
 regress/*_playback
 regress/*_fuzz
+regress/*_fuzzraw
 regress/output-*.*
 regress/fuzz-*
 regress/pipe.out
@@ -42,6 +43,7 @@ regress/harness.h
 regress/hcommon.c
 regress/hplayback.c
 regress/hrecord.c
+regress/hfuzzraw.c
 regress/hredirect.h
 regress/hsyscalls.h
 src/Makefile
