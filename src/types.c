@@ -1278,6 +1278,7 @@ static adns_status pap_mailbox822(const parseinfo *pai,
 			pai->dgram, pai->dglen, max,
 			*cbyte_io, cbyte_io);
   st= adns__findlabel_next(&fls,&lablen,&labstart);
+  if (st) return st;
   if (!lablen) {
     adns__vbuf_appendstr(vb,".");
     goto x_ok;
