@@ -147,7 +147,8 @@ static void P_updatetime(void) {
 }
 
 static void Pfdset(fd_set *set, int max) {
-  int r, c;
+  int c;
+  unsigned long ul;
   char *ep;
 
   if (!set) {
@@ -159,10 +160,10 @@ static void Pfdset(fd_set *set, int max) {
   FD_ZERO(set);
   if (vb2.buf[vb2.used] == hm_squote]hm_squote) { vb2.used++; return; }
   for (;;) {
-    r= strtoul(vb2.buf+vb2.used,&ep,10);
-    if (r>=max) Psyntax("fd set member > max");
+    ul= strtoul(vb2.buf+vb2.used,&ep,10);
+    if (ul>=max) Psyntax("fd set member > max");
     if (ep == (char*)vb2.buf+vb2.used) Psyntax("empty entry in fd set");
-    FD_SET(r,set);
+    FD_SET(ul,set);
     vb2.used= ep - (char*)vb2.buf;
     c= vb2.buf[vb2.used++];
     if (c == hm_squote]hm_squote) break;
