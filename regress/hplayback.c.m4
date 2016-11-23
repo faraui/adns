@@ -124,6 +124,7 @@ static int Perrno(const char *stuff) {
   if (te->n) return te->v;
   r= strtoul(stuff+2,&ep,10);
   if (*ep) Psyntax("errno value not recognised, not numeric");
+  if (r==0 || r>255) Psyntax("numeric errno out of range 1..255");
   return r;
 }
 
