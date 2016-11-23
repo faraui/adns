@@ -33,7 +33,7 @@ int main(int argc, char **argv) { return Hmain(argc, argv); }
 FILE *Hfopen(const char *path, const char *mode) { return fopen(path,mode); }
 
 void Texit(int rv) {
-  Tallocshutdown();
+  Tcommonshutdown();
   exit(rv);
 }
 

@@ -311,7 +311,7 @@ void *Hrealloc(void *op, size_t nsz) {
   return np;
 }
 
-void Tallocshutdown(void) {
+void Tcommonshutdown(void) {
   struct malloced *loopnode;
 
   Tshutdown();

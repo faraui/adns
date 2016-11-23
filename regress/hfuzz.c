@@ -86,7 +86,7 @@ int Ttestinputfd(void) {
 
 void Texit(int rv) {
   fprintf(stderr,"**Texit(%d)**\n",rv);
-  Tallocshutdown();
+  Tcommonshutdown();
   exit(0);
 }
 
