@@ -42,3 +42,75 @@ int Ttestinputfd(void) {
   if (!fdstr) return -1;
   return atoi(fdstr);
 }
+
+struct malloced {
+  struct malloced *next, *back;
+  size_t sz;
+  unsigned long count;
+  struct { double d; long ul; void *p; void (*fp)(void); } data;
+};
+
+static unsigned long malloccount, mallocfailat;
+static struct { struct malloced *head, *tail; } mallocedlist;
+
+#define MALLOCHSZ ((char*)&mallocedlist.head->data - (char*)mallocedlist.head)
+
+void *Hmalloc(size_t sz) {
+  struct malloced *newnode;
+  const char *mfavar;
+  char *ep;
+
+  assert(sz);
+
+  newnode= malloc(MALLOCHSZ + sz);  if (!newnode) Tnomem();
+
+  LIST_LINK_TAIL(mallocedlist,newnode);
+  newnode->sz= sz;
+  newnode->count= ++malloccount;
+  if (!mallocfailat) {
+    mfavar= getenv("ADNS_REGRESS_MALLOCFAILAT");
+    if (mfavar) {
+      mallocfailat= strtoul(mfavar,&ep,10);
+      if (!mallocfailat || *ep) Tfailed("ADNS_REGRESS_MALLOCFAILAT bad value");
+    } else {
+      mallocfailat= ~0UL;
+    }
+  }
+  assert(newnode->count != mallocfailat);
+  memset(&newnode->data,0xc7,sz);
+  return &newnode->data;
+}
+
+void Hfree(void *ptr) {
+  struct malloced *oldnode;
+
+  if (!ptr) return;
+
+  oldnode= (void*)((char*)ptr - MALLOCHSZ);
+  LIST_UNLINK(mallocedlist,oldnode);
+  memset(&oldnode->data,0x38,oldnode->sz);
+  free(oldnode);
+}
+
+void *Hrealloc(void *op, size_t nsz) {
+  struct malloced *oldnode;
+  void *np;
+  size_t osz;
+
+  if (op) { oldnode= (void*)((char*)op - MALLOCHSZ); osz= oldnode->sz; } else { osz= 0; }
+  np= Hmalloc(nsz);
+  if (osz) memcpy(np,op, osz>nsz ? nsz : osz);
+  Hfree(op);
+  return np;
+}
+
+void Tmallocshutdown(void) {
+  struct malloced *loopnode;
+  if (mallocedlist.head) {
+    fprintf(stderr,"adns test harness: memory leaked:");
+    for (loopnode=mallocedlist.head; loopnode; loopnode=loopnode->next)
+      fprintf(stderr," %lu",loopnode->count);
+    putc('\n',stderr);
+    if (ferror(stderr)) exit(-1);
+  }
+}

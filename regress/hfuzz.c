@@ -126,3 +126,8 @@ int main(int argc, char **argv) {
   int estatus = Hmain(t_argc, t_argv);
   Texit(estatus);
 }
+
+void Tmallocshutdown(void) { }
+void *Hmalloc(size_t s) { assert(s); return malloc(s); }
+void *Hrealloc(void *p, size_t s) { assert(s); return realloc(p,s); }
+void Hfree(void *p) { free(p); }
