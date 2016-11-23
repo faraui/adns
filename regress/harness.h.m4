@@ -67,6 +67,7 @@ void Tvba(const char *str);
 extern vbuf vb;
 extern struct timeval currenttime;
 extern const struct Terrno { const char *n; int v; } Terrnos[];
+extern const int Tnerrnos;
 
 /* Special cases */
   

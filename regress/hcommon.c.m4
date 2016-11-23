@@ -64,6 +64,8 @@ const struct Terrno Terrnos[]= {
   {  0,                          0                            }
 };
 
+const int Tnerrnos= sizeof(Terrnos)/sizeof(Terrnos[0]) - 1;
+
 static vbuf vbw;
 
 int Hgettimeofday(struct timeval *tv, struct timezone *tz) {
