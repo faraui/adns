@@ -72,7 +72,7 @@ static void Tensurefuzzrawfile(void) {
 
 static void FR_write(void *p, size_t sz) {
   if (!Tfuzzrawfile) return;
-  ssize_t got = fwrite(&p,1,sz,Tfuzzrawfile);
+  ssize_t got = fwrite(p,1,sz,Tfuzzrawfile);
   if (ferror(Tfuzzrawfile)) Tfailed("write fuzzraw output file");
   assert(got==sz);
 }
