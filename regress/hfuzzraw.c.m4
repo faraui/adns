@@ -64,6 +64,11 @@ static void Pcheckinput(void) {
 }
 
 void Tensurerecordfile(void) {
+  static int done;
+
+  if (done) return;
+  done++;
+
   int fd;
 
   fd = Ttestinputfd();
