@@ -196,6 +196,13 @@ static void Psync(const char *exp, char *got, size_t sz, const char *what) {
   if (memcmp(exp,got,sz)) Pformat(what);
 }
 #endif
+m4_define(`syscall_sync',`
+#ifdef FUZZRAW_SYNC
+  hm_fr_syscall_ident($'`1)
+  static char sync_got[sizeof(sync_expect)];
+  Psync(sync_expect, sync_got, sizeof(sync_got), "sync lost: exp=$1");
+#endif
+')
 
 #ifdef HAVE_POLL
 static void Ppollfds(struct pollfd *fds, int nfds, int *r_io) {
@@ -245,11 +252,7 @@ int H$1(hm_args_massage($3,void)) {
    Q$1(hm_args_massage($3));
  }
 
-#ifdef FUZZRAW_SYNC
-  hm_fr_syscall_ident($'`1)
-  static char sync_got[sizeof(sync_expect)];
-  Psync(sync_expect, sync_got, sizeof(sync_got), "sync lost: exp=$1");
-#endif
+  syscall_sync($'`1)
 
  m4_define(`hm_rv_succfail',`
   r= P_succfail();
