@@ -54,6 +54,12 @@ m4_define(`hm_create_nothing', `
  m4_define(`hm_arg_bytes_in', `')
  m4_define(`hm_arg_bytes_out', `')
  m4_define(`hm_arg_addr_out', `')
+ m4_define(`hm_rv_must', `')
+ m4_define(`hm_rv_any', `')
+ m4_define(`hm_rv_fd', `')
+ m4_define(`hm_rv_succfail', `')
+ m4_define(`hm_rv_len', `')
+ m4_define(`hm_rv_fcntl', `')
 ')
 
 m4_define(`hm_create_proto_h',`

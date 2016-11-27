@@ -339,12 +339,9 @@ m4_define(`hm_syscall', `
  hm_create_proto_h
 int H$1(hm_args_massage($3,void)) {
  int r, amtread;
+ hm_create_nothing
  m4_define(`hm_rv_fd',`char *ep;')
  m4_define(`hm_rv_any',`char *ep;')
- m4_define(`hm_rv_len',`')
- m4_define(`hm_rv_must',`')
- m4_define(`hm_rv_succfail',`')
- m4_define(`hm_rv_fcntl',`')
  $2
 
  hm_create_hqcall_vars
