@@ -108,11 +108,12 @@ static void P_read_dump(const unsigned char *p0, size_t count, ssize_t d) {
 }
     
 static void P_read(void *p, size_t sz, const char *what) {
+  long pos = ftell(Tinputfile);
   ssize_t got = fread(p,1,sz,Tinputfile);
   Pcheckinput();
   assert(got==sz);
   if (stdout_enable && sz) {
-    fprintf(stdout,"%s:",what);
+    fprintf(stdout,"%8lx %8s:",pos,what);
     P_read_dump(p, sz, +1);
     if (sz<=16) {
       P_read_dump((const unsigned char *)p+sz-1, sz, -1);
