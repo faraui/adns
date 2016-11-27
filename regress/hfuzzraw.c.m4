@@ -216,15 +216,17 @@ int H$1(hm_args_massage($3,void)) {
  m4_define(`hm_rv_fd',`
   hm_rv_succfail
   if (!r) {
-    for (;;) {
-      assert(r < 1000);
-      if (r >= fdtab.used)
-        if (!adns__vbuf_append(&fdtab,"\0",1)) Tnomem();
-      assert(r < fdtab.used);
-      if (!(fdtab.buf[r] & FDF_OPEN)) break;
-      r++;
+    int newfd;
+    P_READ(newfd);
+    if (newfd<0 || newfd>1000) Pformat("new fd out of range");
+    adns__vbuf_ensure(&fdtab, newfd+1);
+    if (fdtab.used <= newfd) {
+      memset(fdtab.buf+fdtab.used, 0, newfd+1-fdtab.used);
+      fdtab.used= newfd+1;
     }
-    fdtab.buf[r] |= FDF_OPEN;
+    if (fdtab.buf[newfd]) Pformat("new fd already in use");
+    fdtab.buf[newfd] |= FDF_OPEN;
+    r= newfd;
  }
  ')
  $2
