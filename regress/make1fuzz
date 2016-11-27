@@ -29,8 +29,6 @@ if test ! -e $playback; then
 fi
 
 dump_args () {
-	set "${program}_fuzz" "$@"
-
 	printf "%d\n" "$#"
 	for a in "$@"; do
 		printf "%d\n" "${#a}"
@@ -50,8 +48,8 @@ dump_args () {
 }	
 
 playback_execute_hook () {
-	dump_args "$@"
-	dump_args "$@" >&6
+	dump_args "${program}_fuzz"    "$@"
+	dump_args "${program}_fuzzraw" "$@" >&6
 	cat <&4 >"$ofuzz.sys.tmp"
 	exec 4<$ofuzz.sys.tmp
 	ADNS_TEST_FUZZRAW_DUMP_FD=6

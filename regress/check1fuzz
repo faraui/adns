@@ -10,7 +10,10 @@ fuzzfile="$1"
 
 exec <"$fuzzfile"
 
-desc="${fuzzfile#fuzz-}"
+case "$fuzzfile" in
+fuzz-*)		desc="${fuzzfile#fuzz-}"	;;
+fuzzraw-*)	desc="${fuzzfile#fuzzraw-}"	;;
+esac
 
 read nargs
 if [ "$nargs" = 0 ]; then printf "SKIPPED-$desc "; exit 5; fi

@@ -55,7 +55,9 @@ check:		$(TARGETS) $(addprefix check-,$(ALL_TESTS))
 		@echo
 		@echo 'all tests passed or maybe skipped.'
 
-checkfuzz:	$(TARGETS) $(addprefix checkfuzz-,$(ALL_TESTS))
+checkfuzz:		$(TARGETS) \
+			$(addprefix checkfuzz-,$(ALL_TESTS)) \
+			$(addprefix checkfuzzraw-,$(ALL_TESTS))
 		@echo
 		@echo 'all fuzzes passed or maybe skipped.'
 # this target is mostly useful as prep work for running the fuzzer;
@@ -70,9 +72,14 @@ check-%:	case-%.sys
 fuzz-%:		case-%.sys $(TARGETS) make1fuzz shlib
 		srcdir=$(srcdir) $(srcdir)/make1fuzz $*
 
+fuzzraw-%:	fuzz-%
+
 .PRECIOUS: fuzz-%
 
 checkfuzz-%:	fuzz-% $(TARGETS)
+		@srcdir=$(srcdir) $(srcdir)/check1fuzz $< || test $$? = 5
+
+checkfuzzraw-%:	fuzzraw-% $(TARGETS)
 		@srcdir=$(srcdir) $(srcdir)/check1fuzz $< || test $$? = 5
 
 LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
