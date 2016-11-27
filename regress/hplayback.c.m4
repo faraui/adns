@@ -205,6 +205,20 @@ static void Pfdset(fd_set *set, int max) {
     if (c == hm_squote]hm_squote) break;
     if (c != hm_squote,hm_squote) Psyntax("fd set separator not ,");
   }
+
+  uint16_t accum;
+  int inaccum=0, fd;
+  for (fd=0; ; fd++) {
+    if (fd>=max || inaccum==16) {
+      FR_WRITE(accum);
+      inaccum= 0;
+    }
+    if (fd>=max)
+      break;
+    accum <<= 1;
+    accum |= !!FD_ISSET(fd,set);
+    inaccum++;
+  }
 }
 
 #ifdef HAVE_POLL

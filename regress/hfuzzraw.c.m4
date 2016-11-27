@@ -161,23 +161,30 @@ static int Pbytes(byte *buf, int maxlen) {
 }
 
 static void Pfdset(fd_set *set, int max, int *r_io) {
-  uint16_t got;
-  int fd, ngot=0;
+  uint16_t fdmap;
+  int fd, nfdmap=0;
 
-  for (fd=0; fd<max; fd++) {
-    if (!FD_ISSET(fd,set)) continue;
-    P_fdf(fd);
-    if (ngot==0) {
-      P_READ(got);
-      ngot= 16;
+  if (!set)
+    return;
+
+  for (fd=max-1; fd>=0; fd--) {
+    if (nfdmap==0) {
+      P_READ(fdmap);
+      nfdmap= 16;
     }
-    if (got & 1u) {
+    _Bool y = fdmap & 1u;
+    fdmap >>= 1;
+    nfdmap--;
+
+    if (!FD_ISSET(fd,set)) continue;
+
+    P_fdf(fd);
+
+    if (y) {
       (*r_io)++;
     } else {
       FD_CLR(fd,set);
     }
-    got >>= 1;
-    ngot--;
   }
 }
 
