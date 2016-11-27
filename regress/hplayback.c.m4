@@ -195,16 +195,19 @@ static void Pfdset(fd_set *set, int max) {
   
   if (vb2.buf[vb2.used++] != hm_squote[hm_squote) Psyntax("fd set start not [");
   FD_ZERO(set);
-  if (vb2.buf[vb2.used] == hm_squote]hm_squote) { vb2.used++; return; }
-  for (;;) {
-    ul= strtoul(vb2.buf+vb2.used,&ep,10);
-    if (ul>=max) Psyntax("fd set member > max");
-    if (ep == (char*)vb2.buf+vb2.used) Psyntax("empty entry in fd set");
-    FD_SET(ul,set);
-    vb2.used= ep - (char*)vb2.buf;
-    c= vb2.buf[vb2.used++];
-    if (c == hm_squote]hm_squote) break;
-    if (c != hm_squote,hm_squote) Psyntax("fd set separator not ,");
+  if (vb2.buf[vb2.used] == hm_squote]hm_squote) {
+    vb2.used++;
+  } else {
+    for (;;) {
+      ul= strtoul(vb2.buf+vb2.used,&ep,10);
+      if (ul>=max) Psyntax("fd set member > max");
+      if (ep == (char*)vb2.buf+vb2.used) Psyntax("empty entry in fd set");
+      FD_SET(ul,set);
+      vb2.used= ep - (char*)vb2.buf;
+      c= vb2.buf[vb2.used++];
+      if (c == hm_squote]hm_squote) break;
+      if (c != hm_squote,hm_squote) Psyntax("fd set separator not ,");
+    }
   }
 
   uint16_t accum;
