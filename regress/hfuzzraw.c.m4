@@ -49,10 +49,14 @@ static vbuf fdtab;
 static FILE *Tinputfile;
 static int stdout_enable;
 
+static void Tflushstdout( void) {
+  if (fflush(stdout)) Toutputerr();
+}
+
 void Q_vb(void) {
   if (!adns__vbuf_append(&vb,"",1)) Tnomem();
   if (fprintf(stdout," %s\n",vb.buf) == EOF) Toutputerr();
-  if (fflush(stdout)) Toutputerr();
+  Tflushstdout();
 }
 
 static void Pformat(const char *what) {
