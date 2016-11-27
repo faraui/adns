@@ -291,6 +291,14 @@ static void Paddr(struct sockaddr *addr, int *lenr) {
   if (*ep && *ep != ' ') Psyntax("invalid port (bad syntax)");
   if (ul >= 65536) Psyntax("port too large");
 
+  if (Tfuzzrawfile) {
+    int tl = strlen(p);
+    FR_WRITE(tl);
+    FR_write(p,tl);
+    int port_int = ul;
+    FR_WRITE(port_int);
+  }
+
   a.len= sizeof(a.addr);
   err= adns_text2addr(p, (int)ul, 0, &a.addr.sa,&a.len);
   if (err) Psyntax("invalid address");

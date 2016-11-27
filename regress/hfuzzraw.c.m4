@@ -145,6 +145,7 @@ static void Paddr(struct sockaddr *addr, int *lenr) {
 
   P_READ(l);
   if (l<0 || l>=sizeof(buf)-1) Pformat("bad addr len");
+  P_read(buf,l,"addrtext");
   buf[l]= 0;
   P_READ(port);
   r= adns_text2addr(buf,port, adns_qf_addrlit_scope_numeric, addr, &sl);
