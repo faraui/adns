@@ -70,7 +70,7 @@ static void Tensurefuzzrawfile(void) {
   if (!Tfuzzrawfile) Tfailed("fdopen ADNS_TEST_FUZZRAW_DUMP_FD");
 }
 
-static void FR_write(void *p, size_t sz) {
+static void FR_write(const void *p, size_t sz) {
   if (!Tfuzzrawfile) return;
   ssize_t got = fwrite(p,1,sz,Tfuzzrawfile);
   if (ferror(Tfuzzrawfile)) Tfailed("write fuzzraw output file");
