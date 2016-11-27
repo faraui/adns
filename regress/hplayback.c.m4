@@ -369,6 +369,7 @@ int H$1(hm_args_massage($3,void)) {
  vb2.buf[amtread]= 0;
  if (memcmp(vb2.buf," $1=",hm_r_offset)) Psyntax("syscall reply mismatch");
 
+ m4_define(`hm_rv_check_errno',`
  if (vb2.buf[hm_r_offset] == hm_squoteEhm_squote) {
   int e;
   e= Perrno(vb2.buf+hm_r_offset);
@@ -377,21 +378,37 @@ int H$1(hm_args_massage($3,void)) {
   FR_WRITE(e);
   return -1;
  }
-
- m4_define(`hm_rv_succfail',`
+ r= 0;
+ FR_WRITE(r);
+ ')
+ m4_define(`hm_rv_check_success',`
   if (memcmp(vb2.buf+hm_r_offset,"OK",2)) Psyntax("success/fail not E* or OK");
   vb2.used= hm_r_offset+2;
   r= 0;
  ')
- m4_define(`hm_rv_len',`hm_rv_succfail')
- m4_define(`hm_rv_must',`hm_rv_succfail')
- m4_define(`hm_rv_any',`
+ m4_define(`hm_rv_any_nowrite',`
+  hm_rv_check_errno
   unsigned long ul_r= strtoul(vb2.buf+hm_r_offset,&ep,10);
   if (ul_r < 0 || ul_r > INT_MAX ||
       (*ep && *ep!=hm_squote hm_squote))
     Psyntax("return value not E* or positive number");
   r= ul_r;
   vb2.used= ep - (char*)vb2.buf;
+ ')
+
+ m4_define(`hm_rv_succfail',`
+  hm_rv_check_errno
+  hm_rv_check_success
+ ')
+ m4_define(`hm_rv_len',`
+  hm_rv_check_errno
+  hm_rv_check_success
+ ')
+ m4_define(`hm_rv_must',`
+  hm_rv_check_success
+ ')
+ m4_define(`hm_rv_any',`
+  hm_rv_any_nowrite
   FR_WRITE(r);
  ')
  m4_define(`hm_rv_fd',`hm_rv_any')
