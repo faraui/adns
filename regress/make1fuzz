@@ -9,21 +9,26 @@ casename="$1"
 playback_prepare
 
 ofuzz="fuzz-$casename"
+ofuzzraw="fuzzraw-$casename"
 
 rm -f "$ofuzz.tmp"
+rm -f "$ofuzzraw.tmp"
 exec >"$ofuzz.tmp"
+exec 6>"$ofuzzraw.tmp"
 
 fuzzout_complete () {
 	mv "$ofuzz.tmp" "$ofuzz"
+	mv "$ofuzzraw.tmp" "$ofuzzraw"
 	exit 0
 }
 
 if test ! -e $playback; then
 	echo 0
+	echo 0 >&6
 	fuzzout_complete
 fi
 
-playback_execute_hook () {
+dump_args () {
 	set "${program}_fuzz" "$@"
 
 	printf "%d\n" "$#"
@@ -32,20 +37,27 @@ playback_execute_hook () {
 		printf "%s\n" "$a"
 	done
 
+	if test -e "$case.in"
+	then
+		inputsz=$(stat -c'%s' -L "$case.in")
+		printf "%d\n" "$inputsz"
+		cat "$case.in"
+	else
+		echo 0
+	fi
+
+	echo
+}	
+
+playback_execute_hook () {
+	dump_args "$@"
+	dump_args "$@" >&6
 	cat <&4 >"$ofuzz.sys.tmp"
 	exec 4<$ofuzz.sys.tmp
+	ADNS_TEST_FUZZRAW_DUMP_FD=6
+	export ADNS_TEST_FUZZRAW_DUMP_FD
 }
 playback_execute
-
-if test -e "$case.in"
-then
-	inputsz=$(stat -c'%s' -L "$case.in")
-	printf "%d\n" "$inputsz"
-	cat "$case.in"
-else
-	echo 0
-fi
-echo
 
 cat $ofuzz.sys.tmp
 

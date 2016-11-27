@@ -37,6 +37,7 @@ regress/*_fuzz
 regress/*_fuzzraw
 regress/output-*.*
 regress/fuzz-*
+regress/fuzzraw-*
 regress/pipe.out
 regress/pipe.err
 regress/harness.h
