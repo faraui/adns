@@ -101,11 +101,6 @@ hm_syscall(
 ')
 
 hm_syscall(
-	close, `hm_rv_succfail', `
-	hm_arg_fd(fd) hm_na
-')
-
-hm_syscall(
 	sendto, `hm_rv_any', `
 	hm_arg_fd(fd) hm_na
 	hm_arg_bytes_in(void,msg,int,msglen) hm_na
@@ -136,6 +131,14 @@ hm_syscall(
 hm_specsyscall(int, writev, `int fd, const struct iovec *vector, size_t count')
 hm_specsyscall(int, gettimeofday, `struct timeval *tv, struct timezone *tz')
 hm_specsyscall(pid_t, getpid, `void')
+hm_specsyscall(int, close, `int fd')
+
+m4_define(hm_stdsyscall_close,`
+hm_syscall(
+	close, `hm_rv_succfail', `
+	hm_arg_fd(fd) hm_na
+')
+')
 
 hm_specsyscall(void*, malloc, `size_t sz')
 hm_specsyscall(void, free, `void *ptr')

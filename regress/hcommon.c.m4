@@ -134,6 +134,8 @@ m4_define(`hm_specsyscall', `')
 
 m4_include(`hsyscalls.i4')
 
+hm_stdsyscall_close
+
 void Tvbaddr(const struct sockaddr *addr, int len) {
   char buf[ADNS_ADDR2TEXT_BUFLEN];
   int err, port;

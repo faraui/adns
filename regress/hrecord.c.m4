@@ -156,3 +156,5 @@ int H$1(hm_args_massage($3,void)) {
 m4_define(`hm_specsyscall', `')
 
 m4_include(`hsyscalls.i4')
+
+hm_stdsyscall_close
