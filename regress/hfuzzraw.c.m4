@@ -220,10 +220,7 @@ static void Ppollfds(struct pollfd *fds, int nfds, int *r_io) {
 static int P_succfail(void) {
   int e;
   P_READ(e);
-  if (e<0 && -e<Tnerrnos) {
-    errno= Terrnos[-e].v;
-    return -1;
-  } else if (e>0 && e<=255) {
+  if (e>0) {
     errno= e;
     return -1;
   } else if (e) {
