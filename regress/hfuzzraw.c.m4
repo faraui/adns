@@ -245,7 +245,7 @@ int H$1(hm_args_massage($3,void)) {
  }
 
 #ifdef FUZZRAW_SYNC
-  static const char sync_expect[]= "$1";
+  hm_fr_syscall_ident($'`1)
   static char sync_got[sizeof(sync_expect)];
   Psync(sync_expect, sync_got, sizeof(sync_got), "sync lost: exp=$1");
 #endif

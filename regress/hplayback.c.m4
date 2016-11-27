@@ -382,7 +382,8 @@ int H$1(hm_args_massage($3,void)) {
  if (memcmp(vb2.buf," $1=",hm_r_offset)) Psyntax("syscall reply mismatch");
 
 #ifdef FUZZRAW_SYNC
- FR_WRITE("$1");
+ hm_fr_syscall_ident($1)
+ FR_WRITE(sync_expect);
 #endif
 
  m4_define(`hm_rv_check_errno',`

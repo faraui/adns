@@ -146,3 +146,7 @@ m4_define(`hm_create_hqcall_args',`
  m4_define(`hm_arg_bytes_out', `$'`4')
  m4_define(`hm_arg_addr_out', `*$'`2')
 ')
+
+m4_define(`hm_fr_syscall_ident',`
+  static const char sync_expect[sizeof("$1")]= "$1\xee";
+')
