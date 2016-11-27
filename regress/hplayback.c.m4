@@ -70,6 +70,8 @@ static void Pcheckinput(void) {
   if (feof(Tinputfile)) Psyntax("eof at syscall reply");
 }
 
+void T_gettimeofday_hook(void) { }
+
 void Tensurerecordfile(void) {
   int fd;
   int chars;

@@ -71,6 +71,7 @@ static vbuf vbw;
 int Hgettimeofday(struct timeval *tv, struct timezone *tz) {
   Tensurerecordfile();
   Tmust("gettimeofday","tz",!tz);
+  T_gettimeofday_hook();
   *tv= currenttime;
   return 0;
 }

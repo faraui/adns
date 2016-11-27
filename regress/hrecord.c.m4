@@ -53,6 +53,8 @@ static void R_recordtime(void) {
   currenttime= tv;
 }
 
+void T_gettimeofday_hook(void) { }
+
 void Tensurerecordfile(void) {
   const char *fdstr;
   int fd, r;

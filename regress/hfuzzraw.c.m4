@@ -85,13 +85,16 @@ static void P_read(void *p, size_t sz) {
 
 #define P_READ(x) (P_read(&(x), sizeof((x))))
 
-static void P_updatetime(void) {
-m4_dnl xxx
-}
-
 static unsigned P_fdf(int fd) {
   assert(fd>=0 && fd<fdtab.used);
   return fdtab.buf[fd];
+}
+
+void T_gettimeofday_hook(void) {
+  struct timeval delta, sum;
+  P_READ(delta);
+  timeradd(&delta, &currenttime, &sum);
+  currenttime= sum;
 }
 
 static void Paddr(struct sockaddr *addr, int *lenr) {
@@ -167,7 +170,6 @@ int H$1(hm_args_massage($3,void)) {
  $3
 
  Tensurerecordfile();
- P_updatetime();
 
  m4_define(`hm_rv_succfail',`
   P_READ(r);
@@ -237,7 +239,6 @@ int H$1(hm_args_massage($3,void)) {
  m4_define(`hm_arg_bytes_out',`r= Pbytes($'`2,$'`4);')
  $3
 
- P_updatetime();
  return r;
 }
 ')

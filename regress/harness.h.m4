@@ -77,5 +77,6 @@ void Texit(int rv) NONRETURNING;
 void Tcommonshutdown(void);
 void Tmallocshutdown(void);
 int Ttestinputfd(void);
+void T_gettimeofday_hook(void);
 
 #endif
