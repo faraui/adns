@@ -83,7 +83,7 @@ void Tensurerecordfile(void) {
 }
 
 static void P_read(void *p, size_t sz) {
-  ssize_t got = fread(&p,1,sz,Tinputfile);
+  ssize_t got = fread(p,1,sz,Tinputfile);
   Pcheckinput();
   assert(got==sz);
 }
