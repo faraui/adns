@@ -42,7 +42,7 @@ m4_include(hmacros.i4)
 
 #include "harness.h"
 
-static FILE *Tinputfile, *Treportfile;
+static FILE *Tinputfile, *Tfuzzrawfile, *Treportfile;
 static vbuf vb2;
 
 static void Tensurereportfile(void) {
@@ -56,8 +56,34 @@ static void Tensurereportfile(void) {
   Treportfile= fdopen(fd,"a"); if (!Treportfile) Tfailed("fdopen ADNS_TEST_REPORT_FD");
 }
 
+static void Tensurefuzzrawfile(void) {
+  static int done;
+
+  if (done) return;
+  done++;
+
+  const char *fdstr= getenv("ADNS_TEST_FUZZRAW_DUMP_FD");
+  if (!fdstr) return;
+
+  int fd= atoi(fdstr);
+  Tfuzzrawfile= fdopen(fd,"ab");
+  if (!Tfuzzrawfile) Tfailed("fdopen ADNS_TEST_FUZZRAW_DUMP_FD");
+}
+
+static void FR_write(void *p, size_t sz) {
+  if (!Tfuzzrawfile) return;
+  ssize_t got = fwrite(&p,1,sz,Tfuzzrawfile);
+  if (ferror(Tfuzzrawfile)) Tfailed("write fuzzraw output file");
+  assert(got==sz);
+}
+
+#define FR_WRITE(x) (FR_write(&(x), sizeof((x))))
+
 extern void Tshutdown(void) {
   adns__vbuf_free(&vb2);
+  if (Tfuzzrawfile) {
+    if (fclose(Tfuzzrawfile)) Tfailed("close fuzzraw output file");
+  }
 }
 
 static void Psyntax(const char *where) {
@@ -70,7 +96,13 @@ static void Pcheckinput(void) {
   if (feof(Tinputfile)) Psyntax("eof at syscall reply");
 }
 
-void T_gettimeofday_hook(void) { }
+void T_gettimeofday_hook(void) {
+  static struct timeval previously;
+  struct timeval delta;
+  memset(&delta,0,sizeof(delta));
+  timersub(&currenttime, &previously, &delta);
+  FR_WRITE(delta);
+}
 
 void Tensurerecordfile(void) {
   int fd;
@@ -329,6 +361,7 @@ int H$1(hm_args_massage($3,void)) {
  fgets(vb2.buf,vb2.avail,Tinputfile); Pcheckinput();
 
  Tensurereportfile();
+ Tensurefuzzrawfile();
  fprintf(Treportfile,"%s",vb2.buf);
  amtread= strlen(vb2.buf);
  if (amtread<=0 || vb2.buf[--amtread]!=hm_squote\nhm_squote)
@@ -341,6 +374,7 @@ int H$1(hm_args_massage($3,void)) {
   e= Perrno(vb2.buf+hm_r_offset);
   P_updatetime();
   errno= e;
+  FR_WRITE(e);
   return -1;
  }
 
@@ -358,6 +392,7 @@ int H$1(hm_args_massage($3,void)) {
     Psyntax("return value not E* or positive number");
   r= ul_r;
   vb2.used= ep - (char*)vb2.buf;
+  FR_WRITE(r);
  ')
  m4_define(`hm_rv_fd',`hm_rv_any')
  m4_define(`hm_rv_fcntl',`
@@ -388,7 +423,11 @@ int H$1(hm_args_massage($3,void)) {
  if (vb2.used != amtread) Psyntax("junk at end of line");
 
  hm_create_nothing
- m4_define(`hm_arg_bytes_out',`r= Pbytes($'`2,$'`4);')
+ m4_define(`hm_arg_bytes_out',`
+  r= Pbytes($'`2,$'`4);
+  FR_WRITE(r);
+  FR_write(buf,r);
+ ')
  $3
 
  P_updatetime();
