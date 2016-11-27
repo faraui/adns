@@ -20,6 +20,16 @@ playback_prepare () {
 	playback=./${program}_playback
 }
 
+playback_execute_core () {
+	playback_execute_hook "$@"
+	set +e
+	ADNS_TEST_REPORT_FD=3 ADNS_TEST_IN_FD=4 \
+	 3>>"$ocase.report" 4<&4 >"$ocase.out" 2>"$ocase.err" \
+	 $ADNS_TEST_DEBUG $playback "$@"
+	rc=$?
+	set -e
+}
+
 playback_execute () {
-	playback_execute_callback $initflags"$initstring" $queryargs
+	playback_execute_core $initflags"$initstring" $queryargs
 }

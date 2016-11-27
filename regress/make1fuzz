@@ -23,7 +23,7 @@ if test ! -e $playback; then
 	fuzzout_complete
 fi
 
-playback_execute_callback () {
+playback_execute_hook () {
 	set "${program}_fuzz" "$@"
 
 	printf "%d\n" "$#"
@@ -31,6 +31,9 @@ playback_execute_callback () {
 		printf "%d\n" "${#a}"
 		printf "%s\n" "$a"
 	done
+
+	cat <&4 >"$ofuzz.sys.tmp"
+	exec 4<$ofuzz.sys.tmp
 }
 playback_execute
 
@@ -44,6 +47,6 @@ else
 fi
 echo
 
-cat <&4
+cat $ofuzz.sys.tmp
 
 fuzzout_complete
