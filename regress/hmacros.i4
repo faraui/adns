@@ -60,6 +60,8 @@ m4_define(`hm_create_nothing', `
  m4_define(`hm_rv_succfail', `')
  m4_define(`hm_rv_len', `')
  m4_define(`hm_rv_fcntl', `')
+ m4_define(`hm_rv_select', `hm_rv_any')
+ m4_define(`hm_rv_poll', `hm_rv_any')
 ')
 
 m4_define(`hm_create_proto_h',`

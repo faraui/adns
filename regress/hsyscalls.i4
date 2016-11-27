@@ -31,6 +31,8 @@ m4_dnl  hm_rv_fd         file descriptor is returned, -1 means see errno
 m4_dnl  hm_rv_succfail   returns 0 (ok) or -1 (see errno)
 m4_dnl  hm_rv_len(<max>) returns length read/written, must be <=max, -1 => errno
 m4_dnl  hm_rv_fcntl      syscall is fcntl, do special processing
+m4_dnl  hm_rv_select     select, do special processing } default is _any
+m4_dnl  hm_rv_poll       poll, do special processing   }  after create_nothing
 m4_dnl <args> is list of macros for arguments, each followed by hm_na
 m4_dnl  hm_arg_nullptr(<type>,<arg>)    pointer of type type, must be null
 m4_dnl  hm_arg_int(<arg>)               signed integer
@@ -53,7 +55,7 @@ m4_dnl   return value from syscall is supposed to be returned length
 m4_dnl  hm_arg_addr_out(<arg>,<lenptr>) struct sockaddr*, length io at <lenptr> (an int*)
 
 hm_syscall(
-	select, `hm_rv_any', `
+	select, `hm_rv_select', `
 	hm_arg_int(max) hm_na
 	hm_arg_fdset_io(rfds,max) hm_na
 	hm_arg_fdset_io(wfds,max) hm_na
@@ -63,7 +65,7 @@ hm_syscall(
 
 #ifdef HAVE_POLL
 hm_syscall(
-	poll, `hm_rv_any', `
+	poll, `hm_rv_poll', `
         hm_arg_pollfds_io(fds,nfds) hm_na
 	hm_arg_int(timeout) hm_na
 ')
