@@ -121,8 +121,6 @@ int main(int argc, char **argv) {
   if (dup2(fileno(t_stdin), 0)) baile("dup2 t_stdin");
   if (fseek(stdin, 0, SEEK_SET)) baile("rewind t_stdin");
 
-  if (dup2(1,2)!=2) baile("redirect stderr to stdout");
-
   int estatus = Hmain(t_argc, t_argv);
   Texit(estatus);
 }
