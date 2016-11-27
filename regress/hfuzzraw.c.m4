@@ -167,6 +167,21 @@ int fd;
 }
 #endif
 
+static int P_succfail(void) {
+  int r;
+  P_READ(r);
+  if (r<0 && -r<Tnerrnos) {
+    errno= Terrnos[-r].v;
+    return -1;
+  } else if (r>0 && r<=255) {
+    errno= r;
+    return -1;
+  } else if (r) {
+    Pformat("wrong errno value");
+  }
+  return 0;
+}
+
 m4_define(`hm_syscall', `
  hm_create_proto_h
 int H$1(hm_args_massage($3,void)) {
@@ -193,17 +208,8 @@ int H$1(hm_args_massage($3,void)) {
  }
 
  m4_define(`hm_rv_succfail',`
-  P_READ(r);
-  if (r<0 && -r<Tnerrnos) {
-    errno= Terrnos[-r].v;
-    return -1;
-  } else if (r>0 && r<=255) {
-    errno= r;
-    return -1;
-  } else if (r) {
-    Pformat("wrong errno value");
-  }
-  r= 0;
+  r= P_succfail();
+  if (r<0) return r;
  ')
 
  m4_define(`hm_rv_any',`
