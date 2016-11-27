@@ -140,6 +140,7 @@ int H$1(hm_args_massage($3,void)) {
  m4_define(`hm_arg_bytes_out',`Tvbbytes($'`2,r);')
  $3
 
+ hm_create_nothing
  m4_define(`hm_rv_any',`x_error:')
  m4_define(`hm_rv_fd',`x_error:')
  m4_define(`hm_rv_succfail',`x_error:')
