@@ -333,6 +333,7 @@ m4_define(`hm_specsyscall', `')
 m4_include(`hsyscalls.i4')
 
 int Hclose(int fd) {
+  syscall_sync(close)
   P_fdf(fd);
   fdtab.buf[fd]= 0;
   return P_succfail();
