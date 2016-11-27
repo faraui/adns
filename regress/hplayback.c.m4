@@ -295,8 +295,8 @@ static void Paddr(struct sockaddr *addr, int *lenr) {
     int tl = strlen(p);
     FR_WRITE(tl);
     FR_write(p,tl);
-    int port_int = ul;
-    FR_WRITE(port_int);
+    uint16_t port16 = ul;
+    FR_WRITE(port16);
   }
 
   a.len= sizeof(a.addr);

@@ -138,28 +138,28 @@ void T_gettimeofday_hook(void) {
 }
 
 static void Paddr(struct sockaddr *addr, int *lenr) {
-  int l, r;
+  int al, r;
   uint16_t port;
   char buf[512];
   socklen_t sl = *lenr;
 
-  P_READ(l);
-  if (l<0 || l>=sizeof(buf)-1) Pformat("bad addr len");
-  P_read(buf,l,"addrtext");
-  buf[l]= 0;
+  P_READ(al);
+  if (al<0 || al>=sizeof(buf)-1) Pformat("bad addr len");
+  P_read(buf,al,"addrtext");
+  buf[al]= 0;
   P_READ(port);
   r= adns_text2addr(buf,port, adns_qf_addrlit_scope_numeric, addr, &sl);
   if (r==EINVAL) Pformat("bad addr text");
-  assert(r==ENOSPC);
+  assert(r==0 || r==ENOSPC);
   *lenr = sl;
 }
 
 static int Pbytes(byte *buf, int maxlen) {
-  int l;
-  P_READ(l);
-  if (l<0 || l>maxlen) Pformat("bad byte block len");
-  P_read(buf, l, "bytes");
-  return l;
+  int bl;
+  P_READ(bl);
+  if (bl<0 || bl>maxlen) Pformat("bad byte block len");
+  P_read(buf, bl, "bytes");
+  return bl;
 }
 
 static void Pfdset(fd_set *set, int max, int *r_io) {
@@ -264,8 +264,7 @@ int H$1(hm_args_massage($3,void)) {
   }
  ')
  m4_define(`hm_rv_len',`
-  hm_rv_any
-  if (r>($'`1)) Pformat("syscall length return is excessive");
+  hm_rv_succfail
  ')
  m4_define(`hm_rv_must',`
   r= 0;
