@@ -202,15 +202,15 @@ static void Ppollfds(struct pollfd *fds, int nfds, int *r_io) {
 #endif
 
 static int P_succfail(void) {
-  int r;
-  P_READ(r);
-  if (r<0 && -r<Tnerrnos) {
-    errno= Terrnos[-r].v;
+  int e;
+  P_READ(e);
+  if (e<0 && -e<Tnerrnos) {
+    errno= Terrnos[-e].v;
     return -1;
-  } else if (r>0 && r<=255) {
-    errno= r;
+  } else if (e>0 && e<=255) {
+    errno= e;
     return -1;
-  } else if (r) {
+  } else if (e) {
     Pformat("wrong errno value");
   }
   return 0;
