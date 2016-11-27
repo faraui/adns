@@ -277,9 +277,7 @@ m4_define(`hm_specsyscall', `')
 m4_include(`hsyscalls.i4')
 
 int Hclose(int fd) {
-  int r;
   P_fdf(fd);
   fdtab.buf[fd]= 0;
-  hm_rv_succfail
-  return r;
+  return P_succfail();
 }
