@@ -101,6 +101,7 @@ void T_gettimeofday_hook(void) {
   struct timeval delta;
   memset(&delta,0,sizeof(delta));
   timersub(&currenttime, &previously, &delta);
+  previously = currenttime;
   FR_WRITE(delta);
 }
 
