@@ -97,13 +97,32 @@ void Tensurerecordfile(void) {
   if (proutstr) stdout_enable= atoi(proutstr);
 }
 
-static void P_read(void *p, size_t sz) {
+
+static void P_read_dump(const unsigned char *p0, size_t count, ssize_t d) {
+  fputs(" | ",stdout);
+  while (count) {
+    fprintf(stdout,"%02x", *p0);
+    p0 += d;
+    count--;
+  }
+}
+    
+static void P_read(void *p, size_t sz, const char *what) {
   ssize_t got = fread(p,1,sz,Tinputfile);
   Pcheckinput();
   assert(got==sz);
+  if (stdout_enable && sz) {
+    fprintf(stdout,"%s:",what);
+    P_read_dump(p, sz, +1);
+    if (sz<=16) {
+      P_read_dump((const unsigned char *)p+sz-1, sz, -1);
+    }
+    fputs(" |\n",stdout);
+    Tflushstdout();
+  }
 }
 
-#define P_READ(x) (P_read(&(x), sizeof((x))))
+#define P_READ(x) (P_read(&(x), sizeof((x)), #x))
 
 static unsigned P_fdf(int fd) {
   assert(fd>=0 && fd<fdtab.used);
@@ -137,7 +156,7 @@ static int Pbytes(byte *buf, int maxlen) {
   int l;
   P_READ(l);
   if (l<0 || l>maxlen) Pformat("bad byte block len");
-  P_read(buf, l);
+  P_read(buf, l, "bytes");
   return l;
 }
 
