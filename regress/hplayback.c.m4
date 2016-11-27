@@ -438,7 +438,7 @@ int H$1(hm_args_massage($3,void)) {
       Psyntax("fcntl flags not O_NONBLOCK|... or ~O_NONBLOCK&...");
     }
   } else if (cmd == F_SETFL) {
-    hm_rv_succfail
+    hm_rv_check_success
   } else {
     Psyntax("fcntl not F_GETFL or F_SETFL");
   }
