@@ -47,8 +47,13 @@ static vbuf fdtab;
 #define FDF_NONBLOCK 002u
 
 static FILE *Tinputfile;
+static int stdout_enable;
 
-void Q_vb(void) { abort(); /* we neve called Q_anythig */ }
+void Q_vb(void) {
+  if (!adns__vbuf_append(&vb,"",1)) Tnomem();
+  if (fprintf(stdout," %s\n",vb.buf) == EOF) Toutputerr();
+  if (fflush(stdout)) Toutputerr();
+}
 
 static void Pformat(const char *what) {
   fprintf(stderr,"adns test harness: format error in raw log input file: %s\n",what);
@@ -56,6 +61,9 @@ static void Pformat(const char *what) {
 }
 
 extern void Tshutdown(void) {
+  int c= fgetc(Tinputfile);
+  if (c!=EOF) Pformat("unwanted additional syscall reply data");
+  if (ferror(Tinputfile)) Tfailed("read test log input (at end)");
 }
 
 static void Pcheckinput(void) {
@@ -80,6 +88,9 @@ void Tensurerecordfile(void) {
     const char fdfstd = FDF_OPEN;
     if (!adns__vbuf_append(&fdtab,&fdfstd,1)) Tnomem();
   }
+
+  const char *proutstr= getenv("ADNS_TEST_FUZZRAW_STDOUT_ENABLE");
+  if (proutstr) stdout_enable= atoi(proutstr);
 }
 
 static void P_read(void *p, size_t sz) {
@@ -175,6 +186,11 @@ int H$1(hm_args_massage($3,void)) {
  $3
 
  Tensurerecordfile();
+
+ if (stdout_enable) {
+   hm_create_hqcall_args
+   Q$1(hm_args_massage($3));
+ }
 
  m4_define(`hm_rv_succfail',`
   P_READ(r);
