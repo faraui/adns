@@ -381,6 +381,10 @@ int H$1(hm_args_massage($3,void)) {
  vb2.buf[amtread]= 0;
  if (memcmp(vb2.buf," $1=",hm_r_offset)) Psyntax("syscall reply mismatch");
 
+#ifdef FUZZRAW_SYNC
+ FR_WRITE("$1");
+#endif
+
  m4_define(`hm_rv_check_errno',`
  if (vb2.buf[hm_r_offset] == hm_squoteEhm_squote) {
   int e;

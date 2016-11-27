@@ -34,6 +34,7 @@ include		$(srcdir)/../src/adns.make
 DIRCFLAGS=	-I../src -I$(srcdir) -I$(srcdir)/../src
 
 HCPPFLAGS=	-DADNS_REGRESS_TEST -I.
+#HCPPFLAGS+=	-DFUZZRAW_SYNC
 
 REDIRLIBOBJS=	$(addsuffix _d.o, $(basename $(LIBOBJS)))
 HARNLOBJS=	hcommon.o $(REDIRLIBOBJS)

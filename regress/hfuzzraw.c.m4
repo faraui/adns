@@ -188,6 +188,13 @@ static void Pfdset(fd_set *set, int max, int *r_io) {
   }
 }
 
+#ifdef FUZZRAW_SYNC
+static void Psync(const char *exp, char *got, size_t sz, const char *what) {
+  P_read(got,sz,"syscall");
+  if (memcmp(exp,got,sz)) Pformat(what);
+}
+#endif
+
 #ifdef HAVE_POLL
 static void Ppollfds(struct pollfd *fds, int nfds, int *r_io) {
   int fd;
@@ -235,6 +242,12 @@ int H$1(hm_args_massage($3,void)) {
    hm_create_hqcall_args
    Q$1(hm_args_massage($3));
  }
+
+#ifdef FUZZRAW_SYNC
+  static const char sync_expect[]= "$1";
+  static char sync_got[sizeof(sync_expect)];
+  Psync(sync_expect, sync_got, sizeof(sync_got), "sync lost: exp=$1");
+#endif
 
  m4_define(`hm_rv_succfail',`
   r= P_succfail();
