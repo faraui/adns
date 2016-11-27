@@ -409,6 +409,8 @@ int H$1(hm_args_massage($3,void)) {
   FR_WRITE(r);
  ')
  m4_define(`hm_rv_fd',`hm_rv_any')
+ m4_define(`hm_rv_select',`hm_rv_any_nowrite')
+ m4_define(`hm_rv_poll',`hm_rv_any_nowrite')
  m4_define(`hm_rv_fcntl',`
   r= 0;
   if (cmd == F_GETFL) {

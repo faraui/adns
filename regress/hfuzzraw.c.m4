@@ -137,7 +137,7 @@ static int Pbytes(byte *buf, int maxlen) {
   return l;
 }
 
-static void Pfdset(fd_set *set, int max) {
+static void Pfdset(fd_set *set, int max, int *r_io) {
   uint16_t got;
   int fd, ngot=0;
 
@@ -148,7 +148,9 @@ static void Pfdset(fd_set *set, int max) {
       P_READ(got);
       ngot= 16;
     }
-    if (!(got & 1u)) {
+    if (got & 1u) {
+      (*r_io)++;
+    } else {
       FD_CLR(fd,set);
     }
     got >>= 1;
@@ -157,12 +159,14 @@ static void Pfdset(fd_set *set, int max) {
 }
 
 #ifdef HAVE_POLL
-static void Ppollfds(struct pollfd *fds, int nfds) {
-int fd;
+static void Ppollfds(struct pollfd *fds, int nfds, int *r_io) {
+  int fd;
   for (fd=0; fd<nfds; fd++) {
     if (!fds[fd].events) continue;
     P_fdf(fd);
     P_READ(fds[fd].revents);
+    if (fds[fd].revents)
+      (*r_io)++;
   }
 }
 #endif
@@ -221,6 +225,8 @@ int H$1(hm_args_massage($3,void)) {
  m4_define(`hm_rv_must',`
   r= 0;
  ')
+ m4_define(`hm_rv_select',`hm_rv_succfail')
+ m4_define(`hm_rv_poll',`hm_rv_succfail')
  m4_define(`hm_rv_fcntl',`
   unsigned flg = P_fdf(fd);
   if (cmd == F_GETFL) {
@@ -254,14 +260,22 @@ int H$1(hm_args_massage($3,void)) {
  $2
 
  hm_create_nothing
- m4_define(`hm_arg_fdset_io',`Pfdset($'`1,$'`2);')
- m4_define(`hm_arg_pollfds_io',`Ppollfds($'`1,$'`2);')
+ m4_define(`hm_arg_fdset_io',`Pfdset($'`1,$'`2,&r);')
+ m4_define(`hm_arg_pollfds_io',`Ppollfds($'`1,$'`2,&r);')
  m4_define(`hm_arg_addr_out',`Paddr($'`1,$'`2);')
  $3
 
  hm_create_nothing
  m4_define(`hm_arg_bytes_out',`r= Pbytes($'`2,$'`4);')
  $3
+
+ hm_create_nothing
+ m4_define(`hm_rv_selectpoll',`
+  if (($'`1) && !r) Pformat("select/poll returning 0 but infinite timeout");
+ ')
+ m4_define(`hm_rv_select',`hm_rv_selectpoll(!to)')
+ m4_define(`hm_rv_poll',`hm_rv_selectpoll(timeout<0)')
+ $2
 
  return r;
 }
