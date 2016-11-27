@@ -45,10 +45,6 @@ m4_include(hmacros.i4)
 static FILE *Tinputfile, *Treportfile;
 static vbuf vb2;
 
-extern void Tshutdown(void) {
-  adns__vbuf_free(&vb2);
-}
-
 static void Tensurereportfile(void) {
   const char *fdstr;
   int fd;
@@ -58,6 +54,10 @@ static void Tensurereportfile(void) {
   fdstr= getenv("ADNS_TEST_REPORT_FD"); if (!fdstr) return;
   fd= atoi(fdstr);
   Treportfile= fdopen(fd,"a"); if (!Treportfile) Tfailed("fdopen ADNS_TEST_REPORT_FD");
+}
+
+extern void Tshutdown(void) {
+  adns__vbuf_free(&vb2);
 }
 
 static void Psyntax(const char *where) {
