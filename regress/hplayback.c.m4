@@ -45,7 +45,7 @@ m4_include(hmacros.i4)
 static FILE *Tinputfile, *Tfuzzrawfile, *Treportfile;
 static vbuf vb2;
 
-static void Tensurereportfile(void) {
+static void Tensure_reportfile(void) {
   const char *fdstr;
   int fd;
 
@@ -56,7 +56,7 @@ static void Tensurereportfile(void) {
   Treportfile= fdopen(fd,"a"); if (!Treportfile) Tfailed("fdopen ADNS_TEST_REPORT_FD");
 }
 
-static void Tensurefuzzrawfile(void) {
+static void Tensure_fuzzrawfile(void) {
   static int done;
 
   if (done) return;
@@ -109,6 +109,9 @@ void Tensuresetup(void) {
   int fd;
   int chars;
   unsigned long sec, usec;
+
+  Tensure_reportfile();
+  Tensure_fuzzrawfile();
 
   if (Tinputfile) return;
   Tinputfile= stdin;
@@ -356,7 +359,6 @@ void Q_vb(void) {
             vb.used,vb.buf, vb.used,vb2.buf+1);
     exit(1);
   }
-  Tensurereportfile();
   nl= memchr(vb.buf,'\n',vb.used);
   fprintf(Treportfile," %.*s\n", (int)(nl ? nl - (const char*)vb.buf : vb.used), vb.buf);
 }
@@ -383,8 +385,7 @@ int H$1(hm_args_massage($3,void)) {
  if (!adns__vbuf_ensure(&vb2,1000)) Tnomem();
  fgets(vb2.buf,vb2.avail,Tinputfile); Pcheckinput();
 
- Tensurereportfile();
- Tensurefuzzrawfile();
+ Tensuresetup();
  fprintf(Treportfile,"%s",vb2.buf);
  amtread= strlen(vb2.buf);
  if (amtread<=0 || vb2.buf[--amtread]!=hm_squote\nhm_squote)
