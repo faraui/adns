@@ -203,7 +203,7 @@ m4_define(`syscall_sync',`
 #ifdef FUZZRAW_SYNC
   hm_fr_syscall_ident($'`1)
   static char sync_got[sizeof(sync_expect)];
-  Psync(sync_expect, sync_got, sizeof(sync_got), "sync lost: exp=$1");
+  Psync(sync_expect, sync_got, sizeof(sync_got), "sync lost: program did $1");
 #endif
 ')
 
