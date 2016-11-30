@@ -4,6 +4,13 @@ playback_prepare () {
 	case="$srcdir/case-$casename"
 	ocase="output-$casename"
 
+	if test -e "$case.in"
+	then
+		exec <"$case.in"
+	else
+		exec </dev/null
+	fi
+
 	exec 4<"$case.sys"
 	read <&4 program initfile initflags
 	read <&4 queryargs

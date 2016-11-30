@@ -37,13 +37,6 @@ rm -f $ocase.*
 EF_DISABLE_BANNER=1
 export EF_DISABLE_BANNER
 
-if test -e "$case.in"
-then
-	exec <"$case.in"
-else
-	exec </dev/null
-fi
-
 if test ! -e $playback
 then
 	printf "SKIPPED-$casename "
