@@ -46,9 +46,8 @@ static vbuf fdtab;
 #define FDF_OPEN     001u
 #define FDF_NONBLOCK 002u
 
-static FILE *Tinputfile;
+static FILE *Tinputfile, *traceout;
 static int traceprint;
-#define traceout stdout
 
 static void Tflushtrace( void) {
   if (fflush(traceout)) Toutputerr();
@@ -73,7 +72,10 @@ void Tensuresetup(void) {
   }
 
   const char *traceprintstr= getenv("ADNS_TEST_FUZZRAW_TRACEPRINT");
-  if (traceprintstr) traceprint= atoi(traceprintstr);
+  if (traceprintstr) {
+    traceprint= atoi(traceprintstr);
+    traceout= fdopen(2,"w");  if (!traceout) Tfailed("fdopen for traceout");
+  }
 }
 
 void Q_vb(void) {
