@@ -53,28 +53,6 @@ static void Tflushstdout( void) {
   if (fflush(stdout)) Toutputerr();
 }
 
-void Q_vb(void) {
-  if (!adns__vbuf_append(&vb,"",1)) Tnomem();
-  if (fprintf(stdout," %s\n",vb.buf) == EOF) Toutputerr();
-  Tflushstdout();
-}
-
-static void Pformat(const char *what) {
-  fprintf(stderr,"adns test harness: format error in raw log input file: %s\n",what);
-  exit(-1);
-}
-
-extern void Tshutdown(void) {
-  int c= fgetc(Tinputfile);
-  if (c!=EOF) Pformat("unwanted additional syscall reply data");
-  if (ferror(Tinputfile)) Tfailed("read test log input (at end)");
-}
-
-static void Pcheckinput(void) {
-  if (ferror(Tinputfile)) Tfailed("read test log input file");
-  if (feof(Tinputfile)) Pformat("eof at syscall reply");
-}
-
 void Tensurerecordfile(void) {
   static int done;
 
@@ -97,6 +75,27 @@ void Tensurerecordfile(void) {
   if (proutstr) stdout_enable= atoi(proutstr);
 }
 
+void Q_vb(void) {
+  if (!adns__vbuf_append(&vb,"",1)) Tnomem();
+  if (fprintf(stdout," %s\n",vb.buf) == EOF) Toutputerr();
+  Tflushstdout();
+}
+
+static void Pformat(const char *what) {
+  fprintf(stderr,"adns test harness: format error in raw log input file: %s\n",what);
+  exit(-1);
+}
+
+extern void Tshutdown(void) {
+  int c= fgetc(Tinputfile);
+  if (c!=EOF) Pformat("unwanted additional syscall reply data");
+  if (ferror(Tinputfile)) Tfailed("read test log input (at end)");
+}
+
+static void Pcheckinput(void) {
+  if (ferror(Tinputfile)) Tfailed("read test log input file");
+  if (feof(Tinputfile)) Pformat("eof at syscall reply");
+}
 
 static void P_read_dump(const unsigned char *p0, size_t count, ssize_t d) {
   fputs(" | ",stdout);
