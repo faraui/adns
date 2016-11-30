@@ -77,7 +77,6 @@ void Tensuresetup(void) {
 }
 
 void Q_vb(void) {
-  Tensuresetup();
   if (!adns__vbuf_append(&vb,"",1)) Tnomem();
   if (fprintf(traceout," %s\n",vb.buf) == EOF) Toutputerr();
   Tflushtrace();

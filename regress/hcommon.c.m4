@@ -256,6 +256,7 @@ void Toutputerr(void) {
 }
 
 void Hexit(int rv) {
+  Tensuresetup();
   vb.used= 0;
   Tvbf("exit %d", rv);
   Q_vb();
