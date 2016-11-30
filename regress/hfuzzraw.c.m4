@@ -47,10 +47,11 @@ static vbuf fdtab;
 #define FDF_NONBLOCK 002u
 
 static FILE *Tinputfile;
-static int stdout_enable;
+static int traceprint;
+#define traceout stdout
 
-static void Tflushstdout( void) {
-  if (fflush(stdout)) Toutputerr();
+static void Tflushtrace( void) {
+  if (fflush(traceout)) Toutputerr();
 }
 
 void Tensuresetup(void) {
@@ -71,15 +72,15 @@ void Tensuresetup(void) {
     if (!adns__vbuf_append(&fdtab,&fdfstd,1)) Tnomem();
   }
 
-  const char *proutstr= getenv("ADNS_TEST_FUZZRAW_STDOUT_ENABLE");
-  if (proutstr) stdout_enable= atoi(proutstr);
+  const char *traceprintstr= getenv("ADNS_TEST_FUZZRAW_TRACEPRINT");
+  if (traceprintstr) traceprint= atoi(traceprintstr);
 }
 
 void Q_vb(void) {
   Tensuresetup();
   if (!adns__vbuf_append(&vb,"",1)) Tnomem();
-  if (fprintf(stdout," %s\n",vb.buf) == EOF) Toutputerr();
-  Tflushstdout();
+  if (fprintf(traceout," %s\n",vb.buf) == EOF) Toutputerr();
+  Tflushtrace();
 }
 
 static void Pformat(const char *what) {
@@ -99,9 +100,9 @@ static void Pcheckinput(void) {
 }
 
 static void P_read_dump(const unsigned char *p0, size_t count, ssize_t d) {
-  fputs(" | ",stdout);
+  fputs(" | ",traceout);
   while (count) {
-    fprintf(stdout,"%02x", *p0);
+    fprintf(traceout,"%02x", *p0);
     p0 += d;
     count--;
   }
@@ -112,14 +113,14 @@ static void P_read(void *p, size_t sz, const char *what) {
   ssize_t got = fread(p,1,sz,Tinputfile);
   Pcheckinput();
   assert(got==sz);
-  if (stdout_enable && sz) {
-    fprintf(stdout,"%8lx %8s:",pos,what);
+  if (traceprint>1 && sz) {
+    fprintf(traceout,"%8lx %8s:",pos,what);
     P_read_dump(p, sz, +1);
     if (sz<=16) {
       P_read_dump((const unsigned char *)p+sz-1, sz, -1);
     }
-    fputs(" |\n",stdout);
-    Tflushstdout();
+    fputs(" |\n",traceout);
+    Tflushtrace();
   }
 }
 
@@ -244,7 +245,7 @@ int H$1(hm_args_massage($3,void)) {
 
  Tensuresetup();
 
- if (stdout_enable) {
+ if (traceprint) {
    hm_create_hqcall_args
    Q$1(hm_args_massage($3));
  }
