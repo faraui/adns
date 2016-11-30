@@ -91,6 +91,7 @@ static void Pformat(const char *what) {
 }
 
 extern void Tshutdown(void) {
+  if (!Tinputfile) return;
   int c= fgetc(Tinputfile);
   if (c!=EOF) Pformat("unwanted additional syscall reply data");
   if (ferror(Tinputfile)) Tfailed("read test log input (at end)");
