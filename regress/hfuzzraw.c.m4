@@ -77,6 +77,7 @@ void Tensuresetup(void) {
 }
 
 void Q_vb(void) {
+  if (!traceprint) return; /* hcommon.c.m4 can call Q_vb directly */
   if (!adns__vbuf_append(&vb,"",1)) Tnomem();
   if (fprintf(traceout," %s\n",vb.buf) == EOF) Toutputerr();
   Tflushtrace();
