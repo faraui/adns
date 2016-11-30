@@ -265,6 +265,7 @@ static void Ppollfds(struct pollfd *fds, int nfds) {
     if (gotevents != fds->events) Psyntax("poll fds[].events changed");
     Pstring(", revents=",", revents= in pollfds");
     fds->revents= Ppollfdevents();
+    if (gotevents) FR_WRITE(fds->revents);
     Pstring("}","} in pollfds");
     Pstring(comma,"separator in pollfds");
     comma= ", ";
