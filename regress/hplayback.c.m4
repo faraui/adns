@@ -105,7 +105,7 @@ void T_gettimeofday_hook(void) {
   FR_WRITE(delta);
 }
 
-void Tensurerecordfile(void) {
+void Tensuresetup(void) {
   int fd;
   int chars;
   unsigned long sec, usec;
@@ -338,7 +338,7 @@ static int Pbytes(byte *buf, int maxlen) {
 void Q_vb(void) {
   const char *nl;
 
-  Tensurerecordfile();
+  Tensuresetup();
   if (!adns__vbuf_ensure(&vb2,vb.used+2)) Tnomem();
   fread(vb2.buf,1,vb.used+2,Tinputfile);
   if (feof(Tinputfile)) {

@@ -53,7 +53,7 @@ static void Tflushstdout( void) {
   if (fflush(stdout)) Toutputerr();
 }
 
-void Tensurerecordfile(void) {
+void Tensuresetup(void) {
   static int done;
 
   if (done) return;
@@ -241,7 +241,7 @@ int H$1(hm_args_massage($3,void)) {
  hm_create_hqcall_init($1)
  $3
 
- Tensurerecordfile();
+ Tensuresetup();
 
  if (stdout_enable) {
    hm_create_hqcall_args

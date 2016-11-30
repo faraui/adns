@@ -69,7 +69,7 @@ const int Tnerrnos= sizeof(Terrnos)/sizeof(Terrnos[0]) - 1;
 static vbuf vbw;
 
 int Hgettimeofday(struct timeval *tv, struct timezone *tz) {
-  Tensurerecordfile();
+  Tensuresetup();
   Tmust("gettimeofday","tz",!tz);
   T_gettimeofday_hook();
   *tv= currenttime;
