@@ -26,6 +26,14 @@ case "$program" in
 *)	program="./$program" ;;
 esac
 
-${program} <"$fuzzfile" >/dev/null
+set +e
+${program} <"$fuzzfile" >/dev/null 2>&1
+rc=$?
+set -e
+
+if [ $rc != 0 ]; then
+	printf >&2 '\nFAIL-%s\n' $fuzzfile
+	exit $rc
+fi
 
 printf "$desc "
