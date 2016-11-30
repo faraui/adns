@@ -257,10 +257,12 @@ static void Ppollfds(struct pollfd *fds, int nfds) {
   if (vb2.buf[vb2.used++] != hm_squote[hm_squote) Psyntax("pollfds start not [");
   for (i=0; i<nfds; i++) {
     Pstring("{fd=","{fd= in pollfds");
-    fds->fd= strtoul(vb2.buf+vb2.used,&ep,10);
+    int gotfd= strtoul(vb2.buf+vb2.used,&ep,10);
+    if (gotfd != fds->fd) Psyntax("poll fds[].fd changed");
     vb2.used= ep - (char*)vb2.buf;    
     Pstring(", events=",", events= in pollfds");
-    fds->events= Ppollfdevents();
+    int gotevents= Ppollfdevents();
+    if (gotevents != fds->events) Psyntax("poll fds[].events changed");
     Pstring(", revents=",", revents= in pollfds");
     fds->revents= Ppollfdevents();
     Pstring("}","} in pollfds");
