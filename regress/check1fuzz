@@ -49,3 +49,4 @@ if [ $rc != 0 ]; then
 fi
 
 printf '%s ' "$desc"
+rm -f output-$desc.trouble
