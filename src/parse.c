@@ -71,6 +71,7 @@ adns_status adns__findlabel_next(findlabel_state *fls,
 				 int *lablen_r, int *labstart_r) {
   int lablen, jumpto;
   const char *dgram;
+  int had_pointer= 0;
 
   dgram= fls->dgram;
   for (;;) {
@@ -81,6 +82,7 @@ adns_status adns__findlabel_next(findlabel_state *fls,
     if ((lablen & 0x0c0) != 0x0c0) return adns_s_unknownformat;
     if (fls->cbyte >= fls->dglen) goto x_truncated;
     if (fls->cbyte >= fls->max) goto x_badresponse;
+    if (had_pointer++ >= 2) goto x_loop;
     GET_B(fls->cbyte,jumpto);
     jumpto |= (lablen&0x3f)<<8;
     if (fls->dmend_r) *(fls->dmend_r)= fls->cbyte;
@@ -108,6 +110,11 @@ adns_status adns__findlabel_next(findlabel_state *fls,
  x_badresponse: 
   adns__diag(fls->ads,fls->serv,fls->qu,
 	     "label in domain runs beyond end of domain");
+  return adns_s_invalidresponse;
+
+ x_loop: 
+  adns__diag(fls->ads,fls->serv,fls->qu,
+	     "compressed label pointer chain");
   return adns_s_invalidresponse;
 }
 
