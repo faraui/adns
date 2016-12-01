@@ -488,6 +488,7 @@ int adns_processwriteable(adns_state ads, int fd, const struct timeval *now) {
 	adns__tcp_broken(ads,"write",strerror(errno));
 	r= 0; goto xit;
       } else if (r>0) {
+	assert(r <= ads->tcpsend.used);
 	ads->tcpsend.used -= r;
 	memmove(ads->tcpsend.buf,ads->tcpsend.buf+r,ads->tcpsend.used);
       }
