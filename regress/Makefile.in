@@ -64,7 +64,7 @@ checkfuzz:		$(TARGETS) \
 # it doesn't really test any of adns
 
 fuzzcat.d:	checkfuzz
-		$(srcdir)/categorizefuzz $(ALL_TESTS)
+		$(srcdir)/categorisefuzz $(ALL_TESTS)
 
 check-%:	case-%.sys
 		@srcdir=$(srcdir) $(srcdir)/r1test $* || test $$? = 5
