@@ -109,7 +109,7 @@ adns_status adns__findlabel_next(findlabel_state *fls,
 
  x_badresponse: 
   adns__diag(fls->ads,fls->serv,fls->qu,
-	     "label in domain runs beyond end of domain");
+	     "label in domain runs or points outside of packet");
   return adns_s_invalidresponse;
 
  x_loop: 
