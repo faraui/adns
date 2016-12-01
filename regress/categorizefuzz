@@ -6,8 +6,8 @@ out=fuzzcat.d
 rm -rf "$out"
 mkdir "$out"
 
-for case in "$@"; do
-	fuzz="fuzz-$case"
+categ () {
+	fuzz=$1
 	exec <"$fuzz"
 	read nargs
 	read arg0len
@@ -15,4 +15,9 @@ for case in "$@"; do
 	program="${program##*/}"
 	mkdir -p "$out/$program"
 	ln "$fuzz" "$out/$program"/.
+}
+
+for case in "$@"; do
+	categ "fuzz-$case"
+	categ "fuzzraw-$case"
 done
