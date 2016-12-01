@@ -45,7 +45,7 @@ FILE *Hfopen(const char *path, const char *mode) {
 static int t_argc;
 static char **t_argv;
 
-static FILE *t_stdin;
+static FILE *t_stdin, *stdoutcopy;
 static int t_sys_fd;
 
 static int bail(const char *msg) {
@@ -85,7 +85,8 @@ int Ttestinputfd(void) {
 }
 
 void Texit(int rv) {
-  fprintf(stderr,"**Texit(%d)**\n",rv);
+  fprintf(stdoutcopy,"rc=%d\n",rv);
+  if (ferror(stdoutcopy) || fclose(stdoutcopy)) baile("flush rc msg");
   Tcommonshutdown();
   exit(0);
 }
@@ -95,6 +96,11 @@ int main(int argc, char **argv) {
 
   if (argc!=1)
     bail("usage: *_fuzz  (no arguments)");
+
+  int stdoutcopyfd= dup(1);
+  if (stdoutcopyfd<0) baile("dup 1 again");
+  stdoutcopy= fdopen(stdoutcopyfd,"w");
+  if (!stdoutcopy) baile("fdopen 1 again");
 
   t_argc = getint(50);
   t_argv = calloc(t_argc+1, sizeof(*t_argv));
