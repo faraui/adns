@@ -74,7 +74,10 @@ void Tensuresetup(void) {
   const char *traceprintstr= getenv("ADNS_TEST_FUZZRAW_TRACEPRINT");
   if (traceprintstr) {
     traceprint= atoi(traceprintstr);
-    traceout= fdopen(2,"w");  if (!traceout) Tfailed("fdopen for traceout");
+    int tracefd= dup(2);
+    if (tracefd<0) Tfailed("dup for tracefd");
+    traceout= fdopen(tracefd,"w");
+    if (!traceout) Tfailed("fdopen for traceout");
   }
 }
 
