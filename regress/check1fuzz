@@ -11,9 +11,12 @@ fuzzfile="$1"
 exec <"$fuzzfile"
 
 case "$fuzzfile" in
-fuzz-*)		desc="${fuzzfile#fuzz-}"	;;
-fuzzraw-*)	desc="${fuzzfile#fuzzraw-}"	;;
+fuzz-*)		kind=f;	case="${fuzzfile#fuzz-}"	;;
+fuzzraw-*)	kind=r;	case="${fuzzfile#fuzzraw-}"	;;
+*)		printf >&2 '\nWRONG-FUZZ-%s\n' $fuzzfile; exit 1 ;;
 esac
+
+desc="$case.$kind"
 
 read nargs
 if [ "$nargs" = 0 ]; then printf "SKIPPED-$desc "; exit 5; fi
@@ -26,14 +29,23 @@ case "$program" in
 *)	program="./$program" ;;
 esac
 
+exec 3>output-$desc.trouble
+
 set +e
-${program} <"$fuzzfile" >/dev/null 2>&1
+${program} <"$fuzzfile" >output-$desc.out.tmp 2>&3
 rc=$?
 set -e
 
+if [ $rc = 0 ]; then
+	set +e
+	diff -u output-$desc.out.tmp case-$case.out >&3
+	rc=$?
+	set -e
+fi
+
 if [ $rc != 0 ]; then
-	printf >&2 '\nFAIL-%s\n' $fuzzfile
+	printf >&2 '\nFAIL-%s\n' $desc
 	exit $rc
 fi
 
-printf "$desc "
+printf '%s ' "$desc"

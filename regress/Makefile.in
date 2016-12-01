@@ -77,10 +77,10 @@ fuzzraw-%:	fuzz-%
 .PRECIOUS: fuzz-%
 
 checkfuzz-%:	fuzz-% $(TARGETS)
-		@srcdir=$(srcdir) $(srcdir)/check1fuzz $< || test $$? = 5
+		@srcdir=$(srcdir) $(srcdir)/check1fuzz $<
 
 checkfuzzraw-%:	fuzzraw-% $(TARGETS)
-		@srcdir=$(srcdir) $(srcdir)/check1fuzz $< || test $$? = 5
+		@srcdir=$(srcdir) $(srcdir)/check1fuzz $<
 
 LINK_CMD=	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
