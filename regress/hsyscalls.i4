@@ -29,7 +29,8 @@ m4_dnl  hm_rv_must       must succeed and return 0
 m4_dnl  hm_rv_any        any nonnegative return allowed, -1 means see errno
 m4_dnl  hm_rv_fd         file descriptor is returned, -1 means see errno
 m4_dnl  hm_rv_succfail   returns 0 (ok) or -1 (see errno)
-m4_dnl  hm_rv_len(<max>) returns length read/written, must be <=max, -1 => errno
+m4_dnl  hm_rv_len(<max>) returns length read, must be <=max, -1 => errno
+m4_dnl  hm_rv_wlen(<max>) returns length written, must be <=max, -1 => errno
 m4_dnl  hm_rv_fcntl      syscall is fcntl, do special processing
 m4_dnl  hm_rv_select     select, do special processing } default is _any
 m4_dnl  hm_rv_poll       poll, do special processing   }  after create_nothing
@@ -103,7 +104,7 @@ hm_syscall(
 ')
 
 hm_syscall(
-	sendto, `hm_rv_any', `
+	sendto, `hm_rv_wlen(msglen)', `
 	hm_arg_fd(fd) hm_na
 	hm_arg_bytes_in(void,msg,int,msglen) hm_na
 	hm_arg_must(unsigned int,flags,0) hm_na
@@ -125,7 +126,7 @@ hm_syscall(
 ')
 
 hm_syscall(
-	write, `hm_rv_any', `
+	write, `hm_rv_wlen(len)', `
 	hm_arg_fd(fd) hm_na
 	hm_arg_bytes_in(void,buf,size_t,len) hm_na
 ')

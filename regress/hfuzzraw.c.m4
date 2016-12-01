@@ -308,6 +308,10 @@ int H$1(hm_args_massage($3,void)) {
     r= newfd;
  }
  ')
+ m4_define(`hm_rv_wlen',`
+  hm_rv_any
+  if (r>$'`1) Pformat("write return value too large");
+ ')
  $2
 
  hm_create_nothing
