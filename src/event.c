@@ -461,7 +461,7 @@ int adns_processwriteable(adns_state ads, int fd, const struct timeval *now) {
       }
       assert(FD_ISSET(ads->tcpsocket,&writeable));
       if (!adns__vbuf_ensure(&ads->tcprecv,1)) { r= ENOMEM; goto xit; }
-      r= read(ads->tcpsocket,&ads->tcprecv.buf,1);
+      r= read(ads->tcpsocket,ads->tcprecv.buf,1);
       if (r==0 || (r<0 && (errno==EAGAIN || errno==EWOULDBLOCK))) {
 	tcp_connected(ads,*now);
 	r= 0; goto xit;
