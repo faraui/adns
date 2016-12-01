@@ -625,8 +625,19 @@ xit:
 void adns_globalsystemfailure(adns_state ads) {
   adns__consistency(ads,0,cc_entex);
 
-  while (ads->udpw.head) adns__query_fail(ads->udpw.head, adns_s_systemfail);
-  while (ads->tcpw.head) adns__query_fail(ads->tcpw.head, adns_s_systemfail);
+  for (;;) {
+    adns_query qu;
+#define GSF_QQ(QQ)				\
+    if ((qu= ads->QQ.head)) {			\
+      LIST_UNLINK(ads->QQ,qu);			\
+      adns__query_fail(qu, adns_s_systemfail);	\
+      continue;					\
+    }
+    GSF_QQ(udpw);
+    GSF_QQ(tcpw);
+#undef GSF_QQ
+    break;
+  }
   
   switch (ads->tcpstate) {
   case server_connecting:
