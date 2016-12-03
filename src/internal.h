@@ -371,7 +371,8 @@ struct adns__state {
   int configerrno;
   struct query_queue udpw, tcpw, childw, output, intdone;
   adns_query forallnext;
-  int nextid, tcpsocket;
+  unsigned nextid;
+  int tcpsocket;
   struct udpsocket { int af; int fd; } udpsockets[MAXUDP];
   int nudpsockets;
   vbuf tcpsend, tcprecv;
