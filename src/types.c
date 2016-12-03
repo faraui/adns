@@ -1108,13 +1108,19 @@ static void mf_inthostaddr(adns_query qu, void *datap) {
   mfp_hostaddr(qu,&rrp->ha);
 }
 
-static adns_status cs_inthostaddr(vbuf *vb, const void *datap) {
-  const adns_rr_inthostaddr *rrp= datap;
+static adns_status csp_intofinthost(vbuf *vb, int i) {
   char buf[10];
 
-  sprintf(buf,"%u ",rrp->i);
+  sprintf(buf,"%u ",i);
   CSP_ADDSTR(buf);
+  return adns_s_ok;
+}
 
+static adns_status cs_inthostaddr(vbuf *vb, const void *datap) {
+  const adns_rr_inthostaddr *rrp= datap;
+  adns_status st;
+
+  st = csp_intofinthost(vb,rrp->i);  if (st) return st;
   return csp_hostaddr(vb,&rrp->ha);
 }
 
@@ -1124,10 +1130,9 @@ static adns_status cs_inthostaddr(vbuf *vb, const void *datap) {
 
 static adns_status cs_inthost(vbuf *vb, const void *datap) {
   const adns_rr_intstr *rrp= datap;
-  char buf[10];
+  adns_status st;
 
-  sprintf(buf,"%u ",rrp->i);
-  CSP_ADDSTR(buf);
+  st = csp_intofinthost(vb,rrp->i);  if (st) return st;
   return csp_domain(vb,rrp->str);
 }
 
