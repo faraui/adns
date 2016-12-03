@@ -1111,6 +1111,10 @@ static void mf_inthostaddr(adns_query qu, void *datap) {
 static adns_status csp_intofinthost(vbuf *vb, int i) {
   char buf[10];
 
+  if (i < 0 || i > 0xffff)
+    /* currently only used for MX whose priorities are 16-bit */
+    return adns_s_invaliddata;
+  
   sprintf(buf,"%u ",i);
   CSP_ADDSTR(buf);
   return adns_s_ok;
@@ -1413,6 +1417,8 @@ static adns_status cs_soa(vbuf *vb, const void *datap) {
   st= csp_mailbox(vb,rrp->rname);  if (st) return st;
 
   for (i=0; i<5; i++) {
+    if (rrp->serial > 0xffffffffUL)
+      return adns_s_invaliddata;
     sprintf(buf," %lu",(&rrp->serial)[i]);
     CSP_ADDSTR(buf);
   }
@@ -1501,6 +1507,10 @@ static int di_srv(adns_state ads, const void *datap_a, const void *datap_b) {
 static adns_status csp_srv_begin(vbuf *vb, const adns_rr_srvha *rrp
 				   /* might be adns_rr_srvraw* */) {
   char buf[30];
+  if (rrp->priority < 0 || rrp->priority > 0xffff ||
+      rrp->weight   < 0 || rrp->weight   > 0xffff ||
+      rrp->port     < 0 || rrp->port     > 0xffff)
+    return adns_s_invaliddata;
   sprintf(buf,"%u %u %u ", rrp->priority, rrp->weight, rrp->port);
   CSP_ADDSTR(buf);
   return adns_s_ok;
@@ -1615,6 +1625,9 @@ static adns_status cs_opaque(vbuf *vb, const void *datap) {
   char buf[10];
   int l;
   unsigned char *p;
+
+  if (rrp->len < 0 || rrp->len > 0xffff)
+    return adns_s_invaliddata;
 
   sprintf(buf,"\\# %d",rrp->len);
   CSP_ADDSTR(buf);
