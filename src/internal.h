@@ -53,7 +53,7 @@ typedef unsigned char byte;
 
 /* Configuration and constants */
 
-#define MAXSERVERS 5
+#define MAXSERVERS 5 /* do not increase beyond no. of bits in `unsigned'! */
 #define MAXSORTLIST 15
 #define UDPMAXRETRIES 15
 #define UDPRETRYMS 2000
