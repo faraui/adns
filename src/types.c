@@ -1371,7 +1371,7 @@ static adns_status pa_soa(const parseinfo *pai, int cbyte,
   adns_rr_soa *rrp= datap;
   const byte *dgram= pai->dgram;
   adns_status st;
-  int msw, lsw, i;
+  int i;
 
   st= pap_domain(pai, &cbyte, max, &rrp->mname,
 		 pai->qu->flags & adns_qf_quoteok_anshost ? pdf_quoteok : 0);
@@ -1383,9 +1383,8 @@ static adns_status pa_soa(const parseinfo *pai, int cbyte,
   if (cbyte+20 != max) return adns_s_invaliddata;
   
   for (i=0; i<5; i++) {
-    GET_W(cbyte,msw);
-    GET_W(cbyte,lsw);
-    (&rrp->serial)[i]= (msw<<16) | lsw;
+    unsigned long v;
+    (&rrp->serial)[i]= GET_L(cbyte, v);
   }
 
   return adns_s_ok;
