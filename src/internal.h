@@ -934,7 +934,7 @@ static inline int errno_resources(int e) { return e==ENOMEM || e==ENOBUFS; }
   (( ((sz)+sizeof(union maxalign)-1) / sizeof(union maxalign) )	\
    * sizeof(union maxalign) )
 
-#define GETIL_B(cb) (((dgram)[(cb)++]) & 0x0ff)
+#define GETIL_B(cb) (((dgram)[(cb)++]) & 0x0ffu)
 #define GET_B(cb,tv) ((tv)= GETIL_B((cb)))
 #define GET_W(cb,tv) ((tv)=0,(tv)|=(GETIL_B((cb))<<8), (tv)|=GETIL_B(cb), (tv))
 #define GET_L(cb,tv) ( (tv)=0,				\
