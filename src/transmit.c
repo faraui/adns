@@ -87,6 +87,7 @@ static adns_status qdparselabel(adns_state ads,
   while (p!=pe && (c= *p++)!='.') {
     if (c=='\\') {
       if (!(flags & adns_qf_quoteok_query)) return adns_s_querydomaininvalid;
+      if (p==pe) return adns_s_querydomaininvalid;
       if (ctype_digit(p[0])) {
 	if (p+1==pe || p+2==pe) return adns_s_querydomaininvalid;
 	if (ctype_digit(p[1]) && ctype_digit(p[2])) {
