@@ -103,6 +103,7 @@ int main(int argc, char **argv) {
   if (!stdoutcopy) baile("fdopen 1 again");
 
   t_argc = getint(50);
+  if (!t_argc) bail("too few arguments");
   t_argv = calloc(t_argc+1, sizeof(*t_argv));
   for (i=0; i<t_argc; i++) {
     l = getint(1000);
