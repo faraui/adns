@@ -206,7 +206,7 @@ static void read_stdin(void) {
       if (r == 0) {
 	if (used) {
 	  /* fake up final newline */
-	  buf[used++]= '\n';
+	  buf[used]= '\n';
 	  r= 1;
 	} else {
 	  ov_pipe= 0;
