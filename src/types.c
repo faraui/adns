@@ -838,6 +838,7 @@ static adns_status pap_findaddrs(const parseinfo *pai, adns_rr_hostaddr *ha,
 			    &type, &class, &ttl, &rdlen, &rdstart,
 			    pai->dgram, pai->dglen, dmstart, &ownermatched);
     if (st) return st;
+    if (type==-1) continue;
     if (!ownermatched || class != DNS_CLASS_IN) continue;
     typef= addr_rrtypeflag(type);
     if (!(want & typef)) continue;

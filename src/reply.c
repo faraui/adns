@@ -340,8 +340,8 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 		     &ownermatched);
     assert(!st); assert(rrtype != -1);
     if (rri < restartfrom ||
-	rrclass != DNS_CLASS_IN ||
 	rrtype != (qu->answer->type & adns_rrt_typemask) ||
+	rrclass != DNS_CLASS_IN ||
 	!ownermatched)
       continue;
     adns__update_expires(qu,ttl,now);
