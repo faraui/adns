@@ -89,6 +89,7 @@ void adns_afterpoll(adns_state ads, const struct pollfd *fds, int nfds,
   adns__must_gettimeofday(ads,&now,&tv_buf);
   if (now) {
     adns__timeouts(ads, 1, 0,0, *now);
+    adns__intdone_process(ads); /* fdevents calls adns_processwriteable */
     adns__fdevents(ads, fds,nfds, 0,0,0,0, *now,0);
   }
   adns__returning(ads,0);
