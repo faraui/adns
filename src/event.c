@@ -624,6 +624,9 @@ xit:
 /* General helpful functions. */
 
 void adns_globalsystemfailure(adns_state ads) {
+  /* Must not be called by adns during actual processing of a
+   * particular query, since it reenters adns.  Only safe to call in
+   * situations where it would be safe to call adns_returning. */
   adns__consistency(ads,0,cc_entex);
 
   for (;;) {
