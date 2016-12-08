@@ -504,7 +504,7 @@ static void free_query_allocs(adns_query qu) {
   qu->query_dgram= 0;
 }
 
-void adns__returning(adns_state ads, adns_query qu_for_caller) {
+void adns__intdone_process(adns_state ads) {
   while (ads->intdone.head) {
     adns_query iq= ads->intdone.head;
     adns_query parent= iq->parent;
@@ -516,6 +516,10 @@ void adns__returning(adns_state ads, adns_query qu_for_caller) {
     free(iq->answer);
     free(iq);
   }
+}
+
+void adns__returning(adns_state ads, adns_query qu_for_caller) {
+  adns__intdone_process(ads);
   adns__consistency(ads,qu_for_caller,cc_entex);
 }
 

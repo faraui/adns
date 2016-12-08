@@ -720,6 +720,8 @@ void adns__returning(adns_state ads, adns_query qu);
  * external-faciing functions which call adns__returning should
  * normally be avoided in internal code. */
 
+void adns__intdone_process(adns_state ads);
+
 /* From reply.c: */
 
 void adns__procdgram(adns_state ads, const byte *dgram, int len,
