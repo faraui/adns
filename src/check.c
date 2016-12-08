@@ -136,14 +136,19 @@ static void checkc_queue_tcpw(adns_state ads) {
 }
 
 static void checkc_queue_childw(adns_state ads) {
-  adns_query parent, child;
+  adns_query parent, child, search;
 
   DLIST_CHECK(ads->childw, parent, , {
     assert(parent->state == query_childw);
     assert(parent->children.head);
     DLIST_CHECK(parent->children, child, siblings., {
       assert(child->parent == parent);
-      assert(child->state != query_done);
+      if (child->state == query_done) {
+	for (search= ads->intdone.head; search; search= search->next)
+	  if (search==child) goto child_done_ok;
+	assert(!"done child not on intdone");
+      child_done_ok:;
+      }
     });
     checkc_query(ads,parent);
     checkc_query_alloc(ads,parent);
