@@ -171,6 +171,10 @@ static void parseargs(const char *const *argv) {
 	config_text= arg;
       } else if (!strcmp(arg,"--debug")) {
 	initflags |= adns_if_debug;
+      } else if (!strcmp(arg,"--checkc-freq")) {
+	initflags |= adns_if_checkc_freq;
+      } else if (!strcmp(arg,"--checkc-entex")) {
+	initflags |= adns_if_checkc_entex;
       } else if (!strcmp(arg,"--help")) {
 	usage(); quitnow(0);
       } else if (!strcmp(arg,"--version")) {
