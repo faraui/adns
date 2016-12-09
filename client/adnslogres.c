@@ -61,6 +61,7 @@
 /* option flags */
 #define OPT_DEBUG 1
 #define OPT_POLL 2
+#define OPT_CHECKC 4
 
 static const char *const progname= "adnslogres";
 static const char *config_text;
@@ -170,7 +171,8 @@ static void proclog(FILE *inf, FILE *outf, int maxpending, int opts) {
   logline *head, *tail, *line;
   adns_initflags initflags;
 
-  initflags= (opts & OPT_DEBUG) ? adns_if_debug : 0;
+  initflags= (((opts & OPT_DEBUG) ? adns_if_debug : 0) |
+              ((opts & OPT_CHECKC) ? adns_if_checkc_entex : 0));
   if (config_text) {
     errno= adns_init_strcfg(&adns, initflags, stderr, config_text);
   } else {
@@ -238,6 +240,13 @@ int main(int argc, char *argv[]) {
   extern char *optarg;
   FILE *inf;
 
+  opts= 0;
+
+  if (argv[1] && !strcmp(argv[1],"--checkc-freq")) {
+    opts|= OPT_CHECKC;
+    argv++; argc--;
+  }
+
   if (argv[1] && !strncmp(argv[1],"--",2)) {
     if (!strcmp(argv[1],"--help")) {
       printhelp(stdout);
@@ -251,7 +260,6 @@ int main(int argc, char *argv[]) {
   }
 
   maxpending= DEFMAXPENDING;
-  opts= 0;
   while ((c= getopt(argc, argv, "c:C:dp")) != -1)
     switch (c) {
     case 'c':
