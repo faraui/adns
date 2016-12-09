@@ -65,6 +65,10 @@ checkfuzz:		$(TARGETS) \
 
 fuzzcat.d:	checkfuzz
 		$(srcdir)/categorisefuzz $(ALL_TESTS)
+		perl -ne 'print $$1,"\n" while m/\"([^"% ]{2,})\"/g' \
+			$(srcdir)/../src/*.[ch] $(srcdir)/../client/*.[ch] \
+		| sort -u >fuzzcat.d/dictionary
+
 
 check-%:	case-%.sys
 		@srcdir=$(srcdir) $(srcdir)/r1test $* || test $$? = 5
