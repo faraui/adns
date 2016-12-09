@@ -45,11 +45,11 @@ static const struct optioninfo global_options[]= {
     "a", "asynch",         &ov_asynch, 1 },
   
   { ot_desconly, "answer/error output format and destination (see below):" },
-  { ot_value,            "Answers to stdout, errors as messages to stderr (default)",
+  { ot_value,    "Answers to stdout, errors as messages to stderr (default)",
     "Fs", "fmt-simple",    &ov_format, fmt_simple },
-  { ot_value,            "Answers and errors both to stdout in parseable format",
+  { ot_value,    "Answers and errors both to stdout in parseable format",
     "Fi", "fmt-inline",    &ov_format, fmt_inline },
-  { ot_value,            "Fully-parseable output format (default for --asynch)",
+  { ot_value,    "Fully-parseable output format (default for --asynch)",
     "Fa", "fmt-asynch",    &ov_format, fmt_asynch },
   		         
   { ot_desconly, "global verbosity level:" },
@@ -127,7 +127,7 @@ static const struct optioninfo perquery_options[]= {
   { ot_desconly, "asynchronous/pipe mode options:" },
   { ot_funcarg,          "Set <id>, default is decimal sequence starting 0",
     0, "asynch-id",        0,0, &of_asynch_id, "id" },
-  { ot_funcarg,          "Cancel the query with id <id> (no error if not found)",
+  { ot_funcarg,  "Cancel the query with id <id> (no error if not found)",
     0, "cancel-id",        0,0, &of_cancel_id, "id" },
 
   { ot_end }
