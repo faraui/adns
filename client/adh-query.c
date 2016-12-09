@@ -40,7 +40,7 @@ void ensure_adns_init(void) {
 
   if (signal(SIGPIPE,SIG_IGN) == SIG_ERR) sysfail("ignore SIGPIPE",errno);
 
-  initflags= adns_if_noautosys|adns_if_nosigpipe|ov_verbose;
+  initflags= adns_if_noautosys|adns_if_nosigpipe|ov_verbose|ov_checkc;
   if (!ov_env) initflags |= adns_if_noenv;
 
   if (config_text) {

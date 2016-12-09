@@ -32,6 +32,7 @@ int ov_verbose= 0;
 adns_rrtype ov_type= adns_r_none;
 int ov_search=0, ov_qc_query=0, ov_qc_anshost=0, ov_qc_cname=1;
 int ov_tcp=0, ov_cname=0, ov_afflags=0, ov_v6map=0, ov_format=fmt_default;
+int ov_checkc=0;
 char *ov_id= 0;
 struct perqueryflags_remember ov_pqfr = { 1,1,1, tm_none };
 
@@ -59,6 +60,13 @@ static const struct optioninfo global_options[]= {
     "Vn", "no-quiet",      &ov_verbose, 0 },
   { ot_value,            "Debugging mode",
     "Vd", "debug",         &ov_verbose, adns_if_debug },
+
+  { ot_value,            "Do not do for-developer consistency checks",
+    0, "no-checkc",         &ov_checkc, 0 },
+  { ot_value,            "Do for-developer consistency checks",
+    0, "checkc",            &ov_checkc, adns_if_checkc_freq },
+  { ot_value,            "Do for-developer consistency checks very often",
+    0, "checkc-freq",       &ov_checkc, adns_if_checkc_freq },
   		         
   { ot_desconly, "other global options:" },
   { ot_funcarg,          "Configuration to use instead of /etc/resolv.conf",
