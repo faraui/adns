@@ -234,8 +234,7 @@ void adns__querysend_tcp(adns_query qu, struct timeval now) {
 
 static void query_usetcp(adns_query qu, struct timeval now) {
   qu->state= query_tcpw;
-  qu->timeout= now;
-  timevaladd(&qu->timeout,TCPWAITMS);
+  adns__timeout_set(qu,now,TCPWAITMS);
   LIST_LINK_TAIL(qu->ads->tcpw,qu);
   adns__querysend_tcp(qu,now);
   adns__tcp_tryconnect(qu->ads,now);
@@ -281,8 +280,7 @@ void adns__query_send(adns_query qu, struct timeval now) {
   if (r<0 && errno != EAGAIN)
     adns__warn(ads,serv,0,"sendto failed: %s",strerror(errno));
   
-  qu->timeout= now;
-  timevaladd(&qu->timeout,UDPRETRYMS);
+  adns__timeout_set(qu, now, UDPRETRYMS);
   qu->udpsent |= (1<<serv);
   qu->udpnextserver= (serv+1)%ads->nservers;
   qu->retries++;

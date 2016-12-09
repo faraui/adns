@@ -72,7 +72,7 @@ static adns_query query_alloc(adns_state ads,
   qu->retries= 0;
   qu->udpnextserver= 0;
   qu->udpsent= 0;
-  timerclear(&qu->timeout);
+  adns__timeout_clear(qu);
   qu->expires= now.tv_sec + MAXTTLBELIEVE;
 
   memset(&qu->ctx,0,sizeof(qu->ctx));

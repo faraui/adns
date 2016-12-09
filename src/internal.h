@@ -298,7 +298,7 @@ struct adns__query {
   int id, flags, retries;
   int udpnextserver;
   unsigned long udpsent; /* bitmap indexed by server */
-  struct timeval timeout;
+  struct timeval timeout_expires;
   time_t expires; /* Earliest expiry time of any record we used. */
 
   qcontext ctx;
@@ -884,6 +884,11 @@ void adns__autosys(adns_state ads, struct timeval now);
  * Must not be called from within adns internal processing functions,
  * lest we end up in recursive descent !
  */
+
+void adns__timeout_set(adns_query qu, struct timeval now, int ms);
+static inline void adns__timeout_clear(adns_query qu)
+  { timerclear(&qu->timeout_expires); }
+
 
 void adns__must_gettimeofday(adns_state ads, const struct timeval **now_io,
 			     struct timeval *tv_buf);

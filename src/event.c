@@ -149,6 +149,11 @@ void adns__tcp_tryconnect(adns_state ads, struct timeval now) {
 
 /* Timeout handling functions. */
 
+void adns__timeout_set(adns_query qu, struct timeval now, int ms) {
+  qu->timeout_expires= now;
+  timevaladd(&qu->timeout_expires,ms);
+}
+
 void adns__must_gettimeofday(adns_state ads, const struct timeval **now_io,
 			     struct timeval *tv_buf) {
   const struct timeval *now;
@@ -212,8 +217,8 @@ static void timeouts_queue(adns_state ads, int act,
   
   for (qu= queue->head; qu; qu= nqu) {
     nqu= qu->next;
-    if (!timercmp(&now,&qu->timeout,>)) {
-      inter_maxtoabs(tv_io,tvbuf,now,qu->timeout);
+    if (!timercmp(&now,&qu->timeout_expires,>)) {
+      inter_maxtoabs(tv_io,tvbuf,now,qu->timeout_expires);
     } else {
       if (!act) { inter_immed(tv_io,tvbuf); return; }
       LIST_UNLINK(*queue,qu);
