@@ -68,7 +68,11 @@ fuzzcat.d:	checkfuzz
 		perl -ne 'print $$1,"\n" while m/\"([^"% ]{2,})\"/g' \
 			$(srcdir)/../src/*.[ch] $(srcdir)/../client/*.[ch] \
 		| sort -u >fuzzcat.d/dictionary
-
+		perl -p -e 'chomp;' \
+			-e 's/[^0-9a-z-_]/sprintf "\\x%02x", ord $$&/ige;' \
+			-e 's/^/l$$.="/; ' \
+			-e 's/$$/"\n/;' \
+			fuzzcat.d/dictionary >fuzzcat.d/dictionary.afl
 
 check-%:	case-%.sys
 		@srcdir=$(srcdir) $(srcdir)/r1test $* || test $$? = 5
