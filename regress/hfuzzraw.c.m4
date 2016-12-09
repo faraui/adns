@@ -141,6 +141,7 @@ void T_gettimeofday_hook(void) {
   struct timeval delta, sum;
   P_READ(delta);
   timeradd(&delta, &currenttime, &sum);
+  sum.tv_usec %= 1000000;
   currenttime= sum;
 }
 
