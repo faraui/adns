@@ -1,0 +1,4 @@
+adns debug: using nameserver 172.18.45.6
+1.0.0.127.in-addr.arpa has no TXT record
+Error during DNS PTR lookup for 1.0.0.127.zen.spamhaus.org: Domain invalid for particular DNS query type
+1.0.0.127.zen.spamhaus.org does not exist

@@ -1,0 +1,136 @@
+./adnshost default
+-f
+ start 1481332828.558221
+ socket domain=AF_INET type=SOCK_DGRAM
+ socket=6
+ +0.000159
+ fcntl fd=6 cmd=F_GETFL
+ fcntl=~O_NONBLOCK&...
+ +0.000051
+ fcntl fd=6 cmd=F_SETFL O_NONBLOCK|...
+ fcntl=OK
+ +0.000035
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=null
+ select=1 rfds=[0] wfds=[] efds=[]
+ +12.-81227
+ read fd=0 buflen=40
+ read=OK
+     2d2d7265 76657273 65203132 372e302e 302e3120 696e2d61 6464722e 61727061
+     0a.
+ +0.000148
+ sendto fd=6 addr=172.18.45.6:53
+     311f0100 00010000 00000000 01310130 01300331 32370769 6e2d6164 64720461
+     72706100 00100001.
+ sendto=40
+ +0.000190
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=1.999810
+ select=1 rfds=[6] wfds=[] efds=[]
+ +1.-429555
+ recvfrom fd=6 buflen=512
+ recvfrom=OK addr=172.18.45.6:53
+     311f8580 00010000 00010000 01310130 01300331 32370769 6e2d6164 64720461
+     72706100 00100001 c0120006 00010009 3a800026 096c6f63 616c686f 73740004
+     726f6f74 c0340000 00010009 3a800001 51800024 ea000009 3a80.
+ +0.000152
+ recvfrom fd=6 buflen=512
+ recvfrom=EAGAIN
+ +0.000032
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=null
+ select=1 rfds=[0] wfds=[] efds=[]
+ +5.124113
+ read fd=0 buflen=40
+ read=OK
+     2d742070 74720a.
+ +0.000126
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=null
+ select=1 rfds=[0] wfds=[] efds=[]
+ +1.658805
+ read fd=0 buflen=40
+ read=OK
+     2d2d7265 76657273 65203132 372e302e 302e3120 696e2d61 6464722e 61727061
+     0a.
+ +0.000135
+ sendto fd=6 addr=172.18.45.6:53
+     31200100 00010000 00000000 01310130 01300331 32370769 6e2d6164 64720461
+     72706100 000c0001.
+ sendto=40
+ +0.000207
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=1.999793
+ select=1 rfds=[6] wfds=[] efds=[]
+ +0.010520
+ recvfrom fd=6 buflen=512
+ recvfrom=OK addr=172.18.45.6:53
+     31208580 00010001 00010001 01310130 01300331 32370769 6e2d6164 64720461
+     72706100 000c0001 c00c000c 00010009 3a80000b 096c6f63 616c686f 737400c0
+     12000200 0100093a 800002c0 34c03400 01000100 093a8000 047f0000 01.
+ +0.000147
+ sendto fd=6 addr=172.18.45.6:53
+     31210100 00010000 00000000 096c6f63 616c686f 73740000 010001.
+ sendto=27
+ +0.000109
+ recvfrom fd=6 buflen=512
+ recvfrom=EAGAIN
+ +0.000035
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=1.999709
+ select=1 rfds=[6] wfds=[] efds=[]
+ +0.003062
+ recvfrom fd=6 buflen=512
+ recvfrom=OK addr=172.18.45.6:53
+     31218580 00010001 00010000 096c6f63 616c686f 73740000 010001c0 0c000100
+     0100093a 8000047f 000001c0 0c000200 0100093a 800002c0 0c.
+ +0.000130
+ recvfrom fd=6 buflen=512
+ recvfrom=EAGAIN
+ +0.000035
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=null
+ select=1 rfds=[0] wfds=[] efds=[]
+ +7.-587512
+ read fd=0 buflen=40
+ read=OK
+     2d2d7265 76657273 65203132 372e302e 302e3120 7a656e2e 7370616d 68617573
+     2e6f7267 0a.
+ +0.000112
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=null
+ select=1 rfds=[0] wfds=[] efds=[]
+ +2.190400
+ read fd=0 buflen=40
+ read=OK
+     2d742070 74722d0a.
+ +0.000091
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=null
+ select=1 rfds=[0] wfds=[] efds=[]
+ +1.091179
+ read fd=0 buflen=40
+ read=OK
+     2d2d7265 76657273 65203132 372e302e 302e3120 7a656e2e 7370616d 68617573
+     2e6f7267 0a.
+ +0.000125
+ sendto fd=6 addr=172.18.45.6:53
+     31230100 00010000 00000000 01310130 01300331 3237037a 656e0873 70616d68
+     61757303 6f726700 000c0001.
+ sendto=44
+ +0.000157
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=1.999843
+ select=1 rfds=[6] wfds=[] efds=[]
+ +0.084632
+ recvfrom fd=6 buflen=512
+ recvfrom=OK addr=172.18.45.6:53
+     31238183 00010000 00010000 01310130 01300331 3237037a 656e0873 70616d68
+     61757303 6f726700 000c0001 c0160006 00010000 000a0034 046e6565 6402746f
+     046b6e6f 77046f6e 6c79000a 686f7374 6d617374 6572c01a 6016b217 00000e10
+     00000258 00069780 0000000a.
+ +0.000163
+ recvfrom fd=6 buflen=512
+ recvfrom=EAGAIN
+ +0.000032
+ select max=7 rfds=[0,6] wfds=[] efds=[] to=null
+ select=1 rfds=[0] wfds=[] efds=[]
+ +10.-109673
+ read fd=0 buflen=40
+ read=OK
+     .
+ +0.000095
+ close fd=6
+ close=OK
+ +0.000060
+ exit 6
