@@ -35,7 +35,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
   int flg_ra, flg_rd, flg_tc, flg_qr, opcode;
   int rrtype, rrclass, rdlength, rdstart;
   int anstart, nsstart;
-  int ownermatched, l, nrrs;
+  int ownermatched, l, nrrs, restartfrom;
   unsigned long ttl, soattl;
   const typeinfo *typei;
   adns_query qu, nqu;
@@ -162,6 +162,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
    * If it has any CNAMEs we stuff them in the answer.
    */
   wantedrrs= 0;
+  restartfrom= -1;
   cbyte= anstart;
   for (rri= 0; rri<ancount; rri++) {
     rrstart= cbyte;
@@ -229,6 +230,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 	 */
       }
     } else if (rrtype == (qu->answer->type & adns_rrt_typemask)) {
+      if (restartfrom==-1) restartfrom= rri;
       wantedrrs++;
     } else {
       adns__debug(ads,serv,qu,"ignoring answer RR"
@@ -331,12 +333,14 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
   pai.arcount= arcount;
   pai.now= now;
 
+  assert(restartfrom>=0);
   for (rri=0, nrrs=0; rri<ancount; rri++) {
     st= adns__findrr(qu,serv, dgram,dglen,&cbyte,
 		     &rrtype,&rrclass,&ttl, &rdlength,&rdstart,
 		     &ownermatched);
     assert(!st); assert(rrtype != -1);
-    if (rrclass != DNS_CLASS_IN ||
+    if (rri < restartfrom ||
+	rrclass != DNS_CLASS_IN ||
 	rrtype != (qu->answer->type & adns_rrt_typemask) ||
 	!ownermatched)
       continue;
