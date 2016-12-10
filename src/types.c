@@ -1007,6 +1007,7 @@ static adns_status csp_hostaddr(vbuf *vb, adns_rrtype rrt,
   adns_status st;
   char buf[20];
   int i;
+  size_t addrsz= gsz_addr(0, rrt);
 
   st= csp_domain(vb,rrp->host);  if (st) return st;
 
@@ -1026,7 +1027,7 @@ static adns_status csp_hostaddr(vbuf *vb, adns_rrtype rrt,
     CSP_ADDSTR(" (");
     for (i=0; i<rrp->naddrs; i++) {
       CSP_ADDSTR(" ");
-      st= csp_addr(vb,&rrp->addrs[i]);
+      st= csp_addr(vb, (const void*)((const char*)rrp->addrs + addrsz*i));
     }
     CSP_ADDSTR(" )");
   } else {
