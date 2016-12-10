@@ -129,7 +129,7 @@ void of_type(const struct optioninfo *oi, const char *arg, const char *arg2) {
 
 static void process_optarg(const char *arg,
 			   const char *const **argv_p,
-			   const char *value) {
+			   char *value) {
   const struct optioninfo *oip;
   const char *arg2;
   int invert;
@@ -148,9 +148,17 @@ static void process_optarg(const char *arg,
 	if (!arg) usageerr("option --%s requires a value argument",oip->lopt);
 	arg2= 0;
       } else if (oip->type == ot_funcarg2) {
-	assert(argv_p);
-	arg= *++(*argv_p);
-	arg2= arg ? *++(*argv_p) : 0;
+	if (argv_p) {
+	  arg= *++(*argv_p);
+	  arg2= arg ? *++(*argv_p) : 0;
+	} else if (value) {
+	  arg= value;
+	  char *space= strchr(value,' ');
+	  if (space) *space++= 0;
+	  arg2= space;
+	} else {
+	  arg= 0;
+	}
 	if (!arg || !arg2)
 	  usageerr("option --%s requires two more arguments", oip->lopt);
       } else {
