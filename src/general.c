@@ -219,7 +219,7 @@ adns_status adns_rr_info(adns_rrtype type,
   if (!datap) return adns_s_ok;
   
   adns__vbuf_init(&vb);
-  st= typei->convstring(&vb,datap);
+  st= typei->convstring(&vb,type,datap);
   if (st) goto x_freevb;
   if (!adns__vbuf_append(&vb,"",1)) { st= adns_s_nomemory; goto x_freevb; }
   assert(strlen(vb.buf) == vb.used-1);

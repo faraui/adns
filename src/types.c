@@ -221,7 +221,7 @@ static adns_status pa_txt(const parseinfo *pai, int cbyte,
   return adns_s_ok;
 }
 
-static adns_status cs_txt(vbuf *vb, const void *datap) {
+static adns_status cs_txt(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_intstr *const *rrp= datap;
   const adns_rr_intstr *current;
   adns_status st;
@@ -238,7 +238,7 @@ static adns_status cs_txt(vbuf *vb, const void *datap) {
  * _hinfo   (cs)
  */
 
-static adns_status cs_hinfo(vbuf *vb, const void *datap) {
+static adns_status cs_hinfo(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_intstrpair *rrp= datap;
   adns_status st;
 
@@ -316,7 +316,7 @@ static adns_status csp_genaddr(vbuf *vb, int af, const void *p) {
   return adns_s_ok;
 }
 
-static adns_status cs_inaddr(vbuf *vb, const void *datap) {
+static adns_status cs_inaddr(vbuf *vb, adns_rrtype rrt, const void *datap) {
   return csp_genaddr(vb, AF_INET,datap);
 }
 
@@ -338,7 +338,7 @@ static int di_in6addr(adns_state ads,
   return dip_genaddr(ads,AF_INET6,datap_a,datap_b);
 }
 
-static adns_status cs_in6addr(vbuf *vb, const void *datap) {
+static adns_status cs_in6addr(vbuf *vb, adns_rrtype rrt, const void *datap) {
   return csp_genaddr(vb,AF_INET6,datap);
 }
 
@@ -499,7 +499,7 @@ static adns_status csp_addr(vbuf *vb, const adns_rr_addr *rrp) {
   return adns_s_ok;
 }
 
-static adns_status cs_addr(vbuf *vb, const void *datap) {
+static adns_status cs_addr(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_addr *rrp= datap;
 
   return csp_addr(vb,rrp);
@@ -785,7 +785,7 @@ static adns_status csp_domain(vbuf *vb, const char *domain) {
   return adns_s_ok;
 }
 
-static adns_status cs_domain(vbuf *vb, const void *datap) {
+static adns_status cs_domain(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const char *const *domainp= datap;
   return csp_domain(vb,*domainp);
 }
@@ -1001,7 +1001,8 @@ static void mf_hostaddr(adns_query qu, void *datap) {
   mfp_hostaddr(qu,rrp);
 }
 
-static adns_status csp_hostaddr(vbuf *vb, const adns_rr_hostaddr *rrp) {
+static adns_status csp_hostaddr(vbuf *vb, adns_rrtype rrt,
+				const adns_rr_hostaddr *rrp) {
   const char *errstr;
   adns_status st;
   char buf[20];
@@ -1034,10 +1035,10 @@ static adns_status csp_hostaddr(vbuf *vb, const adns_rr_hostaddr *rrp) {
   return adns_s_ok;
 }
 
-static adns_status cs_hostaddr(vbuf *vb, const void *datap) {
+static adns_status cs_hostaddr(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_hostaddr *rrp= datap;
 
-  return csp_hostaddr(vb,rrp);
+  return csp_hostaddr(vb,rrt,rrp);
 }
 
 /*
@@ -1121,19 +1122,19 @@ static adns_status csp_intofinthost(vbuf *vb, int i) {
   return adns_s_ok;
 }
 
-static adns_status cs_inthostaddr(vbuf *vb, const void *datap) {
+static adns_status cs_inthostaddr(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_inthostaddr *rrp= datap;
   adns_status st;
 
   st = csp_intofinthost(vb,rrp->i);  if (st) return st;
-  return csp_hostaddr(vb,&rrp->ha);
+  return csp_hostaddr(vb,rrt,&rrp->ha);
 }
 
 /*
  * _inthost  (cs)
  */
 
-static adns_status cs_inthost(vbuf *vb, const void *datap) {
+static adns_status cs_inthost(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_intstr *rrp= datap;
   adns_status st;
 
@@ -1361,7 +1362,7 @@ static adns_status pa_rp(const parseinfo *pai, int cbyte,
   return adns_s_ok;
 }
 
-static adns_status cs_rp(vbuf *vb, const void *datap) {
+static adns_status cs_rp(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_strpair *rrp= datap;
   adns_status st;
 
@@ -1407,7 +1408,7 @@ static void mf_soa(adns_query qu, void *datap) {
   adns__makefinal_str(qu,&rrp->rname);
 }
 
-static adns_status cs_soa(vbuf *vb, const void *datap) {
+static adns_status cs_soa(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_soa *rrp= datap;
   char buf[20];
   int i;
@@ -1517,7 +1518,7 @@ static adns_status csp_srv_begin(vbuf *vb, const adns_rr_srvha *rrp
   return adns_s_ok;
 }
 
-static adns_status cs_srvraw(vbuf *vb, const void *datap) {
+static adns_status cs_srvraw(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_srvraw *rrp= datap;
   adns_status st;
   
@@ -1525,12 +1526,12 @@ static adns_status cs_srvraw(vbuf *vb, const void *datap) {
   return csp_domain(vb,rrp->host);
 }
 
-static adns_status cs_srvha(vbuf *vb, const void *datap) {
+static adns_status cs_srvha(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_srvha *rrp= datap;
   adns_status st;
 
   st= csp_srv_begin(vb,(const void*)datap);  if (st) return st;
-  return csp_hostaddr(vb,&rrp->ha);
+  return csp_hostaddr(vb,rrt,&rrp->ha);
 }
 
 static void postsort_srv(adns_state ads, void *array, int nrrs,int rrsz,
@@ -1621,7 +1622,7 @@ static adns_status pa_opaque(const parseinfo *pai, int cbyte,
   return adns_s_ok;
 }
 
-static adns_status cs_opaque(vbuf *vb, const void *datap) {
+static adns_status cs_opaque(vbuf *vb, adns_rrtype rrt, const void *datap) {
   const adns_rr_byteblock *rrp= datap;
   char buf[10];
   int l;

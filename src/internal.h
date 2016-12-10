@@ -170,7 +170,7 @@ typedef struct typeinfo {
    * Previously, used alloc_interim, now use alloc_final.
    */
 
-  adns_status (*convstring)(vbuf *vb, const void *data);
+  adns_status (*convstring)(vbuf *vb, adns_rrtype, const void *data);
   /* Converts the RR data to a string representation in vbuf.
    * vbuf will be appended to (it must have been initialised),
    * and will not be null-terminated by convstring.
