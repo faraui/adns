@@ -742,7 +742,7 @@ static int init_files(adns_state *ads_r, adns_initflags flags,
   r= init_finish(ads);
   if (r) return r;
 
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_exit);
   *ads_r= ads;
   return 0;
 }
@@ -768,7 +768,7 @@ static int init_strcfg(adns_state *ads_r, adns_initflags flags,
   }
 
   r= init_finish(ads);  if (r) return r;
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_exit);
   *ads_r= ads;
   return 0;
 }
@@ -794,7 +794,7 @@ int adns_init_logfn(adns_state *newstate_r, adns_initflags flags,
 
 void adns_finish(adns_state ads) {
   int i;
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_enter);
   for (;;) {
     if (ads->udpw.head) adns__cancel(ads->udpw.head);
     else if (ads->tcpw.head) adns__cancel(ads->tcpw.head);
@@ -812,7 +812,7 @@ void adns_finish(adns_state ads) {
 }
 
 void adns_forallqueries_begin(adns_state ads) {
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_enter);
   ads->forallnext=
     ads->udpw.head ? ads->udpw.head :
     ads->tcpw.head ? ads->tcpw.head :
@@ -823,7 +823,7 @@ void adns_forallqueries_begin(adns_state ads) {
 adns_query adns_forallqueries_next(adns_state ads, void **context_r) {
   adns_query qu, nqu;
 
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_enter);
   nqu= ads->forallnext;
   for (;;) {
     qu= nqu;

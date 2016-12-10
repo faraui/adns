@@ -37,7 +37,7 @@ int adns_beforepoll(adns_state ads, struct pollfd *fds, int *nfds_io,
   int space, found, timeout_ms, r;
   struct pollfd fds_tmp[MAX_POLLFDS];
 
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_enter);
 
   if (timeout_io) {
     adns__must_gettimeofday(ads,&now,&tv_nowbuf);
@@ -85,7 +85,7 @@ void adns_afterpoll(adns_state ads, const struct pollfd *fds, int nfds,
 		    const struct timeval *now) {
   struct timeval tv_buf;
 
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_enter);
   adns__must_gettimeofday(ads,&now,&tv_buf);
   if (now) {
     adns__timeouts(ads, 1, 0,0, *now);
@@ -102,7 +102,7 @@ int adns_wait_poll(adns_state ads,
   int r, nfds, to;
   struct pollfd fds[MAX_POLLFDS];
   
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_enter);
 
   for (;;) {
     r= adns__internal_check(ads,query_io,answer_r,context_r);

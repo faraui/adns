@@ -95,7 +95,8 @@ typedef unsigned char byte;
 
 typedef enum {
   cc_user,
-  cc_entex,
+  cc_enter,
+  cc_exit,
   cc_freq
 } consistency_checks;
 

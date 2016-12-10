@@ -273,7 +273,7 @@ int adns_submit(adns_state ads,
   adns_query qu;
   const char *p;
 
-  adns__consistency(ads,0,cc_entex);
+  adns__consistency(ads,0,cc_enter);
 
   if (flags & ~(adns_queryflags)0x4009ffff)
     /* 0x40080000 are reserved for `harmless' future expansion
@@ -520,7 +520,7 @@ void adns__intdone_process(adns_state ads) {
 
 void adns__returning(adns_state ads, adns_query qu_for_caller) {
   adns__intdone_process(ads);
-  adns__consistency(ads,qu_for_caller,cc_entex);
+  adns__consistency(ads,qu_for_caller,cc_exit);
 }
 
 void adns__cancel(adns_query qu) {
@@ -558,7 +558,7 @@ void adns_cancel(adns_query qu) {
 
   assert(!qu->parent);
   ads= qu->ads;
-  adns__consistency(ads,qu,cc_entex);
+  adns__consistency(ads,qu,cc_enter);
   adns__cancel(qu);
   adns__returning(ads,0);
 }

@@ -187,7 +187,10 @@ void adns__consistency(adns_state ads, adns_query qu, consistency_checks cc) {
   switch (cc) {
   case cc_user:
     break;
-  case cc_entex:
+  case cc_enter:
+    if (!(ads->iflags & adns_if_checkc_entex)) return;
+    break;
+  case cc_exit:
     if (!(ads->iflags & adns_if_checkc_entex)) return;
     assert(!ads->intdone.head);
     break;
