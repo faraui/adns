@@ -792,15 +792,20 @@ int adns_init_logfn(adns_state *newstate_r, adns_initflags flags,
     return init_files(newstate_r, flags, logfn, logfndata);
 }
 
+static void cancel_all(adns_query qu) {
+  if (!qu->parent) adns__cancel(qu);
+  else cancel_all(qu->parent);
+}
+
 void adns_finish(adns_state ads) {
   int i;
   adns__consistency(ads,0,cc_enter);
   for (;;) {
-    if (ads->udpw.head) adns__cancel(ads->udpw.head);
-    else if (ads->tcpw.head) adns__cancel(ads->tcpw.head);
-    else if (ads->childw.head) adns__cancel(ads->childw.head);
-    else if (ads->output.head) adns__cancel(ads->output.head);
-    else if (ads->intdone.head) adns__cancel(ads->output.head);
+    if (ads->udpw.head) cancel_all(ads->udpw.head);
+    else if (ads->tcpw.head) cancel_all(ads->tcpw.head);
+    else if (ads->childw.head) cancel_all(ads->childw.head);
+    else if (ads->output.head) cancel_all(ads->output.head);
+    else if (ads->intdone.head) cancel_all(ads->output.head);
     else break;
   }
   for (i=0; i<ads->nudpsockets; i++) close(ads->udpsockets[i].fd);
