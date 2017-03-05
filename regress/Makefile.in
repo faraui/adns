@@ -37,7 +37,8 @@ HCPPFLAGS=	-DADNS_REGRESS_TEST -I.
 
 REDIRLIBOBJS=	$(addsuffix _d.o, $(basename $(LIBOBJS)))
 HARNLOBJS=	hcommon.o $(REDIRLIBOBJS)
-TARGETS=	$(addsuffix _record, $(CLIENTS)) $(addsuffix _playback, $(CLIENTS))
+TARGETS=	$(addsuffix _record, $(CLIENTS)) \
+		$(addsuffix _playback, $(CLIENTS))
 ADH_OBJS=	adh-main_c.o adh-opts_c.o adh-query_c.o
 ALL_OBJS=	$(HARNLOBJS) dtest.o hrecord.o hplayback.o
 
