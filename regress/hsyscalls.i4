@@ -133,6 +133,7 @@ hm_syscall(
 
 hm_specsyscall(int, writev, `int fd, const struct iovec *vector, size_t count')
 hm_specsyscall(int, gettimeofday, `struct timeval *tv, struct timezone *tz')
+hm_specsyscall(int, clock_gettime, `clockid_t clk, struct timespec *ts')
 hm_specsyscall(pid_t, getpid, `void')
 hm_specsyscall(int, close, `int fd')
 

@@ -36,6 +36,7 @@ m4_include(hmacros.i4)
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
 
 #include "harness.h"
 #include "internal.h"
@@ -73,6 +74,17 @@ int Hgettimeofday(struct timeval *tv, struct timezone *tz) {
   Tmust("gettimeofday","tz",!tz);
   T_gettimeofday_hook();
   *tv= currenttime;
+  return 0;
+}
+int Hclock_gettime(clockid_t clk, struct timespec *ts) {
+  Tensuresetup();
+  ts->tv_sec =  currenttime.tv_sec;
+  ts->tv_nsec = currenttime.tv_usec * 1000 + 666;
+  switch (clk) {
+  case CLOCK_MONOTONIC: ts->tv_sec -= 1500000000; break;
+  case CLOCK_REALTIME:                            break;
+  default: Tmust("clock_gettime","clk",0);
+  }
   return 0;
 }
 
