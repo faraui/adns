@@ -691,7 +691,7 @@ static void icb_addr(adns_query parent, adns_query child) {
      * settled on.
      */
     adns__cancel_children(parent);
-    r= gettimeofday(&now, 0);  if (r) goto x_gtod;
+    r= adns__gettimeofday(ads,&now);  if (r) goto x_gtod;
     qf= adns__qf_addr_cname;
     if (!(parent->flags & adns_qf_cname_loose)) qf |= adns_qf_cname_forbid;
     addr_subqueries(parent, now, qf, child->vb.buf, child->vb.used);
@@ -712,7 +712,7 @@ static void icb_addr(adns_query parent, adns_query child) {
     adns__cancel_children(parent);
     adns__free_interim(parent, pans->rrs.bytes);
     pans->rrs.bytes= 0; pans->nrrs= 0;
-    r= gettimeofday(&now, 0);  if (r) goto x_gtod;
+    r= adns__gettimeofday(ads,&now);  if (r) goto x_gtod;
     adns__search_next(ads, parent, now);
     return;
   }
@@ -737,7 +737,8 @@ x_gtod:
   /* We have our own error handling, because adns__must_gettimeofday
    * handles errors by calling adns_globalsystemfailure, which would
    * reenter the query processing logic. */
-  adns__diag(ads, -1, parent, "gettimeofday failed: %s", strerror(errno));
+  adns__diag(ads, -1, parent, "gettimeofday/clock_gettime failed: %s",
+	     strerror(errno));
   err= adns_s_systemfail;
   goto x_err;
 

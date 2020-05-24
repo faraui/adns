@@ -36,6 +36,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #include "internal.h"
 #include "tvarith.h"
@@ -149,6 +150,19 @@ void adns__tcp_tryconnect(adns_state ads, struct timeval now) {
 
 /* Timeout handling functions. */
 
+int adns__gettimeofday(adns_state ads, struct timeval *tv) {
+  if (!(ads->iflags & adns_if_monotonic))
+    return gettimeofday(tv,0);
+
+  struct timespec ts;
+  int r = clock_gettime(CLOCK_MONOTONIC,&ts);
+  if (r) return r;
+
+  tv->tv_sec =  ts.tv_sec;
+  tv->tv_usec = ts.tv_nsec / 1000;
+  return 0;
+}
+
 void adns__must_gettimeofday(adns_state ads, const struct timeval **now_io,
 			     struct timeval *tv_buf) {
   const struct timeval *now;
@@ -156,8 +170,9 @@ void adns__must_gettimeofday(adns_state ads, const struct timeval **now_io,
 
   now= *now_io;
   if (now) return;
-  r= gettimeofday(tv_buf,0); if (!r) { *now_io= tv_buf; return; }
-  adns__diag(ads,-1,0,"gettimeofday failed: %s",strerror(errno));
+  r= adns__gettimeofday(ads,tv_buf); if (!r) { *now_io= tv_buf; return; }
+  adns__diag(ads,-1,0,"gettimeofday/clock_gettime failed: %s",
+	     strerror(errno));
   adns_globalsystemfailure(ads);
   return;
 }
@@ -670,7 +685,7 @@ int adns_processany(adns_state ads) {
 
   adns__consistency(ads,0,cc_enter);
 
-  r= gettimeofday(&now,0);
+  r= adns__gettimeofday(ads,&now);
   if (!r) adns_processtimeouts(ads,&now);
 
   /* We just use adns__fdevents to loop over the fd's trying them.
@@ -760,7 +775,7 @@ int adns_check(adns_state ads,
   int r;
   
   adns__consistency(ads,*query_io,cc_enter);
-  r= gettimeofday(&now,0);
+  r= adns__gettimeofday(ads,&now);
   if (!r) adns__autosys(ads,now);
 
   r= adns__internal_check(ads,query_io,answer_r,context_r);

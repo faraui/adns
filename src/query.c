@@ -284,7 +284,7 @@ int adns_submit(adns_state ads,
   typei= adns__findtype(type);
   if (!typei) return ENOSYS;
 
-  r= gettimeofday(&now,0); if (r) goto x_errno;
+  r= adns__gettimeofday(ads,&now); if (r) goto x_errno;
   qu= query_alloc(ads,typei,type,flags,now); if (!qu) goto x_errno;
   
   qu->ctx.ext= context;

@@ -895,6 +895,8 @@ adns__timeout_clear(adns_query qu)
   { qu->timeout_ms= 0; timerclear(&qu->timeout_started); }
 
 
+int adns__gettimeofday(adns_state ads, struct timeval *tv_buf);
+
 void adns__must_gettimeofday(adns_state ads, const struct timeval **now_io,
 			     struct timeval *tv_buf);
 /* Call with care - might reentrantly cause queries to be completed! */

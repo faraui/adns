@@ -100,6 +100,7 @@ typedef enum { /* In general, or together the desired flags: */
  adns_if_noautosys=   0x0010,/* do not make syscalls at every opportunity */
  adns_if_eintr=       0x0020,/* allow _wait and _synchronous to return EINTR */
  adns_if_nosigpipe=   0x0040,/* applic has SIGPIPE ignored, do not protect */
+ adns_if_monotonic=   0x0080,/* enable if you can; see adns_processtimeouts  */
  adns_if_checkc_entex=0x0100,/* consistency checks on entry/exit to adns fns */
  adns_if_checkc_freq= 0x0300,/* consistency checks very frequently (slow!) */
 
@@ -485,6 +486,21 @@ typedef struct {
  *   these approaches has optimal performance.
  */
 
+/*
+ * Use of time:
+ *
+ * adns needs to manipulate timeouts.  For API compatibility reasons
+ * (adns predates clock_gettime) the default is to use wall clock time
+ * from gettimeofday.  This will malfunction if the system clock is
+ * not suitably stable.  To avoid this, you should set
+ *   adns_if_monotonic
+ *
+ * If you specify adns_if_monotonic then all `now' values passed to
+ * adns must be from clock_gettime(CLOCK_MONOTONIC).  clock_gettime
+ * returns a struct timespec; you must convert it to a struct timeval
+ * by dividing the nsec by 1000 to make usec, rounding down.
+ */
+
 int adns_init(adns_state *newstate_r, adns_initflags flags,
 	      FILE *diagfile /*0=>stderr*/);
 
@@ -819,6 +835,8 @@ int adns_processexceptional(adns_state ads, int fd, const struct timeval *now);
  * use that fd and only in the manner specified, regardless of whether
  * adns_if_noautosys was specified.
  *
+ * now is as for adns_processtimeouts.
+ *
  * adns_processexceptional should be called when select(2) reports an
  * exceptional condition, or poll(2) reports POLLPRI.
  *
@@ -834,15 +852,19 @@ void adns_processtimeouts(adns_state ads, const struct timeval *now);
 /* Gives adns flow-of-control so that it can process any timeouts
  * which might have happened.  Very like _processreadable/writeable.
  *
- * now may be 0; if it isn't, *now must be the current time, recently
- * obtained from gettimeofday.
+ * now may be 0; if it isn't, *now must be the current time from
+ * gettimeofday, or iff adns_if_monotonic it must be converted
+ * from the results of clock_gettime(CLOCK_MONOTONIC) (with the
+ * timespec.tv_nsec rounded down to make timeval.tv_usec).
  */
 
 void adns_firsttimeout(adns_state ads,
 		       struct timeval **tv_mod, struct timeval *tv_buf,
 		       struct timeval now);
 /* Asks adns when it would first like the opportunity to time
- * something out.  now must be the current time, from gettimeofday.
+ * something out.
+ *
+ * now must be the current time, as for adns_processtimeouts.
  * 
  * If tv_mod points to 0 then tv_buf must be non-null, and
  * _firsttimeout will fill in *tv_buf with the time until the first
@@ -866,8 +888,9 @@ void adns_globalsystemfailure(adns_state ads);
  * adns_s_systemfail, and adns will close any stream sockets it has
  * open.
  *
- * This is used by adns, for example, if gettimeofday() fails.
- * Without this the program's event loop might start to spin !
+ * This is used by adns, for example, if gettimeofday() or
+ * clock_gettime fails.  Without this the program's event loop might
+ * start to spin !
  *
  * This call will never block.
  */
@@ -883,8 +906,10 @@ void adns_beforeselect(adns_state ads, int *maxfd, fd_set *readfds,
 /* Find out file descriptors adns is interested in, and when it would
  * like the opportunity to time something out.  If you do not plan to
  * block then tv_mod may be 0.  Otherwise, tv_mod and tv_buf are as
- * for adns_firsttimeout.  readfds, writefds, exceptfds and maxfd_io may
+ * for adns_processtimeouts.  readfds, writefds, exceptfds and maxfd_io may
  * not be 0.
+ *
+ * now is as for adns_processtimeouts.
  *
  * If tv_mod is 0 on entry then this will never actually do any I/O,
  * or change the fds that adns is using or the timeouts it wants.  In
@@ -899,6 +924,8 @@ void adns_afterselect(adns_state ads, int maxfd, const fd_set *readfds,
  * select.  This is just a fancy way of calling adns_processreadable/
  * writeable/timeouts as appropriate, as if select had returned the
  * data being passed.  Always succeeds.
+ *
+ * now is as for adns_processtimeouts.
  */
 
 /*
@@ -962,6 +989,8 @@ int adns_beforepoll(adns_state ads, struct pollfd *fds,
  * descriptors, and use _firsttimeout is used to find out when adns
  * might want to time something out.)
  *
+ * now is as for adns_processtimeouts.
+ *
  * adns_beforepoll will return 0 on success, and will not fail for any
  * reason other than the fds buffer being too small (ERANGE).
  *
@@ -984,6 +1013,8 @@ void adns_afterpoll(adns_state ads, const struct pollfd *fds, int nfds,
 /* Gives adns flow-of-control for a bit; intended for use after
  * poll(2).  fds and nfds should be the results from poll().  pollfd
  * structs mentioning fds not belonging to adns will be ignored.
+ *
+ * now is as for adns_processtimeouts.
  */
 
 
