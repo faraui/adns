@@ -370,6 +370,11 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
     adns__query_fail(qu,adns_s_invalidresponse);
     return;
   }
+  if (qu->flags & adns_qf_usevc) {
+    adns__diag(ads,serv,qu,"server sent datagram with TC over TCP");
+    adns__query_fail(qu,adns_s_invalidresponse);
+    return;
+  }
   qu->flags |= adns_qf_usevc;
   
  x_restartquery:
