@@ -1089,7 +1089,9 @@ const char *adns_errtypeabbrev(adns_status st);
  *
  * If you call these functions with status values not actually
  * returned from other functions in the same adns library, the
- * returned information may be NULL.
+ * returned information may be NULL.  (You are also guaranteed
+ * that the return value will not be NULL for values in the
+ * adns_status enum, *except* for adns_s_max_XXXX.)
  */
 
 #ifdef __cplusplus
