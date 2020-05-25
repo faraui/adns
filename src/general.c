@@ -288,14 +288,14 @@ const char *adns_strerror(adns_status st) {
   const struct sinfo *si;
 
   si= findsinfo(st);
-  return si->string;
+  return si ? si->string : 0;
 }
 
 const char *adns_errabbrev(adns_status st) {
   const struct sinfo *si;
 
   si= findsinfo(st);
-  return si->abbrev;
+  return si ? si->abbrev : 0;
 }
 
 
@@ -332,7 +332,7 @@ const char *adns_errtypeabbrev(adns_status st) {
 
   sti= bsearch(&st,stinfos, sizeof(stinfos)/sizeof(*stinfos),
 	       sizeof(*stinfos), sti_compar);
-  return sti->abbrev;
+  return sti ? sti->abbrev : 0;
 }
 
 

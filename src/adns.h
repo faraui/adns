@@ -1085,8 +1085,11 @@ const char *adns_errtypeabbrev(adns_status st);
  * the abbreviation of the error - eg, for adns_s_timeout it returns
  * "timeout".  adns_errtypeabbrev returns the abbreviation of the
  * error class: ie, for values up to adns_s_max_XXX it will return the
- * string XXX.  You MUST NOT call these functions with status values
- * not returned by the same adns library.
+ * string XXX.
+ *
+ * If you call these functions with status values not actually
+ * returned from other functions in the same adns library, the
+ * returned information may be NULL.
  */
 
 #ifdef __cplusplus
