@@ -247,7 +247,7 @@ union maxalign {
   void *p;
   void (*fp)(void);
   union maxalign *up;
-} data;
+};
 
 struct adns__query {
   adns_state ads;
