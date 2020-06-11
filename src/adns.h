@@ -4,11 +4,8 @@
  */
 /*
  *
- *  This file is
- *    Copyright (C) 1997-2000,2003,2006,2014 Ian Jackson
- *
- *  It is part of adns, which is
- *    Copyright (C) 1997-2000,2003,2006,2014 Ian Jackson
+ *  This file is part of adns, which is
+ *    Copyright (C) 1997-2000,2003,2006,2014-2016  Ian Jackson
  *    Copyright (C) 1999-2000,2003,2006 Tony Finch
  *    Copyright (C) 1991 Massachusetts Institute of Technology
  *
