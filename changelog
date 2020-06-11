@@ -1,3 +1,38 @@
+adns (1.6.0) UPSTREAM; urgency=medium
+
+  Bugfixes:
+  * adnshost: Support --reverse in -f mode input stream
+  * timeout robustness against clock skew: track query start time and
+    duration.  Clock instability may now only cause spurious timeouts
+    rather than indefinite hangs or even assertion failures.
+
+  New features:
+  * adnshost: Offer ability to set adns checkc flags
+  * adnslogres: Honour --checkc-freq (if it comes first)
+  * adnsresfilter: Honour --checkc-freq and --checkc-entex
+  * time handling: Support use of CLOCK_MONOTONIC via an init flag.
+  * adns_str* etc.: Improve robustness; more allowable inputs values.
+
+  Build system improvements:
+  * clean targets: Delete $(TARGETS) too!
+  * Remove all m4 output files from the distributed source tree.
+  * Support DESTDIR=/some/absolute/path on `make install'.
+  * Provide autogen.sh.
+  * Rerun autoheader and autoconf (2.69).
+
+  Internal changes:
+  * adnshost: adh-opts.c: Whitespace adjustments to option table
+
+  Tests:
+  * New tests for fixes in 1.5.3.
+  * Fixes to test harness to avoid false positives during fuzzing.
+  * Other changes to support use with AFL.
+  * Many supporting improvements and refactorings.
+  * Fix skipped tests ($$ reference in Makefile)
+
+
+ -- Ian Jackson <ijackson@chiark.greenend.org.uk>  Thu, 11 Jun 2020 15:49:39 +0100
+
 adns (1.5.2) UPSTREAM; urgency=medium
 
   * Important security fixes:
