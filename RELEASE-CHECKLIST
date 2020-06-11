@@ -3,7 +3,6 @@
 #
 #  * Maybe rerun autoconf
 #  * Ensure changelog reflects changes
-#  * Ensure NEWS reflects changes
 #  * Maybe update copyright dates
 #  * Maybe update MAJOR and/or MINOR in common.make.in
 #  * Update DISTVERSION in Makefile.in
