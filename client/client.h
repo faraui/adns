@@ -3,12 +3,8 @@
  * - useful declarations and definitions for adns client programs
  */
 /*
- *  This file is part of adns, which is
- *    Copyright (C) 1997-2000,2003,2006,2014-2016,2020  Ian Jackson
- *    Copyright (C) 2014  Mark Wooding
- *    Copyright (C) 1999-2000,2003,2006  Tony Finch
- *    Copyright (C) 1991 Massachusetts Institute of Technology
- *  (See the file INSTALL for full details.)
+ *  This file is part of adns, which is Copyright Ian Jackson
+ *  and contributors (see the file INSTALL for full details).
  *  
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,10 +26,7 @@
 #define ADNS_VERSION_STRING "1.6.0"
 
 #define COPYRIGHT_MESSAGE \
- "Copyright (C) 1997-2000,2003,2006,2014-2016,2020  Ian Jackson\n" \
- "Copyright (C) 2014  Mark Wooding\n" \
- "Copyright (C) 1999-2000,2003,2006  Tony Finch\n" \
- "Copyright (C) 1991 Massachusetts Institute of Technology\n" \
+ "Copyright Ian Jackson and contributors\n" \
  "This is free software; see the source for copying conditions.  There is NO\n" \
  "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
 
