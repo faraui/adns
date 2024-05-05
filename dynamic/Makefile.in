@@ -31,9 +31,9 @@ ALLOBJS=	$(addsuffix _p.o, $(basename $(LIBOBJS)))
 
 install:
 		mkdir -p $(libdir)
-		$(INSTALL_PROGRAM) $(SHLIBFILE) $(libdir)/$(SHLIBFILE)
-		ln -sf $(SHLIBFILE) $(libdir)/$(SHLIBSONAME)
-		ln -sf $(SHLIBSONAME) $(libdir)/$(SHLIBFORLINK)
+		$(INSTALL_PROGRAM) $(SHLIBFILE) $(DESTDIR)$(libdir)/$(SHLIBFILE)
+		ln -sf $(SHLIBFILE) $(DESTDIR)$(libdir)/$(SHLIBSONAME)
+		ln -sf $(SHLIBSONAME) $(DESTDIR)$(libdir)/$(SHLIBFORLINK)
 
 uninstall:
 		rm -f $(libdir)/$(SHLIBFILE) $(libdir)/$(SHLIBSONAME)

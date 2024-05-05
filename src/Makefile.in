@@ -32,8 +32,10 @@ DIRCFLAGS=	-I. -I$(srcdir)
 install:
 		mkdir -p $(libdir) $(includedir)
 		set -xe; for f in $(TARGETS); \
-			do $(INSTALL_DATA) $$f $(libdir)/$$f; done
-		$(INSTALL_DATA) $(srcdir)/../src/adns.h $(includedir)/adns.h
+			do $(INSTALL_DIR) $(DESTDIR)$(libdir); \
+                           $(INSTALL_DATA) $$f $(DESTDIR)$(libdir)/$$f; done
+		$(INSTALL_DIR)  $(DESTDIR)$(includedir)
+		$(INSTALL_DATA) $(srcdir)/../src/adns.h $(DESTDIR)$(includedir)/adns.h
 
 uninstall:
 		for f in $(TARGETS); do rm -f $(libdir)/$$f; done
