@@ -23,7 +23,7 @@
 #ifndef CLIENT_H_INCLUDED
 #define CLIENT_H_INCLUDED
 
-#define ADNS_VERSION_STRING "1.6.0"
+#define ADNS_VERSION_STRING "1.6.1"
 
 #define COPYRIGHT_MESSAGE \
  "Copyright Ian Jackson and contributors\n" \

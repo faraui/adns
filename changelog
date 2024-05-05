@@ -1,3 +1,22 @@
+adns (1.6.1) UPSTREAM; urgency=low
+
+  Minor bugfix:
+  * Suppress warning about `trust-ad` in resolv.conf.  Debian #1028112.
+
+  Build system:
+  * Honour DESTDIR, avoiding need for prefix= workaround.
+    [Contribution from Sergey Poznyakoff]
+  * regression tests: Add missing dependency on hsyscalls.i.
+    GNU #51329.  [Report from Sergei Trofimovich]
+  * regression tests: build with 64-bit time_t on 32-bit systems.
+    Debian #1065725, Ubuntu Launchpad #2057735.
+    [Report from Sebastian Ramacher]
+
+  Documentation:
+  * Fix all http: URLs in docs to be https: instead.
+
+ -- Ian Jackson <ijackson@chiark.greenend.org.uk>  Sun, 05 May 2024 22:39:28 +0100
+
 adns (1.6.0) UPSTREAM; urgency=medium
 
   Bugfixes:
