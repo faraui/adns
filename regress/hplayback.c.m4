@@ -170,19 +170,25 @@ static int Perrno(const char *stuff) {
 
 static void P_updatetime(void) {
   int chars;
-  unsigned long sec, usec;
+  unsigned long sec;
+  long usec;
 
   if (!adns__vbuf_ensure(&vb2,1000)) Tnomem();
   fgets(vb2.buf,vb2.avail,Tinputfile); Pcheckinput();
   chars= -1;
-  sscanf(vb2.buf," +%lu.%lu%n",&sec,&usec,&chars);
+  sscanf(vb2.buf," +%lu.%ld%n",&sec,&usec,&chars);
   if (chars==-1) Psyntax("update time invalid");
   currenttime.tv_sec+= sec;
-  currenttime.tv_usec+= usec;
-  if (currenttime.tv_usec > 1000000) {
-    currenttime.tv_sec++;
-    currenttime.tv_usec -= 1000000;
+  usec = (long)currenttime.tv_usec + usec;
+  while (usec < 0) {
+    currenttime.tv_sec--;
+    usec += 1000000;
   }
+  while (usec > 1000000) {
+    currenttime.tv_sec++;
+    usec -= 1000000;
+  }
+  currenttime.tv_usec = usec;
   if (vb2.buf[chars] != hm_squote\nhm_squote) Psyntax("not newline after update time");
 }
 
