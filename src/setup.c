@@ -348,6 +348,8 @@ static void ccf_options(adns_state ads, const char *fn,
 	/* adns normally does IPv6 if the application wants it; control
 	 * this with the adns_af: option if you like */
 	WORD_IS("inet6") ||
+	/* adns trusts the resolver anyway */
+	WORD_IS("trust-ad") ||
 	/* adns does not do edns0 and this is not a problem */
 	WORD_IS("edns0"))
       continue;
