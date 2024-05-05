@@ -101,7 +101,8 @@ This file, INSTALL, contains installation instructions and other
 details for adns.
 
 adns is
- Copyright (C) 1997-2000,2003,2006,2014-2016,2020 Ian Jackson
+ Copyright (C) 1997-2000,2003,2006,2014-2016,2020,2024 Ian Jackson
+ Copyright (C) 2024 Sergey Poznyakoff
  Copyright (C) 2014 Mark Wooding
  Copyright (C) 1999-2000,2003,2006 Tony Finch <dot@dotat.at>         [1]
  Copyright (C) 1991 Massachusetts Institute of Technology            [2]
