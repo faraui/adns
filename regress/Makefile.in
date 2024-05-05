@@ -123,10 +123,10 @@ adnshost_fuzz:	$(ADH_OBJS) hplayback.o hfuzz.o $(HARNLOBJS)
 adnshost_fuzzraw: $(ADH_OBJS) hfuzzraw.o hfuzz.o $(HARNLOBJS)
 		$(LINK_CMD)
 
-%_d.o:		$(srcdir)/../src/%.c hredirect.h
+%_d.o:		$(srcdir)/../src/%.c hredirect.h hsyscalls.h
 		$(CC) $(CFLAGS) $(HCPPFLAGS) -c -g -o $@ $<
 
-%_c.o:		$(srcdir)/../client/%.c hredirect.h
+%_c.o:		$(srcdir)/../client/%.c hredirect.h hsyscalls.h
 		$(CC) $(CFLAGS) $(HCPPFLAGS) -I $(srcdir)/../src -c -g -o $@ $<
 
 $(ALL_OBJS):	$(srcdir)/../src/adns.h $(srcdir)/../src/internal.h
