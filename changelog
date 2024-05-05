@@ -6,7 +6,7 @@ adns (1.6.1) UPSTREAM; urgency=low
   Build system:
   * Honour DESTDIR, avoiding need for prefix= workaround.
     [Contribution from Sergey Poznyakoff]
-  * regression tests: Add missing dependency on hsyscalls.i.
+  * regression tests: Add missing dependency on hsyscalls.h.
     GNU #51329.  [Report from Sergei Trofimovich]
   * regression tests: build with 64-bit time_t on 32-bit systems.
     Debian #1065725, Ubuntu Launchpad #2057735.
