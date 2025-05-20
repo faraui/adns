@@ -50,12 +50,12 @@ typedef unsigned char byte;
 /* Configuration and constants */
 
 #define MAXSERVERS 64 /* do not increase beyond no. of bits in 'unsigned'! */
-#define MAXSORTLIST 15
-#define UDPMAXRETRIES 2048
-#define UDPRETRYMS 2000 /* lowered for massive DNS resolutions */
-#define TCPWAITMS 30000
-#define TCPCONNMS 14000
-#define TCPIDLEMS 30000
+#define MAXSORTLIST 16
+#define UDPMAXRETRIES 8192
+#define UDPRETRYMS 512 /* lowered for massive DNS resolutions */
+#define TCPWAITMS 10000
+#define TCPCONNMS 10000
+#define TCPIDLEMS 10000
 #define MAXTTLBELIEVE (7*86400) /* any TTL > 7 days is capped */
 
 #define DNS_PORT 53
